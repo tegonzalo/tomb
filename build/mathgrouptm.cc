@@ -1,6 +1,6 @@
 /*
  * This file automatically produced by ./mathlink-linux/mprep from:
- *	mlink//mathgroup.tm
+ *	src/mathgroup.tm
  * mprep Revision 18 Copyright (c) Wolfram Research, Inc. 1990-2013
  */
 

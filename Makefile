@@ -8,8 +8,10 @@
 CC = g++
 
 # MAIN
-MAIN = group
+TOMBMAIN = tomb
+GROUPMAIN = group
 MATHMAIN = mathgroup
+MAINS = $(TOMBMAIN) $(GROUPMAIN) $(MATHMAIN)
 
 # INCLUDES AND DEPENDENCIES
 IDIR = ./include
@@ -31,6 +33,7 @@ SOURCES = $(shell find $(SDIR) -type f -name *.cc)
 # OBJECT FILES
 ODIR = ./build
 OBJECTS := $(patsubst $(SDIR)/%,$(ODIR)/%,$(SOURCES:.cc=.o))
+OBJS = $(filter-out $(patsubst %,$(ODIR)/%.o, $(MAINS)),$(OBJECTS))
 
 # JSON
 JSONDIR = ./libjson/_internal/Source
@@ -47,18 +50,20 @@ MLDIR = ./mlink/
 MATHINCS = $(INCS) -I./mathlink-linux/
 MATHLIBS = $(LIBS) -L./mathlink-linux/ -lML64i4 -lm -lpthread -lrt -lstdc++ -ldl -luuid
 #-lMLi3 -lstdc++.6 -framework Foundation
-MLOBJECTS = $(filter-out $(ODIR)/$(MAIN).o,$(OBJECTS))
 MPREP = ./mathlink-linux/mprep
 MCC = mcc
 MLOBJ = $(ODIR)/$(MATHMAIN)tm.o
 
 # TARGETS
-all: $(MAIN) $(MATHMAIN) 
+all: $(MAINS) 
 
-$(MAIN): $(OBJECTS) $(JSOBJ)
+$(TOMBMAIN): $(ODIR)/$(TOMBMAIN).o $(OBJS) $(JSOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 	
-$(MATHMAIN): $(ODIR)/$(MATHMAIN).o $(MLOBJECTS) $(JSOBJ) $(MLOBJ)
+$(GROUPMAIN):  $(ODIR)/$(GROUPMAIN).o $(OBJS) $(JSOBJ)
+	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
+	
+$(MATHMAIN): $(ODIR)/$(MATHMAIN).o $(OBJS) $(JSOBJ) $(MLOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(MATHINCS) $(MATHLIBS)
 
 $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
@@ -67,18 +72,19 @@ $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
 $(JSONDIR)/%.o: $(JSONDIR)/%.cpp
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(MLOBJ): $(MLDIR)/$(MATHMAIN).tm
+$(MLOBJ): $(SDIR)/$(MATHMAIN).tm
 	$(MPREP) $? -o $(ODIR)/$(MATHMAIN)tm.cc
 	$(CC) -c -o $@ $(ODIR)/$(MATHMAIN)tm.cc $(CFLAGS) $(MATHINCS)
 
-$(ODIR)/$(MATHMAIN).o: $(MLDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
+$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
 	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
 
 .PHONY: clean
 
 clean:
-	rm -rf $(ODIR)/*  *~ core $(IDIR)/*~ $(MAIN)
-	rm -rf $(ODIR)/*  *~ core $(IDIR)/*~ $(MATHMAIN)
+	rm -rf $(ODIR)/*
+	rm -rf *~ core $(IDIR)/*~ 
+	rm -rf $(TOMBMAIN) $(GROUPMAIN) $(MATHMAIN)
 	rm -rf $(JSONDIR)/*.o $(JSONDIR)/*~
 	rm -rf $(MLDIR)/$(MATHMAIN)tm.cc
 	rm -rf $(MLDIR)/$(MATHMAIN)tm.o
