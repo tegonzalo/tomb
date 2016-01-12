@@ -1,0 +1,5 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "mathlink";
+CFBundleShortVersionString = "3.16";
+CFBundleGetInfoString = "MathLink version 3.24, Copyright 2013 Wolfram Research Inc.";

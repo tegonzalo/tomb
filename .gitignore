@@ -1,0 +1,10 @@
+# Ignore the build and models dirs
+build
+models
+
+# Ignore any executables
+./group
+./mathgroup
+
+# Ignore any temporary files
+*~

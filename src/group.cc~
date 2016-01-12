@@ -1,0 +1,183 @@
+/*
+ * main.cc
+ * Created by T.Gonzalo on 15/02/2012.
+ * Last modified on 12/07/2012..
+ */
+
+#include "liegroups.h"
+#include "files.h"
+
+
+int main(int argc, char *argv[]) {
+
+	try {
+				
+		int rank, maxdim = 20;
+		char type;
+		string id;
+		
+		switch(argc) {
+			case 2:
+				if(!strcmp(argv[1],"clean")) {
+					EmptyDirectory("./out");
+					return 0;
+				} else {
+					string s(argv[1]);
+					if(s.find('x') != string::npos) {
+						id = s;
+					} else {
+						type = argv[1][0];
+						char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
+						rank = atoi(auxstring);
+						free(auxstring);
+					}
+				}
+				break;
+				
+			case 3:
+				if(!strcmp(argv[1],"clean")) {
+					string dir = "./out/";
+					dir.append(argv[2]);
+					if(IsDirectory(dir)) {
+						DeleteDirectory(dir);
+						return 0;
+					} else {
+						throw "Directory does not exits";
+					}
+				} else {
+					type = argv[1][0];
+					char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
+					rank = atoi(auxstring);
+					free(auxstring);
+					maxdim = atoi(argv[2]);
+				}
+				break;
+				
+			case 4:
+				if(!strcmp(argv[1],"clean")) {
+					string dir = "./out/";
+					dir.append(argv[2]);
+					dir.append("/Reps/");
+					dir.append(argv[3]);
+					dir.append(".out");
+					if(FileExists(dir)) {
+						DeleteFile(dir);
+						return 0;
+					} else {
+						throw "File does not exits";
+					}
+				} else {
+					throw "Wrong syntax, see manual for further information";
+				}
+				break;
+				
+			default:
+				throw "Wrong syntax, see manual for further information";
+
+   		}
+
+		if(id.empty()) {
+			if(type != 'U' and type != 'A' and type != 'B' and type != 'C' and type != 'D' and type != 'E' and type != 'F' and type != 'G') {
+				throw "Group not valid";
+			}
+
+    		if(rank <= 0) {
+				throw "Rank must be a positive number";
+    		}
+			
+    		if(rank == 2 and type == 'D') {
+				throw "D2 is not a simple group";
+				return 1;
+    		}
+
+			if(rank >= 10) {
+				cout << "Rank is too high, are you sure you want to continue?(Y/N)" << endl;
+				char yesno;
+				cin >> yesno;
+				if(toupper(yesno) == 'N') {
+					return 1;
+				}
+			}
+		}
+		
+		if(maxdim <=0) {
+			throw "Dim must be a positive number";
+		}
+
+		if(id.empty()) {
+			
+			SimpleGroup G1(rank, type);
+			
+			id = G1.id();
+			
+		}
+
+		cout << "Group : " << id << endl;
+		LieGroup G(id);
+		//cout << G.json().write_formatted() << endl;
+
+		cout << "Calculating group info..." << endl;
+			
+		cout << "Casimir = " << G.Casimir() << endl;
+            
+		// Reps
+		List<Rrep> Reps = G.Reps(maxdim);
+		cout << "Reps = " << Reps << endl;
+
+		// Subgroups
+		List<SubGroup> MaximalSubgroups = G.MaximalSubgroups();
+		cout << "Maximal subgroups = " << MaximalSubgroups << endl;
+
+		//List<SubGroup> Subgroups = G.Subgroups();
+		//cout << "Subgroups = " << Subgroups << endl;
+		
+		
+		// Decomposition of reps
+/*		for(int j=0; j<Reps.nterms(); j++) {
+			for(int i=0; i<MaximalSubgroups.nterms(); i++) {
+				Sum<Rrep> reps = Reps.GetObject(j).Decompose(MaximalSubgroups.GetObject(i));
+				cout << Reps.GetObject(j) << "(" << G << ")" " -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << endl;
+			}
+		}
+*/		
+		// Breaking Chains
+/*		LieGroup SMGroup("A2xA1xU1");
+		cout << "Breaking chains of " << G << " to " << SMGroup << ":" << endl;
+		cout << G.BreakingChains(SMGroup) << endl;
+*/
+		// Product of reps
+/*		for(int i=0; i<Reps.nterms(); i++) {
+			for(int j=i; j<Reps.nterms(); j++) {
+				cout << Reps.GetObject(i) << " * " << Reps.GetObject(j) << " = " << Reps.GetObject(i)*Reps.GetObject(j) << endl;
+			}
+		}
+*/		
+		// Invariants
+/*		List<Rrep> ListofReps;
+		if(Reps.nterms() > 1) ListofReps.AddTerm(Reps.GetObject(1));
+		if(Reps.nterms() > 2) ListofReps.AddTerm(Reps.GetObject(2));
+		if(Reps.nterms() > 3) ListofReps.AddTerm(Reps.GetObject(3));
+		if(Reps.nterms() > 4) ListofReps.AddTerm(Reps.GetObject(4));
+		
+		
+		cout << "Calculating Invariants ... " << endl;
+		List<Product<Rrep> > Invariants = G.Invariants(ListofReps,4);
+		cout << "Invariants = " << Invariants << endl;
+*/
+		
+		return 1;
+		
+	} catch (exception &e) {
+		cerr << "Exception caught: " << e.what() << endl;
+	} catch (const string e) {
+		cerr << "Exception caught: " << e << endl;
+	} catch (const char *e) {
+		cerr << "Exception caught: " << e << endl;
+	} catch (...) {
+		cerr << "Exception caught: Unspecified exception" << endl;
+	}
+
+ }
+
+
+//#endif
