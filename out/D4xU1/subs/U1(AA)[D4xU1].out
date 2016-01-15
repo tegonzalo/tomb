@@ -1,0 +1,56 @@
+{
+	"rank" : 1,
+	"type" : "U",
+	"dim" : 1,
+	"order" : 1,
+	"label" : "U(1)",
+	"abelian" : true,
+	"Cartan" : [
+		[
+			1
+		]
+	],
+	"G" : [
+		[
+			1
+		]
+	],
+	"Casimir" : 0,
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Reps" : [],
+	"Subgroups" : [],
+	"id" : "U1(AA)[D4xU1]",
+	"SuperGroups" : [
+		{
+			"D4(A)" : [
+				{
+					"A1(AC)" : [
+						{
+							"U1(AC)" : []
+						}
+					]
+				}
+			]
+		},
+		{
+			"U1(B)" : []
+		}
+	],
+	"Projection" : [
+		[
+			0.5,
+			0,
+			0,
+			0,
+			0
+		]
+	],
+	"labels" : [
+		"AA"
+	],
+	"maximal" : false,
+	"regular" : true,
+	"special" : false
+}

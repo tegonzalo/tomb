@@ -1,0 +1,78 @@
+{
+	"rank" : 3,
+	"dim" : 5,
+	"label" : "SU(2)xU(1)xU(1)",
+	"simple" : false,
+	"semisimple" : false,
+	"ngroups" : 3,
+	"nabelians" : 2,
+	"Casimir" : [
+		2,
+		0,
+		0
+	],
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Reps" : [],
+	"Subgroups" : [],
+	"id" : "A1(AAA)xU1(AAC)xU1(B)[D4xU1]",
+	"SuperGroups" : [
+		{
+			"D4(A)" : [
+				{
+					"A3(AA)" : [
+						{
+							"A1(AAA)" : []
+						},
+						{
+							"U1(AAB)" : []
+						}
+					]
+				}
+			]
+		},
+		{
+			"U1(B)" : [
+				{
+					"U1(B)" : [
+						{
+							"U1(B)" : []
+						}
+					]
+				}
+			]
+		}
+	],
+	"Projection" : [
+		[
+			0,
+			0,
+			0,
+			1,
+			0
+		],
+		[
+			0,
+			1,
+			0.5,
+			0.5,
+			0
+		],
+		[
+			0,
+			0,
+			0,
+			0,
+			1
+		]
+	],
+	"labels" : [
+		"AAA",
+		"AAC",
+		"B"
+	],
+	"maximal" : false,
+	"regular" : true,
+	"special" : false
+}

@@ -1,0 +1,29 @@
+{
+	"id" : "(0,0,0,0,0)D4xU1",
+	"Group" : "D4xU1",
+	"HWeight" : [
+		[
+			0,
+			0,
+			0,
+			0,
+			0
+		]
+	],
+	"dim" : 1,
+	"real" : true,
+	"label" : "{1, 0.000}",
+	"nirreps" : 2,
+	"Casimir" : [
+		0,
+		0
+	],
+	"DynkinIndex" : [
+		0,
+		0
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,0,0,0,0)D4xU1"
+	]
+}

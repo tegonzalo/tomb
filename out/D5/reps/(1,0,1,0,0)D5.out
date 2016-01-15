@@ -1,0 +1,27 @@
+{
+	"id" : "(1,0,1,0,0)D5",
+	"Group" : "D5",
+	"HWeight" : [
+		[
+			1,
+			0,
+			1,
+			0,
+			0
+		]
+	],
+	"dim" : 945,
+	"real" : true,
+	"label" : "945",
+	"Casimir" : 16,
+	"DynkinIndex" : 336,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			0,
+			0
+		]
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

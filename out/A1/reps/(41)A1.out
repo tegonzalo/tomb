@@ -1,0 +1,22 @@
+{
+	"id" : "(41)A1",
+	"Group" : "A1",
+	"HWeight" : [
+		[
+			41
+		]
+	],
+	"dim" : 42,
+	"real" : true,
+	"label" : "42",
+	"Casimir" : 440.75,
+	"DynkinIndex" : 6170.5,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			1
+		]
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

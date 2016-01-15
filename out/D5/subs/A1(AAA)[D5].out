@@ -1,0 +1,57 @@
+{
+	"rank" : 1,
+	"type" : "A",
+	"dim" : 3,
+	"order" : 2,
+	"label" : "SU(2)",
+	"abelian" : false,
+	"Cartan" : [
+		[
+			2
+		]
+	],
+	"G" : [
+		[
+			0.5
+		]
+	],
+	"Casimir" : 2,
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Reps" : [],
+	"Subgroups" : [],
+	"id" : "A1(AAA)[D5]",
+	"SuperGroups" : [
+		{
+			"D5" : [
+				{
+					"A4(A)" : [
+						{
+							"A3(A)" : [
+								{
+									"A1(AA)" : []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"Projection" : [
+		[
+			0,
+			-1,
+			0,
+			0,
+			0
+		]
+	],
+	"labels" : [
+		"AAA"
+	],
+	"maximal" : false,
+	"regular" : true,
+	"special" : false
+}

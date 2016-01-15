@@ -16,6 +16,8 @@ namespace Tomb
 	
 	std::map<std::string, Rrep> Rrep::DataBase;
 	std::map<std::string, JSONNode> Rrep::JSONDataBase;
+	std::map<std::pair<std::string, std::string>, Sum<Rrep> > Rrep::DecomposeDataBase;
+	std::map<std::pair<std::string, std::string>, Sum<Rrep> > Rrep::ProductDataBase;
 	
 	bool Rrep::database_check(std::string id, std::string what) {
 		if(DataBase.find(id) != DataBase.end()) {
@@ -45,6 +47,10 @@ namespace Tomb
 	}
 	
 	// Member functions
+	
+	/* Constructor 0 */
+	Rrep::Rrep() {
+	}
 
 	/* Constructor 1*/
 	Rrep::Rrep(const LieGroup &Group, const Weight &HWeight) : List<Irrep>() {
@@ -246,9 +252,10 @@ namespace Tomb
 			}
 			
 			if(database_check(id())) {
+				//std::cout << "in the db " << DataBase.at(id()).nterms() << std::endl;
 				*this = DataBase.at(id());
 			} else {
-			
+				
 				_dim = 1;
 				_nirreps = 0;
 				int accumulated_rank = 0;
@@ -353,13 +360,12 @@ namespace Tomb
 		
 		try {
 			
-			
 			// If the weights have been calculated already take them
-			if(_Weights.nterms()) {
+			if(_Weights.nterms()) 
 				return _Weights;
-			}
 			
-			if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights()) {
+			if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights())
+			{
 				_Weights = DataBase.at(id()).Weights();
 				if(_Weights.nterms()) _hasWeights = true;
 				return _Weights;
@@ -391,7 +397,7 @@ namespace Tomb
 					terms *= thisterms;
 					int index = (i*terms/totalterms)%thisterms;
 					if(j==0) {
-						weight = Weight(this->Group(),ListofWeights.GetObject(0).GetObject(index));
+						weight = Weight(this->Group().GetObject(0),ListofWeights.GetObject(0).GetObject(index));
 					} else {	
 						//std::cout << weight << std::endl;
 						weight.Append(ListofWeights.GetObject(j).GetObject(index));
@@ -477,10 +483,9 @@ namespace Tomb
 
 	/* Checks whether the rep is a singlet */
 	bool Rrep::isSinglet() const {
-		
 		if(dim() == 1) {
 			for(int i=0; i<Group().nabelians(); i++) {
-				if(_HWeight[nterms()-i-1] != 0) return false;
+				if((*_HWeight)[-i-1] != 0) return false;
 			}
 
 			return true;
@@ -490,7 +495,8 @@ namespace Tomb
 	}
 
 	/* Projects the weights of a rrep into the weights of rreps of a subgroup */
-	List<Weight> Rrep::Project(SubGroup Subgroup) {
+	List<Weight> Rrep::Project(SubGroup Subgroup)
+	{
 		
 		try {
 			List<Weight> Weights = this->Weights();
@@ -515,7 +521,8 @@ namespace Tomb
 	}
 
 	/* Obtains the decomposition into rreps of a subgroup */
-	Sum<Rrep> Rrep::Decompose(SubGroup Subgroup) {
+	Sum<Rrep> Rrep::Decompose(SubGroup Subgroup)
+	{
 
 		try {
 			
@@ -523,6 +530,12 @@ namespace Tomb
 			//std::cout << "Weights = " << Weights()  << std::endl;
 			//std::cout << "Projection matrix" << std::endl << Subgroup.Projection() << std::endl;
 			Sum<Rrep> Reps;
+			
+			if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+			{
+				Reps = DecomposeDataBase.at(std::pair<std::string,std::string>(id(),Subgroup.id()));
+				return Reps;
+			}
 					
 			if(Subgroup.isSubgroupOf(this->Group())) {
 				List<Weight> ProjectedWeights = this->Project(Subgroup);
@@ -552,6 +565,8 @@ namespace Tomb
 							}
 						}
 					}
+					//std::cout << Subgroup << std::endl;
+					//std::cout << HWeight << std::endl;
 					Rrep Rep(Subgroup, HWeight);
 					//std::cout << "Rep = " << Rep << std::endl;
 					List<Weight> SubWeights = Rep.Weights();
@@ -572,6 +587,10 @@ namespace Tomb
 				throw "Rrep::Decompose::Not a subgroup";
 			}
 			
+			if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+				DecomposeDataBase.erase(std::pair<std::string,std::string>(id(),Subgroup.id()));
+			DecomposeDataBase.emplace(std::pair<std::string,std::string>(id(),Subgroup.id()), Reps);
+			
 			return Reps;
 
 		} catch (...) {
@@ -589,6 +608,12 @@ namespace Tomb
 
 			Sum<Rrep> ListofReps;
 			Sum<Rrep> ListofReps2;
+			
+			if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
+			{
+				ListofReps = ProductDataBase.at(std::pair<std::string,std::string>(id(),Rep.id()));
+				return ListofReps;
+			}
 
 			for(int i=0; i<nirreps(); i++) {
 				Sum<Irrep> Prod = GetObject(i)*Rep.GetObject(i);
@@ -608,6 +633,10 @@ namespace Tomb
 						ListofReps.AddTerm(Rrep(*it_Prod));
 				}
 			}
+			
+			if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
+				ProductDataBase.erase(std::pair<std::string,std::string>(id(),Rep.id()));
+			ProductDataBase.emplace(std::pair<std::string,std::string>(id(),Rep.id()), ListofReps);
 			
 			return ListofReps;
 
@@ -657,14 +686,34 @@ namespace Tomb
 		}
 	}
 
+	/* Overloaded == operator */
+	bool Rrep::operator==(const Rrep &R) const
+	{
+		return List<Irrep>::operator==(R);
+	}
+	
+	/* Overloaded != operator */
+	bool Rrep::operator!=(const Rrep &R) const
+	{
+		return !(*this == R);
+	}
+	
 	/* Overloaded > operator */
-	bool Rrep::operator>(Rrep R) {
+	bool Rrep::operator>(const Rrep &R) const {
 		
 		try {
-			if(this->dim() > R.dim()) {
+			if(this->dim() > R.dim())
+			{
 				return true;
-			} else if(this->dim() == R.dim() && this->GetObject(0).dim() > R.GetObject(0).dim()) {
-				return true;
+			} else if(this->dim() == R.dim())
+			{
+				for(int i=0; i<nterms(); i++)
+				{
+					if(GetObject(i) > R.GetObject(i))
+						return true;
+					else if(GetObject(i) < R.GetObject(i))
+						return false;
+				}
 			}
 			return false;
 		} catch (...) {
@@ -673,15 +722,12 @@ namespace Tomb
 	}
 
 	/* Overloaded < operator */
-	bool Rrep::operator<(Rrep R) {
+	bool Rrep::operator<(const Rrep &R) const {
 		
 		try {
-			if(this->dim() < R.dim()) {
-				return true;
-			} else if(this->dim() == R.dim() && this->GetObject(0).dim() < R.GetObject(0).dim()) {
-				return true;
-			}
-			return false;
+			if((*this)>R)
+				return false;
+			return true;
 		} catch (...) {
 			throw;
 		}
@@ -773,17 +819,22 @@ namespace Tomb
 			//increment the iterator
 			++i;
 		}
-			
-		int accumulated_rank = 0;
-		_nirreps = 0;
-		for(int i=0; i<Group().ngroups(); i++) {
-			RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + Group().GetObject(i).rank()-1).Row(0);
-			Weight HW(Group().GetObject(i), R);
-			Irrep aRep(Group().GetObject(i), HW);
-			this->AddTerm(aRep);
-			_nirreps ++;
-			accumulated_rank += Group().GetObject(i).rank();
+		
+		if(!nterms())
+		{
+			int accumulated_rank = 0;
+			_nirreps = 0;
+			for(int i=0; i<Group().ngroups(); i++)
+			{
+				RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + Group().GetObject(i).rank()-1).Row(0);
+				Weight HW(Group().GetObject(i), R);
+				Irrep aRep(Group().GetObject(i), HW);
+				this->AddTerm(aRep);
+				_nirreps ++;
+				accumulated_rank += Group().GetObject(i).rank();
+			}
 		}
+		
 
 	}
 

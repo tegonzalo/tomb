@@ -488,6 +488,7 @@ namespace Tomb
 			}*/
 			_Group.push_back('x');
 			_Group.append(w.Group());
+			
 			if(positive() and w.positive()) {
 				setPositive(true);
 			} else {

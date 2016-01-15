@@ -1,0 +1,23 @@
+{
+	"id" : "(4,2)A2",
+	"Group" : "A2",
+	"HWeight" : [
+		[
+			4,
+			2
+		]
+	],
+	"dim" : 60,
+	"real" : false,
+	"label" : "60",
+	"Casimir" : 15.333333,
+	"DynkinIndex" : 115,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			0
+		]
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

@@ -19,6 +19,7 @@
 #include "trees.h"
 #include "matrix.h"
 #include "libjson.h"
+#include "helper_functions.h"
 
 namespace Tomb 
 {
@@ -39,6 +40,16 @@ namespace Tomb
 #include "liegroup.h"
 #include "subgroup.h"
 
+namespace Tomb
+{
+	class Chain;
+}
+
+#include "field.h"
+
+#include "sm.h"
+
+#include "chain.h"
 #include "theory.h"
 #include "model.h"
 

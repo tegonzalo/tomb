@@ -48,10 +48,15 @@ int main(int argc, char *argv[]) {
 						throw "Directory does not exits";
 					}
 				} else {
-					type = argv[1][0];
-					char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
-					rank = atoi(auxstring);
-					free(auxstring);
+					std::string s(argv[1]);
+					if(s.find('x') != std::string::npos) {
+						id = s;
+					} else {
+						type = argv[1][0];
+						char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
+						rank = atoi(auxstring);
+						free(auxstring);
+					}
 					maxdim = atoi(argv[2]);
 				}
 				break;
@@ -145,7 +150,7 @@ int main(int argc, char *argv[]) {
 		}
 		
 		// Breaking Chains
-		LieGroup SMGroup("A2xA1xU1");
+/*		LieGroup SMGroup("A2xA1xU1");
 
 		std::cout << "Breaking chains of " << G << " to " << SMGroup << ":" << std::endl;
 		std::cout << G.BreakingChains(SMGroup) << std::endl;
@@ -174,7 +179,6 @@ int main(int argc, char *argv[]) {
 		std::cout << "Invariants = " << Invariants << std::endl;
 */
 		// Flush all the databases to files
-		
 		Tomb::database_flush();
 
 		return 1;

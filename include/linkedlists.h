@@ -22,6 +22,7 @@ namespace Tomb
 		public:
 			List();
 			List(const TYPE &);
+			List(const TYPE *, const TYPE *);
 			List(const List<TYPE> &);
 			List(const std::vector<TYPE> &);
 			List(List<TYPE> &&);
@@ -36,9 +37,9 @@ namespace Tomb
 			void AddTerm(const TYPE &);
 			void InsertTerm(int, const TYPE &);
 			void DeleteTerm(int);
-			void DeleteObject(const TYPE &);
+			int DeleteObject(const TYPE &, int = 0);
 			void SwapTerms(int, int);
-			void EliminateRepeated();
+			int EliminateRepeated();
 			bool Empty() const;
 			void Clear();
 			void AppendList(const List &);
@@ -46,6 +47,10 @@ namespace Tomb
 			void Reverse();
 			int Index(const TYPE &) const;
 			std::string Print() const;
+			
+			bool operator==(const List<TYPE> &) const;
+			bool operator!=(const List<TYPE> &) const;
+			
 			JSONNode json(std::string = "") const;
 			void ParseJSON(const JSONNode &);
 	};
@@ -105,6 +110,12 @@ namespace Tomb
 	{
 		
 	}
+	
+	/* Constructor with an iterator of objects */
+	template <class TYPE> List<TYPE>::List(const TYPE *first, const TYPE *last) : std::vector<TYPE>(first, last)
+	{
+		
+	}
 
 	/* Copy constructor 0 */
 	template <class TYPE> List<TYPE>::List(const List<TYPE> &otherList) : std::vector<TYPE>(otherList)
@@ -126,7 +137,7 @@ namespace Tomb
 	/* Class destructor */
 	template <class TYPE> List<TYPE>::~List()
 	{
-		//std::cout << "deleting list " << this << std::endl;
+		this->Clear();
 	}
 
 	/* Overloaded = operator */
@@ -254,13 +265,20 @@ namespace Tomb
 	}
 
 	/* Deletes a term of the List by term */
-	template <class TYPE> void List<TYPE>::DeleteObject(const TYPE &Object)
+	template <class TYPE> int List<TYPE>::DeleteObject(const TYPE &Object, int times)
 	{
 		try
 		{
+			int nerased = 0;
+			
 			typename List<TYPE>::iterator it;
-			while((it = std::find(this->begin(), this->end(), Object)) != this->end())
+			while((it = std::find(this->begin(), this->end(), Object)) != this->end()) {
 				this->erase(it);
+				nerased ++;
+				if(times and nerased >= times) return nerased;
+			}
+			
+			return nerased;
 		}
 		catch (...)
 		{
@@ -289,18 +307,22 @@ namespace Tomb
 	}
 
 	/* Eliminates repeated terms */
-	template <class TYPE> void List<TYPE>::EliminateRepeated()
+	template <class TYPE> int List<TYPE>::EliminateRepeated()
 	{
 		try
 		{
 			List<TYPE> auxList;
+			int nerased = 0;
 			while(this->nterms())
 			{
 				TYPE Object = this->GetObject(0);
 				auxList.AddTerm(Object);
-				this->DeleteObject(Object);
+				nerased += this->DeleteObject(Object);
+				nerased--;
 			}
 			*this = auxList;
+			
+			return nerased;
 		}
 		catch (...)
 		{
@@ -411,6 +433,18 @@ namespace Tomb
 		{
 			throw;
 		}
+	}
+	
+	/* Overloaded == operator */
+	template <class TYPE> bool List<TYPE>::operator==(const List<TYPE> &list) const
+	{
+		return (std::vector<TYPE>(*this) == std::vector<TYPE>(list));
+	}
+	
+	/* Overloaded != operator */
+	template <class TYPE> bool List<TYPE>::operator!=(const List<TYPE> &list) const
+	{
+		return !(*this == list);
 	}
 
 	/* Prints to json format */

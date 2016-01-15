@@ -17,26 +17,45 @@ namespace Tomb
 		protected:
 			
 			LieGroup _Group;
-			List<Tree<SimpleGroup> > _BreakingChain;
-			List<Rrep> _Reps;
+			Chain _BreakingChain;
+			List<Field> _Fields;
+			RVector<double> _Mixing;
 			bool _anomalyFree;
 			List<std::string> _protonDecay;
 			
 		public:
 			
-			Theory(LieGroup &, List<Tree<SimpleGroup> > &, List<Rrep> &);
+			Theory(LieGroup &, Chain &, List<Field> &);
 			Theory(const Theory &);
+			Theory(const JSONNode &);
 			Theory(Theory &&);
 			~Theory();
 			Theory &operator=(const Theory &);
 			Theory &operator=(Theory &&);
 			
 			LieGroup Group() const;
-			List<Tree<SimpleGroup> > BreakingChain() const;
-			List<Rrep> Reps() const;
+			Chain BreakingChain() const;
+			List<Field> Fields() const;
+			RVector<double> Mixing() const;
 			bool anomalyFree() const;
 			List<std::string> protonDecay() const;
+			
+			List<Field> getScalars() const;
+			List<Field> getFermions() const;
+			
+			bool operator==(const Theory &) const;
+			bool operator!=(const Theory &) const;
+			
+			List<Field> findBreakingReps(SubGroup &, const List<Field> & = List<Field>());
+			List<Sum<Field> > calculateBreaking(List<RVector<double> > &);
+			bool containsSM() const;
+			
+			JSONNode json() const;
+			void ParseJSON(const JSONNode &);
 	};
+	
+	
+	std::ostream &operator<<(std::ostream &, const Theory &);
 	
 }
 

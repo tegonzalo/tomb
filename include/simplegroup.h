@@ -93,7 +93,7 @@ namespace Tomb
 			static bool GroupExists(int, char);
 	};	
 
-	std::ostream &operator<<(std::ostream &, SimpleGroup);
+	std::ostream &operator<<(std::ostream &, const SimpleGroup &);
 
 //	std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
 }

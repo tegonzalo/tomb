@@ -220,7 +220,7 @@ namespace Tomb
 			_labels = mixlabels;
 			
 			// Change the supergroups
-			// Don't do it now, cause it's pain, maybe we won't need it
+			// Don't do it now, cause it's a pain, maybe we won't need it
 					
 			// Change the projection matrix
 			_Projection = 0;
@@ -627,20 +627,33 @@ namespace Tomb
 	}
 
 	/* Initialises some variables */
-	void SubGroup::init(const std::string id) {
+	void SubGroup::init(const std::string Id) {
 		
 		try {
 			
-			std::stringstream ss(id);
+			std::stringstream ss(Id);
 			
 			std::string SGstr, Gstr;
 			
 			getline(ss, Gstr, '[');
 			getline(ss, SGstr, ']');
 			
-			if(database_check(id)) {
+			if(Strings::split_string(Id,'+').nterms() > 1)
+			{
+				ss.str("");
+				ss << Strings::split_string(Id,'+').GetObject(0) << ")[" << SGstr << "]";
+			}
+			
+			getline(ss, Gstr, '[');
+			getline(ss, SGstr, ']');
+			
+			std::string id = ss.str();
+					
+			if(database_check(id))
+			{
 				*this = DataBase.at(id);
-			} else {
+			} else
+			{
 				LieGroup Supergroup(SGstr);
 				Supergroup.Order();
 				Supergroup.Subgroups();
@@ -680,7 +693,16 @@ namespace Tomb
 					}
 				}
 			}
-
+			if(Strings::split_string(Id,'+').nterms() > 1)
+			{
+				std::string label = Strings::split_string(Strings::split_string(Id,'(').GetObject(-1),')').GetObject(0);
+				
+				List<std::string> oldlabels = labels();
+				oldlabels.DeleteTerm(-1);
+				oldlabels.AddTerm(label);
+				setLabels(oldlabels);
+			}
+			
 		} catch (...) {
 			throw;
 		}
@@ -935,9 +957,12 @@ namespace Tomb
 	}
 
 	/* Deletes a subgroup of the Subgroup */
-	void SubGroup::DeleteTerm(int i) {
+	void SubGroup::DeleteTerm(int del) {
 
 		try {
+			int i = del;
+			if(del < 0)
+				i = nterms() + i;
 			int rank = 0;
 			for(int j=0; j<i; j++){
 				rank += GetObject(j).rank();

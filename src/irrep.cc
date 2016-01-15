@@ -4,7 +4,7 @@
  * Last modified on 10/11/2015
  */
 
- #include "headers.h"
+#include "headers.h"
 
 /**************************************************/
 /***************Class Irrep methods****************/
@@ -16,6 +16,8 @@ namespace Tomb
 	
 	std::map<std::string, Irrep> Irrep::DataBase;
 	std::map<std::string, JSONNode> Irrep::JSONDataBase;
+	std::map<std::pair<std::string, std::string>, Sum<Rrep> > Irrep::DecomposeDataBase;
+	std::map<std::pair<std::string, std::string>, Sum<Irrep> > Irrep::ProductDataBase;
 	
 	bool Irrep::database_check(std::string id, std::string what) {
 		if(DataBase.find(id) != DataBase.end()) {
@@ -688,11 +690,16 @@ namespace Tomb
 	Sum<Irrep> Irrep::operator*(Irrep R) {
 
 		try {
+			Sum<Irrep> Reps;
+			
+			if(ProductDataBase.find(std::pair<std::string,std::string>(id(),R.id())) != ProductDataBase.end())
+			{
+				Reps = ProductDataBase.at(std::pair<std::string,std::string>(id(),R.id()));
+				return Reps;
+			}
+			
 			int totaldim = this->dim()*R.dim();
 			int nreps = 0;
-
-			//Irrep Rep;
-			Sum<Irrep> Reps;
 
 			List<Weight> R1Weights = this->Weights();
 			List<Weight> R2Weights = R.Weights();
@@ -753,6 +760,10 @@ namespace Tomb
 
 			Reps.Order();
 
+			if(ProductDataBase.find(std::pair<std::string,std::string>(id(),R.id())) != ProductDataBase.end())
+				ProductDataBase.erase(std::pair<std::string,std::string>(id(),R.id()));
+			ProductDataBase.emplace(std::pair<std::string,std::string>(id(),R.id()), Reps);
+			
 			return Reps;
 			
 		} catch (...) {
@@ -892,6 +903,12 @@ namespace Tomb
 			
 			//std::cout << "decomposing " << *this << " into " << Subgroup << std::endl;
 			Sum<Rrep> Reps;
+			
+			if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+			{
+				Reps = DecomposeDataBase.at(std::pair<std::string,std::string>(id(),Subgroup.id()));
+				return Reps;
+			}
 		
 			if(Subgroup.isSubgroupOf(this->Group())) {
 				List<Weight> ProjectedWeights = this->Project(Subgroup);
@@ -958,6 +975,11 @@ namespace Tomb
 			if(dim != this->dim()) {
 				throw "Irrep::Decompose::Dimension of the result doesn't match the dimension of the rep";
 			}
+			
+			if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+				DecomposeDataBase.erase(std::pair<std::string,std::string>(id(),Subgroup.id()));
+			DecomposeDataBase.emplace(std::pair<std::string,std::string>(id(),Subgroup.id()), Reps);
+			
 			return Reps;
 
 		} catch (...) {

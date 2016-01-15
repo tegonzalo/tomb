@@ -1726,6 +1726,8 @@ namespace Tomb
 
 	/* Overloaded [] operator */
 	template <class TYPE> TYPE &CVector<TYPE>::operator[](int i) const {
+		if(i<0)
+			return this->_M[this->rows()+i][0];
 		return this->_M[i][0];
 	}
 
@@ -2010,8 +2012,11 @@ namespace Tomb
 	}
 
 	/* Overloaded [] operator */
-	template <class TYPE> TYPE &RVector<TYPE>::operator[](int i) const{
-	return this->_M[0][i];
+	template <class TYPE> TYPE &RVector<TYPE>::operator[](int i) const
+	{
+		if(i<0)
+			return this->_M[0][this->cols()+i];
+		return this->_M[0][i];
 	}
 
 	/* Overloaded = operator */

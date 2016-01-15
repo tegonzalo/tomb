@@ -1,0 +1,22 @@
+{
+	"id" : "(0.25)U1",
+	"Group" : "U1",
+	"HWeight" : [
+		[
+			0.25
+		]
+	],
+	"dim" : 1,
+	"real" : true,
+	"label" : "0.250",
+	"Casimir" : 0.0625,
+	"DynkinIndex" : 0.0625,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			0
+		]
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

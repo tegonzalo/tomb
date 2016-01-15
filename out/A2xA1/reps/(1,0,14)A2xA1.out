@@ -1,0 +1,25 @@
+{
+	"id" : "(1,0,14)A2xA1",
+	"Group" : "A2xA1",
+	"HWeight" : [
+		[
+			1,
+			0,
+			14
+		]
+	],
+	"dim" : 45,
+	"real" : false,
+	"label" : "{3, 15}",
+	"nirreps" : 2,
+	"Casimir" : [
+		1.333333,
+		56
+	],
+	"DynkinIndex" : [
+		7.5,
+		840
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

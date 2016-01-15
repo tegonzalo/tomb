@@ -13,7 +13,6 @@ namespace Tomb
 {
 	class Model : public List<Theory>
 	{
-		
 		protected:
 			
 			int _nsteps;
@@ -21,6 +20,7 @@ namespace Tomb
 			
 		public:
 			
+			Model();
 			Model(Theory);
 			Model(const Model &);
 			Model(const List<Theory> &);
@@ -32,8 +32,11 @@ namespace Tomb
 			
 			int nsteps() const;
 			List<double> scales() const;
+			
+			List<Model> generateModels(int = 0, int = 0, bool = false);
 	};
 	
+	std::ostream &operator<<(std::ostream &, const Model &);
 }
 
 #endif /* __MODEL_H */

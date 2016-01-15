@@ -30,6 +30,8 @@ namespace Tomb
 			
 			static std::map<std::string, Irrep> DataBase;
 			static std::map<std::string, JSONNode> JSONDataBase;
+			static std::map<std::pair<std::string, std::string>, Sum<Rrep> > DecomposeDataBase;
+			static std::map<std::pair<std::string, std::string>, Sum<Irrep> > ProductDataBase;
 			
 			bool database_check(std::string, std::string = "");
 			void database_emplace(std::string, Irrep);

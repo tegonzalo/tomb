@@ -1877,7 +1877,7 @@ namespace Tomb
 	}
 
 	/* Overloaded << operator with simple groups on the right */
-	std::ostream &operator<<(std::ostream &stream, SimpleGroup g) {
+	std::ostream &operator<<(std::ostream &stream, const SimpleGroup &g) {
 		stream << g.label();
 		return stream;
 	}

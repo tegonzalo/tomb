@@ -28,10 +28,13 @@ namespace Tomb
 			
 			static std::map<std::string, Rrep> DataBase;
 			static std::map<std::string, JSONNode> JSONDataBase;
+			static std::map<std::pair<std::string, std::string>, Sum<Rrep> > DecomposeDataBase;
+			static std::map<std::pair<std::string, std::string>, Sum<Rrep> > ProductDataBase;
 			
 			bool database_check(std::string, std::string = "");
 			void database_emplace(std::string, Rrep);
 			
+			Rrep();
 			Rrep(const LieGroup &, const Weight &);
 			Rrep(const SubGroup &, const Weight &);
 			Rrep(const Irrep &);
@@ -65,8 +68,10 @@ namespace Tomb
 			Sum<Rrep> operator*(Rrep);
 			static Sum<Rrep> Product(List<Rrep> &);
 			bool hasSinglet() const;
-			bool operator>(Rrep);
-			bool operator<(Rrep);
+			bool operator==(const Rrep &) const;
+			bool operator!=(const Rrep &) const;
+			bool operator>(const Rrep &) const;
+			bool operator<(const Rrep &) const;
 			JSONNode json(std::string = "") const;
 			void ParseJSON(const JSONNode &n, std::string ="");
 		

@@ -5,18 +5,20 @@
  */
 
 #include "headers.h"
-//#include "files.h"
-//#include "group_database.h"
+#include "files.h"
+#include "group_database.h"
 
 using namespace Tomb;
 
-bool parsearguments(int argc, char *argv[]) 
+bool parsearguments(int argc, char *argv[], std::string &filename) 
 {
 	try {
 		if(argc != 3) return false;
 		
-		//if(!strcmp(argv[1],"-f") and Files::FileExists(std::string(argv[2])))
-		//	return true;
+		filename = argv[2];
+		
+		if(!strcmp(argv[1],"-f") and Files::FileExists(filename))
+			return true;
 		
 		return false;
 		
@@ -33,9 +35,31 @@ void die()
 int main(int argc, char *argv[])
 {
 	try {
-
-		if(parsearguments(argc, argv)) {
-			std::cout << "Good arguments" << std::endl;
+		
+		std::string filename;
+		
+		if(parsearguments(argc, argv, filename)) {
+			
+			JSONNode json = libjson::parse(Files::ReadFileString(filename));
+			
+			JSONNode::iterator i = json.begin();
+			while(i != json.end() and i->name() != "Data") i++;
+			
+			// Pull all the available info from the database first of all
+			Tomb::database_fill();
+			
+			std::cout << "DataBases loaded" << std::endl;
+			
+			Theory theory(*i);
+			Model model(theory);
+			
+			List<Model> models = model.generateModels();
+			
+			std::cout << models << std::endl;
+			
+			// Flush all the databases to files
+			Tomb::database_flush();
+			
 		} else {
 			die();
 		}
