@@ -21,12 +21,8 @@ namespace Tomb
 		try {
 			_Group = Group;
 			_BreakingChain = BreakingChain;
-			for(int i=0; i<Fields.nterms(); i++)
-				std::cout << Fields.GetObject(i).nterms() << std::endl;
 			_Fields = Fields;
-			std::cout << _Fields <<std::endl;
 			_Fields.Order();
-			std::cout << _Fields <<std::endl;
 			_Mixing = RVector<double>();
 			_anomalyFree = true;
 			_protonDecay.Clear();
@@ -108,7 +104,8 @@ namespace Tomb
 	}
 
 	/* Move assignment operator */
-	Theory &Theory::operator=(Theory &&T) {
+	Theory &Theory::operator=(Theory &&T)
+	{
 		
 		try {
 			if(this == &T) return *this;
@@ -135,31 +132,172 @@ namespace Tomb
 	
 	
 	/* Group getter */
-	LieGroup Theory::Group() const {
+	LieGroup Theory::Group() const
+	{
 		return _Group;
 	}
 	
 	/* Breaking chain getter */
-	Chain Theory::BreakingChain() const {
+	Chain Theory::BreakingChain() const
+	{
 		return _BreakingChain;
 	}
 	
 	/* Fields getter */
-	List<Field> Theory::Fields() const {
+	List<Field> Theory::Fields() const
+	{
 		return _Fields;
 	}
 	
 	/* Mixing getter */
-	RVector<double> Theory::Mixing() const {
+	RVector<double> Theory::Mixing() const
+	{
 		return _Mixing;
 	}
+	
+	/* Mixing setter */
+	void Theory::setMixing(RVector<double> mixing)
+	{
+		_Mixing = mixing;
+	}
 
-	/* anomalyFre getter */
+	/* Returns whether the theory is chiral or not */
+	bool Theory::chirality() const
+	{
+		try
+		{
+			if(_Group.nterms() == 1)
+			{
+				if(!(_Group.GetObject(0).type() == 'A' and _Group.rank() > 1) and !(_Group.GetObject(0).type() == 'D' and _Group.rank()%2 != 0))
+					return false;
+				else
+				{
+					int nfields = 0;
+					for(auto it=_Fields.begin(); it != _Fields.end(); it++)
+						if(it->isFermion() and !it->real())
+							nfields += it->dim();
+					if(nfields >= 45)
+						return true;
+					return false;
+				}
+			}
+			else
+			{
+				int nfields = 0;
+				for(auto it=_Fields.begin(); it != _Fields.end(); it++)
+				{
+					bool real = true;
+					for(int i = 0; i != it->nterms() and real; i++) {
+						if((_Group.GetObject(i).abelian() and it->GetObject(i).HWeight()!=0) or (!_Group.GetObject(i).abelian() and !it->GetObject(i).real()))
+							real = false;
+					}
+					if(it->isFermion() and !real){
+						nfields += it->dim();}
+				}
+				if(nfields >= 45)
+					return true;
+				return false;
+			}
+					
+		} catch (...)
+		{
+			throw;
+		}
+	}
+
+	/* Anomaly getter */
 	bool Theory::anomalyFree() const {
 		return _anomalyFree;
 	}
 	
-	/* protonDecay getter */
+	/* Calculate the anomaly contribution */
+	void Theory::calculateAnomaly()
+	{
+		try
+		{
+			List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(_Group, 3, true, true);
+			//std::cout << tdgroups << std::endl;
+	
+			// Create an abelian group to compare with
+			SimpleGroup abelian("U1");
+			
+			// Default anomaly
+			_anomalyFree = true;
+			
+			//std::cout << _Fields.json().write_formatted() << std::endl;
+		
+			for(List<List<SimpleGroup> >::iterator it = tdgroups.begin(); it != tdgroups.end(); it++)
+			{
+				//std::cout << *it << std::endl;
+				double anomaly = 0;
+				switch(std::count(it->begin(), it->end(), abelian))
+				{
+					case 0:
+						if(it->GetObject(0) == it->GetObject(1) and it->GetObject(0) == it->GetObject(2))
+							if((it->GetObject(0).type() == 'A' and it->GetObject(0).rank() > 1) or (it->GetObject(0).type() == 'D' and it->GetObject(0).rank() == 3))
+							{
+								//Calculate the anomaly for a general gauge group, MISSING 
+								for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
+								{
+									Irrep rep = it_fields->GetObject(it_fields->Group().Index(it->GetObject(0)));
+									if(rep.real())
+										switch(it->GetObject(0).rank())
+										{
+											case 2:
+												// SU(3)
+												if(rep.dim() == 3)
+													anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+												break;
+											case 3:
+												// SU(4)
+												if(rep.dim() == 4)
+													anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+												break;
+											case 5:
+												// SU(5)
+												if(rep.dim() == 5)
+													anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+												else if(rep.dim() == 10)
+													anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+												break;
+										}
+								}
+							}
+						break;
+					case 1: 
+						// Only works if there is one abelian component and it's at the end
+						if(it->GetObject(0) == it->GetObject(1))
+							for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
+								if(!it_fields->isSinglet(it_fields->Group().Index(it->GetObject(0))))
+									anomaly += it_fields->dim()*it_fields->HWeight()[-1];
+						break;
+					case 2:
+						anomaly = 0;
+						break;
+					case 3:
+						// Only works if there is one abelian component and it's at the end
+						for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
+						{
+							//std::cout << *it_fields <<  std::endl;
+							//std::cout <<  (it_fields->dim()*pow(it_fields->HWeight()[-1],3)) << std::endl;
+							anomaly += it_fields->dim()*pow(it_fields->HWeight()[-1],3);
+							//std::cout << anomaly << std::endl;
+						}
+						break;
+				}
+				
+				//std::cout << "anomaly = " << anomaly << std::endl;
+				if(fabs(anomaly) > 0.001)
+					_anomalyFree = false;
+			}
+			// Maybe add gravitational and Witten anomalies
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Proton decay getter */
 	List<std::string> Theory::protonDecay() const {
 		return _protonDecay;
 	}
@@ -193,7 +331,12 @@ namespace Tomb
 	/* Overloaded == operator */
 	bool Theory::operator==(const Theory &theory) const 
 	{
-		if(Group() == theory.Group() and BreakingChain() == theory.BreakingChain() and Fields() == theory.Fields())
+		if(Group() == theory.Group() and 
+			BreakingChain() == theory.BreakingChain() and 
+			Fields() == theory.Fields() and
+			Mixing() == theory.Mixing() and
+			anomalyFree() == theory.anomalyFree() and
+			protonDecay() == protonDecay())
 			return true;
 		return false;
 	}
@@ -259,19 +402,19 @@ namespace Tomb
 
 			// If there is a + character in the subgroup, there is U(1) mixing
 			if(subgroup.id().find("+") != std::string::npos) {
-			
+							
 				SubGroup auxsubgroup = subgroup;
 				auxsubgroup.DeleteTerm(-1);
 				SubGroup semisimplesubgroup(auxsubgroup.id());
 				
 				breakingreps = findBreakingReps(semisimplesubgroup, scalars);
 				
-				std::cout << semisimplesubgroup << std::endl;
-				std::cout << breakingreps << std::endl;
+				//std::cout << semisimplesubgroup << std::endl;
+				//std::cout << breakingreps << std::endl;
    
 				// Calculate the Mixing of the U(1)s
 				List<std::string> labels = Strings::split_string(subgroup.labels().GetObject(-1), '+');
-				std::cout << labels << std::endl;
+				//std::cout << labels << std::endl;
 				for(auto j=breakingreps.begin(); j!=breakingreps.end(); j++)
 				{
 					List<double> charges;
@@ -308,7 +451,7 @@ namespace Tomb
 					Sum<Field> subrep;
 					for(List<Field>::iterator it_fields = fields.begin(); it_fields != fields.end(); it_fields++)
 					{
-						Sum<Field> auxsubrep = it_fields->Decompose(subgroup);
+						Sum<Field> auxsubrep = it_fields->Decompose(newsubgroup);
 						subrep.AppendList(auxsubrep);
 					}
 					subreps.AddTerm(subrep);
@@ -332,7 +475,6 @@ namespace Tomb
 					subrep.AppendList(auxsubrep);
 				}
 				subreps.AddTerm(subrep);
-				mixings.AddTerm(RVector<double>(Group().rank() - subgroup.rank() + 1));
 			}
 
 			
@@ -353,50 +495,115 @@ namespace Tomb
 			List<Field>::const_iterator pos = _Fields.begin();
 			while(pos != _Fields.end() and (pos->dim() != 1 or pos->HWeight()[-1] == 0 or !pos->isFermion())) pos++;
 			double norm = pos->HWeight()[-1]/StandardModel::e.HWeight()[-1];
-			std::cout << norm << std::endl;
 
-			List<Field> SMReps;
 			for(List<Field>::const_iterator it = StandardModel::Reps.begin(); it != StandardModel::Reps.end(); it++)
 			{
 				Weight HW = it->HWeight();
 				HW[-1]*= norm;
-				SMReps.AddTerm(Field(Rrep(StandardModel::Group, HW),it->LorentzRep()));
+				Field SMRep(Rrep(StandardModel::Group, HW), it->LorentzRep()); 
+				if(_Fields.Index(SMRep) == -1)
+					return false;
 			}
-			std::cout << SMReps << std::endl;
-			std::cout << _Fields << std::endl;
 			
-			/*
-
-SMReps = Table[
-   Charge = 
-    SetAccuracy[Attribute[SMreps[[i]]]["HWeight"][[1, -1]]*Norm, 6];
-   Id = StringSplit[Attribute[SMreps[[i]]]["id"], ","];
-   Id = Id[[1]] <> ", " <> Id[[2]] <> ", " <> Id[[3]] <> "," <> 
-     ToString[Charge] <> ")A2xA1xU1";
-   (*Print[Id];
-   Print[Attribute[SMreps[[i]]]["type"]];*)
-   
-   NewRep[Id, Attribute[SMreps[[i]]]["type"]],
-   {i, Length[SMreps]}];
-
-If[OptionValue[PrintOut],
-  Print[SMReps];
-  Print[Reps];
-  ];
-If[Length[SMReps] > Length[Reps], Return[False]];
-
-(* Check if the SM is contained *)
-Deleted = 0;
-Do[
-  Pos = FirstPosition[Reps, SMReps[[i]]];
-  If[OptionValue[PrintOut], Print[Pos]];
-  If[Head[Pos] === Missing, Return[False];, Reps = Delete[Reps, Pos];];
-  Deleted++;,
-  {i, Length[SMReps]}];
-If[Deleted != Length[SMReps], Out = False; Return[False]];*/
-
 			return true;
 			
+		} catch (...)
+		{
+			throw;
+		}
+	}
+
+	/* Normalise the field content to SM normalisation */
+	double Theory::normaliseToSM() 
+	{
+		try
+		{
+			// If the group is not the SM or the field content does not contain the SM fields, return 0
+			if(Group() != StandardModel::Group or !containsSM())
+				return 0;
+			
+			
+			// Recast the hypercharge normalisation of the SMreps
+			List<Field>::const_iterator pos = _Fields.begin();
+			while(pos != _Fields.end() and (pos->dim() != 1 or pos->HWeight()[-1] == 0 or !pos->isFermion())) pos++;
+			double norm = sqrt(3./5)*StandardModel::e.HWeight()[-1]/pos->HWeight()[-1];
+
+			List<Field> fields;
+			for(List<Field>::const_iterator it = _Fields.begin(); it != _Fields.end(); it++)
+			{
+				Weight w = it->HWeight();
+				w[-1] *= norm; 
+				fields.AddTerm(Field(Rrep(it->Group(), w), it->LorentzRep()));
+				
+
+			}
+			_Fields.Clear();
+			_Fields = fields;
+			
+			return norm;
+		}
+		catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Normalises the mixing */
+	double Theory::normaliseMixing(double norm)
+	{
+		try
+		{
+			if(_Mixing == 0)
+				return 0;
+			
+			_Mixing *= norm;
+			
+			// If there is a U1, find which of the mixing entries corresponds to it and renormalise its mixing to force a^2 + b^2 = 1
+			if(_Group.nabelians())
+			{
+				List<std::string> labels = Strings::split_string(_BreakingChain.GetObject(-1).Branch(-1).label(),'+');
+				List<int> indices;
+				double norm2 = 1;
+				for(auto it_BC = _BreakingChain.begin(); it_BC != _BreakingChain.end() and norm2 == 1; it_BC++)
+				{
+					int index = labels.Index(it_BC->label());
+					if(index != -1 and it_BC->Object().abelian())
+					{
+						if(_Mixing[index] != 0)
+						{
+							norm2 = _Mixing[index];
+							_Mixing[index] = sqrt(1.-pow(_Mixing[-index-1],2));
+							norm2 /= _Mixing[index];
+						}
+					}
+				}
+				return norm2;
+			}
+			
+			return 0;
+ 
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Normalise the reps with given normalisation */
+	double Theory::normaliseReps(double norm)
+	{
+		try
+		{
+			List<Field> fields;
+			for(List<Field>::const_iterator it = _Fields.begin(); it != _Fields.end(); it++)
+			{
+				Weight w = it->HWeight();
+				w[-1] *= norm; 
+				fields.AddTerm(Field(Rrep(it->Group(), w), it->LorentzRep()));
+				
+
+			}
+			_Fields.Clear();
+			_Fields = fields;
 		} catch (...)
 		{
 			throw;
@@ -411,6 +618,9 @@ If[Deleted != Length[SMReps], Out = False; Return[False]];*/
 		json.push_back(JSONNode("Group", _Group.id()));
 		json.push_back(_BreakingChain.json("BreakingChain"));
 		json.push_back(_Fields.json("Fields"));
+		if(_Mixing != 0)
+			json.push_back(_Mixing.json("Mixing"));
+		json.push_back(JSONNode("AnomalyFree", _anomalyFree));
 		
 		return json;
 	}
@@ -424,12 +634,25 @@ If[Deleted != Length[SMReps], Out = False; Return[False]];*/
 			std::string node_name = i->name();
 
 			// find out where to store the values
-			if(node_name == "Group") {
+			if(node_name == "Group")
+			{
 				_Group = LieGroup(i->as_string());
-			} else if(node_name =="BreakingChain") {
+			}
+			else if(node_name =="BreakingChain")
+			{
 				_BreakingChain.ParseJSON(*i);
-			} else if(node_name == "Fields") {
+			}
+			else if(node_name == "Fields")
+			{
 				_Fields.ParseJSON(*i);
+			}
+			else if(node_name == "Mixing")
+			{
+				_Mixing.ParseJSON(*i);
+			}
+			else if(node_name == "AnomalyFree")
+			{
+				_anomalyFree = i->as_bool();
 			}
 		}
 	}

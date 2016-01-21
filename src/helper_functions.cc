@@ -4,7 +4,7 @@
  * Last modified on 14/01/16
  */
 
-#include "linkedlists.h"
+#include "headers.h"
 
 namespace Tomb
 {
@@ -26,5 +26,38 @@ namespace Tomb
 
 		}
 	
+	}
+	
+	namespace Combinatorics
+	{
+		template<typename TYPE> List<List<TYPE> > permutations(List<TYPE> list, int n, bool repetitions, bool order)
+		{
+			List<List<TYPE> > result;
+
+			for(typename List<TYPE>::iterator it = list.begin(); it != list.end(); it++)
+			{
+				if(n ==1) result.AddTerm(*it);
+				else
+				{
+					List<List<TYPE> > perms = permutations(list, n-1);
+					for(typename List<List<TYPE> >::iterator it2 = perms.begin(); it2 != perms.end(); it2++)
+					{
+						if(!repetitions and it2->Index(*it) != -1)
+							continue;
+						List<TYPE> aux(*it);
+						aux.AppendList(*it2);
+						if(order)
+							aux.Order();
+						if(result.Index(aux) == -1)
+							result.AddTerm(aux);
+					} 
+				}
+			}
+				
+			return result;
+		}
+		
+		
+		template List<List<SimpleGroup> > permutations(List<SimpleGroup>, int, bool, bool);
 	}
 }

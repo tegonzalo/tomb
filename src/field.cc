@@ -264,7 +264,7 @@ namespace Tomb
 	}
 	
 	/* Decompose the field into subfields of the subgroup */
-	Sum<Field> Field::Decompose(SubGroup subgroup)
+	Sum<Field> Field::Decompose(SubGroup &subgroup)
 	{
 		try
 		{

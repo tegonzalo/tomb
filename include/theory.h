@@ -19,7 +19,7 @@ namespace Tomb
 			LieGroup _Group;
 			Chain _BreakingChain;
 			List<Field> _Fields;
-			RVector<double> _Mixing;
+			RVector<double>  _Mixing;
 			bool _anomalyFree;
 			List<std::string> _protonDecay;
 			
@@ -36,8 +36,13 @@ namespace Tomb
 			LieGroup Group() const;
 			Chain BreakingChain() const;
 			List<Field> Fields() const;
+			
 			RVector<double> Mixing() const;
+			void setMixing(RVector<double>);
+			
+			bool chirality() const;
 			bool anomalyFree() const;
+			void calculateAnomaly();
 			List<std::string> protonDecay() const;
 			
 			List<Field> getScalars() const;
@@ -49,6 +54,9 @@ namespace Tomb
 			List<Field> findBreakingReps(SubGroup &, const List<Field> & = List<Field>());
 			List<Sum<Field> > calculateBreaking(List<RVector<double> > &);
 			bool containsSM() const;
+			double normaliseToSM();
+			double normaliseMixing(double);
+			double normaliseReps(double);
 			
 			JSONNode json() const;
 			void ParseJSON(const JSONNode &);

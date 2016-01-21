@@ -19,7 +19,6 @@
 #include "trees.h"
 #include "matrix.h"
 #include "libjson.h"
-#include "helper_functions.h"
 
 namespace Tomb 
 {
@@ -31,6 +30,8 @@ namespace Tomb
 	class Irrep;
 	class Rrep;
 }
+
+#include "helper_functions.h"
 
 #include "root.h"
 #include "weight.h"

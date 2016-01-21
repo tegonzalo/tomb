@@ -153,7 +153,6 @@ namespace Tomb
 	List<Model> Model::generateModels(int nReps, int startAt, bool printToFile) {
 		
 		try {
-  
 			Theory theory = GetObject(0);
 			
 			Chain chain = theory.BreakingChain();
@@ -167,10 +166,13 @@ namespace Tomb
 			List<Model> models;
 			models.AddTerm(Model(theory));
     
+			// Count the number of successes
+			int success = 0;
+			
 			for(int l = 0; l < depth; l++) { // l
    
 				int step = l;
-				std::cout << "step = " << step << std::endl;
+				//std::cout << "step = " << step << std::endl;
 				int count = 0;
    
 				chain = subchain;
@@ -188,38 +190,42 @@ namespace Tomb
 					
       
 					// Check constraints
-//					if(model.checkChirality())
-//						continue;
+					if(!theory.chirality())
+					{
+						std::cerr << "Theory is not chiral" << std::endl;
+						continue;
+					}
 					
 					// Check if it is last step, and if so, check for SM content and exit
 					if(chain.depth() == 1 and group == StandardModel::Group) { 
-						std::cout << "last step" << std::endl;
+						//std::cout << "last step" << std::endl;
 						
 						if(theory.containsSM())
 						{
+							//std::cout << "contains sm" << std::endl;
 							// Check for anomaly cancellation and proton decay
-	/*anomaly = AnomalyCancellation[reps];
-        AppendTo[model[[-1]], "AnomalyFree" -> anomaly];
-        model = ProtonDecay[model];*/
+							//std::cout << theory << std::endl;
+							theory.calculateAnomaly();
+							//model = ProtonDecay[model];*/
 							model.DeleteTerm(-1);
 							model.AddTerm(theory);
 							if(newmodels.Index(model) == -1)
 								newmodels.AddTerm(model);
-							//success++;
+							success++;
 							
 							// For every successful model calculate the rges and print to file
 	/*rges = getRGEs[gauge][model];
         
         If[OptionValue[PrintFile], 
          PrintToFile[{"Model" -> model, "RGEs" -> rges}]];*/
-						} 
-						exit(0);			
+						}
 						continue;
 					}
       
       
 					// If it is not the last step, calculate the subgroup and subchain
 					subgroup = subgroups.GetObject(l+1);
+					//std::cout << "subgroup = " << subgroup << std::endl;
 					
 					// Build the subchain
 					subchain.Clear();
@@ -227,87 +233,51 @@ namespace Tomb
 						subchain.AppendList(chain.GetObject(j).Branches());
 					subchain.calculateDepth();
 					
-					//Calculate the breaking, obtaining the subreps at the end
+					//Calculate the breaking, obtaining the subreps and mixings at the end
 					List<RVector<double> > mixings;
 					List<Sum<Field> > subreps = theory.calculateBreaking(mixings);
 					//std::cout << subreps << std::endl;
-					
+										
 					// Loop over number of subreps, i.e. breaking options 
 					for(int k=0; k<subreps.nterms(); k++) {
-						
 						List<Field> subrep = subreps.GetObject(k);
-						RVector<double> mixing = mixings.GetObject(k);
-  //   norm = 1;
-						// Check if the next step is last step, and if so, check for SM content
+						Theory subtheory = Theory(subgroup, subchain, subrep);
+						Theory newtheory(theory);
+						Model newmodel(model);
+						//std::cout << newmodel << std::endl;
+
+						// Check if the next step is last step, and if so, check for SM content and normalise
 						if(subchain.depth() == 1 and subrep.GetObject(0).Group() == StandardModel::Group)
 						{
- /*If[
-                
-        If[ContainsSM[subrep],
-          (*Print["is sm"];*)
-          If[OptionValue[KeepTiming],
-           time3 = SessionTime[];
-           
-           If[time3 - time2 > maxinstime, maxinstime = time3 - time2; 
-            maxinstimebit = "ContainsSM"];
-           Print["ContainsSM: ", time3 - time2];
-           ];
-          
-          {subrep, norm} = NormaliseRepstoSM[subrep];
-          
-          
-          If[OptionValue[PrintOut], Print["CONTAINS SM"]];,
-          If[OptionValue[PrintOut],
-           Print["NO SM: MODEL UNSUCCESSFUL"];
-           ];
-          Continue[];
-          ];
-        ];*/
+							if(subtheory.containsSM())
+							{
+								double norm = subtheory.normaliseToSM();
+								subrep = subtheory.Fields();
+								
+								// Add normalisation, mixing and anomaly to the previous step (ONLY WORKS FOR THE STEP BEFORE SM)
+								if(mixings.nterms() > k and norm != 1)
+								{
+									newtheory.setMixing(mixings.GetObject(k));
+									norm = newtheory.normaliseMixing(norm);
+								}
+								//std::cout << newtheory << std::endl;
+								newtheory.normaliseReps(norm);
+
+								
+							} else
+								continue;
 						}
-            
-      /*
-
-       
-       
-       
-       
-       
-       
-       (* Add normalisation, 
-       mixing and anomaly to the previous step (ONLY WORKS FOR THE \
-STEP BEFORE SM) *)
-       
-       If[Length[StringCases[group, "U1"]] > 0 && norm != 1,
-        If[! (Head[mixing] === String),
-         {mixing, norm} = 
-           NormaliseMixing[group, subgroup, mixing, norm];
-         ];
-        
-        newreps = NormaliseReps[reps, norm];
-
-        model = Delete[model, -1];
-        model = 
-         Append[model, NewTheory[group, chain, newreps, norm]];
-        ];
-       
-       If[! (Head[mixing] === String),
-        AppendTo[model[[-1]], "Mixing" -> mixing];
-        ];
-
-       (* 
-       Calculate the anomaly contribution of the newly renormalised \
-reps *)
-       anomaly = AnomalyCancellation[reps];
-       AppendTo[model[[-1]], "AnomalyFree" -> anomaly];
-       
-       If[OptionValue[KeepTiming],
-        time3 = SessionTime[];
-        If[time3 - time2, maxinstime, maxinstime = time2 - time0; 
-         maxinstimebit = "/anomaly"];
-        Print["anomaly: ", time3 - time2];
-        ];
-  */     
-       //Generate all possible combiations of reps
+						// Calculate the anomaly contribution of the newly renormalised reps
+						newtheory.calculateAnomaly();
+     
+						// Replace the last theory of the model with the current theory
+						if(newmodel.GetObject(-1) != newtheory)
+						{
+							newmodel.DeleteTerm(-1);
+							newmodel.AddTerm(newtheory);
+						}
+						
+						//Generate all possible combiations of reps
        
 /*
        If[
@@ -323,40 +293,19 @@ reps *)
   */     
 						List<List<Field> > possiblereps;
 						possiblereps.AddTerm(subrep);
-						std::cout << "number of possible reps = " << possiblereps.nterms() << std::endl;
+						//std::cout << "number of possible reps = " << possiblereps.nterms() << std::endl;
 						
 						for(List<List<Field> >::iterator it_possreps = possiblereps.begin(); it_possreps != possiblereps.end(); it_possreps ++) 
 						{
-							theory = Theory(subgroup, subchain, *it_possreps);
-							std::cout <<theory << std::endl;
-							Model newmodel(model);
-							newmodel.AddTerm(theory);
+							subtheory = Theory(subgroup, subchain, *it_possreps);
+							newmodel.AddTerm(subtheory);
 							if(newmodels.Index(newmodel) == -1)
 								newmodels.AddTerm(newmodel);
-/* 
-       Table[
-        theory = 
-         NewTheory[NewGroup[subgroup], subchain, 
-          "Reps" /. possiblereps[[j]]];
-        Sow[Append[model, theory]];,
-        {j, Length[possiblereps]}
-        ];,
-	*/
 						}
-						std::cout << newmodels << std::endl;
+						//std::cout << newmodels << std::endl;
 					}
-					/*
-       {k, Length[subreps]}];,
-      {i, startat, Length[models]}]
-     ];
    
-   If[Length[models[[2]]] > 0,
-    models = DeleteDuplicates[models[[2, 1]]];,
-    If[OptionValue[PrintOut], Print["NO SUCCESSFUL MODELS"]];
-    models = {};
-    Break[];
-    ];,
-	*/			}
+				}
 			
 				models = newmodels;
 				

@@ -482,15 +482,18 @@ namespace Tomb
 	}
 
 	/* Checks whether the rep is a singlet */
-	bool Rrep::isSinglet() const {
-		if(dim() == 1) {
-			for(int i=0; i<Group().nabelians(); i++) {
-				if((*_HWeight)[-i-1] != 0) return false;
+	bool Rrep::isSinglet(int which) const {
+		if(which == -1)
+		{
+			if(dim() == 1)
+			{
+				for(int i=0; i<Group().nabelians(); i++)
+					if((*_HWeight)[-i-1] != 0)
+						return false;
+				return true;
 			}
-
-			return true;
-		}
-		
+		} else
+			return GetObject(which).isSinglet();
 		return false;
 	}
 
@@ -521,7 +524,7 @@ namespace Tomb
 	}
 
 	/* Obtains the decomposition into rreps of a subgroup */
-	Sum<Rrep> Rrep::Decompose(SubGroup Subgroup)
+	Sum<Rrep> Rrep::Decompose(SubGroup &Subgroup)
 	{
 
 		try {

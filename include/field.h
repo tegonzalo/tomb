@@ -44,7 +44,7 @@ namespace Tomb
 			bool isVector() const;
 			
 			bool canBreak(Chain &) const;
-			Sum<Field> Decompose(SubGroup);
+			Sum<Field> Decompose(SubGroup &);
 			
 			bool operator==(const Field &) const;
 			bool operator!=(const Field &) const;

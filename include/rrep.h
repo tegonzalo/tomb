@@ -62,9 +62,9 @@ namespace Tomb
 			List<Weight> WeightsConst() const;
 			Rrep AddIrrep(Irrep);
 			Rrep AddRrep(Rrep);
-			bool isSinglet() const;
+			bool isSinglet(int = -1) const;
 			List<Weight> Project(SubGroup);
-			Sum<Rrep> Decompose(SubGroup);
+			Sum<Rrep> Decompose(SubGroup &);
 			Sum<Rrep> operator*(Rrep);
 			static Sum<Rrep> Product(List<Rrep> &);
 			bool hasSinglet() const;

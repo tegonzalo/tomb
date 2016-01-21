@@ -7,7 +7,7 @@
 #ifndef __HELPER_FUNCTIONS_H
 #define __HELPER_FUNCTIONS_H
 
-#include "linkedlists.h"
+#include "headers.h"
 
 namespace Tomb
 {
@@ -16,6 +16,12 @@ namespace Tomb
 		List<std::string> split_string(std::string, char);
 	
 	}
+	
+	namespace Combinatorics
+	{
+		template<typename TYPE> List<List<TYPE> > permutations(List<TYPE>, int, bool = true, bool = false);
+	}
+
 }
 
 #endif /* __HELPER_FUNCTIONS_H */
