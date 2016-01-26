@@ -18,11 +18,8 @@
 	],
 	"Casimir" : 0,
 	"repsMaxDim" : 50,
+	"hasReps" : false,
 	"hasSubgroups" : false,
 	"Irreps" : [],
-	"Subgroups" : [],
-	"hasReps" : true,
-	"Reps" : [
-		"(0)U1"
-	]
+	"Subgroups" : []
 }

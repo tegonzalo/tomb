@@ -37,7 +37,8 @@ namespace Tomb
 			
 			std::string id() const;
 			//LieGroup &Group() const;
-			std::string Group() const;
+			LieGroup Group() const;
+			std::string GroupId() const;
 			bool positive() const;
 			int multiplicity() const;
 			int level() const;

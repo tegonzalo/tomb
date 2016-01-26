@@ -177,7 +177,7 @@ namespace Tomb
 					Error("Tomb::Files::File could not be removed");
 					return 1;
 				}	
-				std::cout << "Deleting " << path << std::endl;
+				//std::cout << "Deleting " << path << std::endl;
 			}
 			return 0;
 		}

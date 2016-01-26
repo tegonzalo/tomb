@@ -634,8 +634,15 @@ namespace Tomb
 				if(abelian()) {
 					_Casimir = 0;
 				} else {
-					Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
-					_Casimir = Adjoint.DynkinIndex();
+					Weight w(*this, PRoots().GetObject(0));
+					_Casimir = 0;
+					for(int i=0; i<_rank; i++) {
+						for(int j=0; j<_rank; j++) {
+							_Casimir += 0.5*w[i]*_G[i][j]*(w[j]+2);
+						}
+					}
+					//Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
+					//_Casimir = Adjoint.DynkinIndex();
 				}
 				
 				database_emplace(id(),*this);

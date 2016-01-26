@@ -21,6 +21,11 @@ namespace Tomb
 	{
 		template<typename TYPE> List<List<TYPE> > permutations(List<TYPE>, int, bool = true, bool = false);
 	}
+	
+	namespace Progress
+	{
+		void UpdateProgress(int, int);
+	}
 
 }
 

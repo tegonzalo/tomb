@@ -1,6 +1,7 @@
 {
 	"id" : "(1,1,1,1,0)A2xA1xA1xU1",
-	"Group" : "A2xA1xA1xU1",
+	"Group" : "A2(A)xA1(B)xA1(C)xU1(D)[D5]",
+	"GroupRank" : 5,
 	"HWeight" : [
 		[
 			1,
@@ -11,7 +12,7 @@
 		]
 	],
 	"dim" : 32,
-	"real" : true,
+	"real" : false,
 	"label" : "{8, 2, 2, 0.000}",
 	"nirreps" : 4,
 	"Casimir" : [

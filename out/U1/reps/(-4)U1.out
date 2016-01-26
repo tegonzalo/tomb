@@ -1,11 +1,13 @@
 {
 	"id" : "(-4)U1",
 	"Group" : "U1",
+	"GroupRank" : 1,
 	"HWeight" : [
 		[
 			-4
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 1,
 	"real" : true,
 	"label" : "-4.000",

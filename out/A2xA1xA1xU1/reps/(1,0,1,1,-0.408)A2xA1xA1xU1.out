@@ -1,6 +1,7 @@
 {
 	"id" : "(1,0,1,1,-0.408)A2xA1xA1xU1",
 	"Group" : "A2xA1xA1xU1",
+	"GroupRank" : 5,
 	"HWeight" : [
 		[
 			1,

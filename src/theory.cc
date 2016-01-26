@@ -19,7 +19,7 @@ namespace Tomb
 	Theory::Theory(LieGroup &Group, Chain &BreakingChain, List<Field> &Fields) {
 
 		try {
-			_Group = Group;
+			_Group = Group.id();
 			_BreakingChain = BreakingChain;
 			_Fields = Fields;
 			_Fields.Order();
@@ -36,7 +36,7 @@ namespace Tomb
 	Theory::Theory(const Theory &T) {
 		
 		try {
-			_Group = T.Group();
+			_Group = T.GroupId();
 			_BreakingChain = T.BreakingChain();
 			_Fields = T.Fields();
 			_Mixing = T.Mixing();
@@ -68,7 +68,7 @@ namespace Tomb
 	{
 		
 		try {
-			T._Group = LieGroup();
+			T._Group = "";
 			T._BreakingChain.Clear();
 			T._Fields.Clear();
 			T._Mixing = RVector<double>();
@@ -90,7 +90,7 @@ namespace Tomb
 		try {
 			if(this == &T) return *this;
 			
-			_Group = T.Group();
+			_Group = T.GroupId();
 			_BreakingChain = T.BreakingChain();
 			_Fields = T.Fields();
 			_Mixing = T.Mixing();
@@ -117,7 +117,7 @@ namespace Tomb
 			_anomalyFree = std::move(T._anomalyFree);
 			_protonDecay = std::move(T._protonDecay);
 			
-			T._Group = LieGroup();
+			T._Group = "";
 			T._BreakingChain.Clear();
 			T._Fields.Clear();
 			T._Mixing = RVector<double>();
@@ -133,6 +133,12 @@ namespace Tomb
 	
 	/* Group getter */
 	LieGroup Theory::Group() const
+	{
+		return LieGroup(_Group);
+	}
+	
+	/* Group id getter */
+	std::string Theory::GroupId() const
 	{
 		return _Group;
 	}
@@ -166,9 +172,11 @@ namespace Tomb
 	{
 		try
 		{
-			if(_Group.nterms() == 1)
+			LieGroup Group(_Group);
+
+			if(Group.nterms() == 1)
 			{
-				if(!(_Group.GetObject(0).type() == 'A' and _Group.rank() > 1) and !(_Group.GetObject(0).type() == 'D' and _Group.rank()%2 != 0))
+				if(!(Group.GetObject(0).type() == 'A' and Group.rank() > 1) and !(Group.GetObject(0).type() == 'D' and Group.rank()%2 != 0))
 					return false;
 				else
 				{
@@ -188,7 +196,7 @@ namespace Tomb
 				{
 					bool real = true;
 					for(int i = 0; i != it->nterms() and real; i++) {
-						if((_Group.GetObject(i).abelian() and it->GetObject(i).HWeight()!=0) or (!_Group.GetObject(i).abelian() and !it->GetObject(i).real()))
+						if((Group.GetObject(i).abelian() and it->GetObject(i).HWeight()!=0) or (!Group.GetObject(i).abelian() and !it->GetObject(i).real()))
 							real = false;
 					}
 					if(it->isFermion() and !real){
@@ -215,7 +223,7 @@ namespace Tomb
 	{
 		try
 		{
-			List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(_Group, 3, true, true);
+			List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(LieGroup(_Group), 3, true, true);
 			//std::cout << tdgroups << std::endl;
 	
 			// Create an abelian group to compare with
@@ -365,10 +373,12 @@ namespace Tomb
 			for(List<Field>::iterator it_scalars = scalars.begin(); it_scalars != scalars.end(); it_scalars++) 
 			{
 				Field scalar = *it_scalars;
+				// Check if the rep can break to the next step
 				if(scalar.canBreak(_BreakingChain)) {
+				
 					// Decompose every scalar into fields in the subgroup
 					List<Field> subreps = scalar.Decompose(subgroup);
-
+					
 					// Check whether the decomposition has singlets
 					bool singlet = false;
 					for(List<Field>::iterator it_subreps = subreps.begin(); it_subreps != subreps.end(); it_subreps++)
@@ -380,6 +390,9 @@ namespace Tomb
 					if(singlet and !(Group().rank() > subgroup.rank() and scalar.dim() == Group().dim()))
 						breakingreps.AddTerm(scalar);
 				
+				} else
+				{
+					//std::cout << "cant break" << std::endl;
 				}
 			}
 
@@ -407,6 +420,7 @@ namespace Tomb
 				auxsubgroup.DeleteTerm(-1);
 				SubGroup semisimplesubgroup(auxsubgroup.id());
 				
+				//std::cout << scalars << std::endl;
 				breakingreps = findBreakingReps(semisimplesubgroup, scalars);
 				
 				//std::cout << semisimplesubgroup << std::endl;
@@ -421,7 +435,7 @@ namespace Tomb
 					RVector<double> mixing(2);
 					for(int i=0; i<labels.nterms(); i++) {
 						std::stringstream groupstream;
-						groupstream << Strings::split_string(semisimplesubgroup.id(), '[').GetObject(0) << "xU1(" << labels.GetObject(i) << ")[" << _Group.id() << "]";
+						groupstream << Strings::split_string(semisimplesubgroup.id(), '[').GetObject(0) << "xU1(" << labels.GetObject(i) << ")[" << _Group << "]";
 						SubGroup subgroup(groupstream.str());
 						Sum<Field> subreps = j->Decompose(subgroup);
 						Sum<Field>::iterator k;
@@ -559,7 +573,7 @@ namespace Tomb
 			_Mixing *= norm;
 			
 			// If there is a U1, find which of the mixing entries corresponds to it and renormalise its mixing to force a^2 + b^2 = 1
-			if(_Group.nabelians())
+			if(Group().nabelians())
 			{
 				List<std::string> labels = Strings::split_string(_BreakingChain.GetObject(-1).Branch(-1).label(),'+');
 				List<int> indices;
@@ -610,12 +624,41 @@ namespace Tomb
 		}
 	}
 
+	/* Generate all possible combinations of reps up to certain number of reps */
+	List<List<Field> > Theory::generatePossibleReps(int nReps)
+	{
+		try
+		{
+			// If there are less than 10 reps, don't worry about numbers
+			int nreps = 0;
+			if(getScalars().nterms() > 10)
+				nreps = nReps;
+		
+			List<List<Field> > possibleReps, possibleScalars;
+			possibleScalars = getScalars().Subsets(nreps);
+			
+			for(auto it = possibleScalars.begin(); it != possibleScalars.end(); it++)
+			{
+				List<Field> fields(getFermions());
+				fields.AppendList(*it);
+				possibleReps.AddTerm(fields);
+			}
+		
+			return possibleReps;
+			
+		}
+		catch (...)
+		{
+			throw;
+		}
+	}
+	
 	/* Returns the json string */
-	JSONNode Theory::json() const {
+	JSONNode Theory::json(std::string id) const {
 		
 		JSONNode json;
 		
-		json.push_back(JSONNode("Group", _Group.id()));
+		json.push_back(JSONNode("Group", _Group));
 		json.push_back(_BreakingChain.json("BreakingChain"));
 		json.push_back(_Fields.json("Fields"));
 		if(_Mixing != 0)
@@ -636,7 +679,7 @@ namespace Tomb
 			// find out where to store the values
 			if(node_name == "Group")
 			{
-				_Group = LieGroup(i->as_string());
+				_Group = i->as_string();
 			}
 			else if(node_name =="BreakingChain")
 			{

@@ -1,21 +1,23 @@
 {
 	"id" : "(1,1)A2",
 	"Group" : "A2",
+	"GroupRank" : 2,
 	"HWeight" : [
 		[
 			1,
 			1
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 8,
-	"real" : true,
+	"real" : false,
 	"label" : "8",
 	"Casimir" : 3,
 	"DynkinIndex" : 3,
 	"conjugate" : 0,
 	"congruency" : [
 		[
-			2
+			1
 		]
 	],
 	"hasWeights" : true,
@@ -23,8 +25,8 @@
 		"(1,1)A2",
 		"(-1,2)A2",
 		"(2,-1)A2",
-		"(0,0)A2",
-		"(0,0)A2",
+		"(0,-4.44089e-16)A2",
+		"(0,-4.44089e-16)A2",
 		"(1,-2)A2",
 		"(-2,1)A2",
 		"(-1,-1)A2"

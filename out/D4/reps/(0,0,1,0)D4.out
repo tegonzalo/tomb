@@ -1,6 +1,7 @@
 {
 	"id" : "(0,0,1,0)D4",
 	"Group" : "D4",
+	"GroupRank" : 4,
 	"HWeight" : [
 		[
 			0,
@@ -9,6 +10,7 @@
 			0
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 8,
 	"real" : true,
 	"label" : "8",

@@ -14,7 +14,9 @@ namespace Tomb
 	class Irrep {
 
 		private:
-			SimpleGroup *_Group = NULL;
+			std::string _Group = "";
+			int _GroupRank = 0;
+			int _nirreps = 1;
 			int _dim = 0;
 			bool _real = true;
 			int _conjugate = 0;
@@ -47,7 +49,10 @@ namespace Tomb
 		
 			void init();
 			std::string id() const;
-			SimpleGroup &Group() const;
+			//SimpleGroup &Group() const;
+			SimpleGroup Group() const;
+			std::string GroupId() const;
+			int GroupRank() const;
 			int dim() const;
 			bool real() const;
 			int conjugate() const;

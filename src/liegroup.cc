@@ -74,9 +74,8 @@ namespace Tomb
 			this->_semisimple = false;
 			
 
-			std::stringstream ss(id);
+			std::stringstream ss(Strings::split_string(id, '[')[0]);
 			std::string str;
-			
 			
 			while(getline(ss, str, 'x')) {
 				AddTerm(SimpleGroup(str));

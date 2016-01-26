@@ -12,6 +12,9 @@
 
 namespace Tomb
 {
+	// Definition of static variable
+	List<List<Model> > Model::DataBase;
+	
 	// Member functions
 
 	/* Constructor 0 */
@@ -147,10 +150,34 @@ namespace Tomb
 		return _scales;
 	}
 	
-
+	/* Delete term from the model */
+	void Model::DeleteTerm(int i)
+	{
+		try
+		{
+			List<Theory>::DeleteTerm(i);
+			_nsteps--;
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Add term to the model */
+	void Model::AddTerm(const Theory &theory)
+	{
+		try
+		{
+			List<Theory>::AddTerm(theory);
+			_nsteps++;
+		} catch (...)
+		{
+			throw;
+		}
+	}
 	
 	/* Generate the models */
-	List<Model> Model::generateModels(int nReps, int startAt, bool printToFile) {
+	void Model::generateModels(int nReps, int startAt) {
 		
 		try {
 			Theory theory = GetObject(0);
@@ -173,12 +200,14 @@ namespace Tomb
    
 				int step = l;
 				//std::cout << "step = " << step << std::endl;
-				int count = 0;
    
 				chain = subchain;
 				group = LieGroup(subgroup);
    
 				List<Model> newmodels;
+				
+				if(!models.nterms())
+					std::cout << "No models for step " << step << ", exiting..." << std::endl;
       
 				for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++) {
       
@@ -188,6 +217,8 @@ namespace Tomb
 					theory = model.GetObject(-1);
 					List<Field> fields = theory.Fields();
 					
+					// Update progress
+					Progress::UpdateProgress(step, models.nterms());
       
 					// Check constraints
 					if(!theory.chirality())
@@ -204,21 +235,40 @@ namespace Tomb
 						{
 							//std::cout << "contains sm" << std::endl;
 							// Check for anomaly cancellation and proton decay
-							//std::cout << theory << std::endl;
 							theory.calculateAnomaly();
-							//model = ProtonDecay[model];*/
+							//std::cout << "anomlay free = " << theory.anomalyFree() << std::endl;
+							//model = ProtonDecay[model];
+
+							// Update the model and add to the models list
 							model.DeleteTerm(-1);
 							model.AddTerm(theory);
-							if(newmodels.Index(model) == -1)
-								newmodels.AddTerm(model);
-							success++;
+							//if(newmodels.Index(model) == -1)
+							//{
+								//newmodels.AddTerm(model);
+	
+							// For every successful model calculate the rges and store in the databases
+							RGE rges(model);
+							//std::cout << rges << std::endl;
+							int index = 0;
+							if((index = RGE::DataBase.Index(rges)) == -1)
+							{
+								index = RGE::DataBase.nterms();
+								RGE::DataBase.AddTerm(rges);
+							}
+							//std::cout << RGE::DataBase << std::endl;
+							if(Model::DataBase.nterms() <= index)
+								Model:DataBase.AddTerm(List<Model>());
+							if(Model::DataBase[index].Index(model) == -1)
+							{
+								Model::DataBase[index].AddTerm(model);
 							
-							// For every successful model calculate the rges and print to file
-	/*rges = getRGEs[gauge][model];
-        
-        If[OptionValue[PrintFile], 
-         PrintToFile[{"Model" -> model, "RGEs" -> rges}]];*/
+								// Update the success counter
+								success++;
+							}
+							//}
+							
 						}
+						
 						continue;
 					}
       
@@ -236,7 +286,6 @@ namespace Tomb
 					//Calculate the breaking, obtaining the subreps and mixings at the end
 					List<RVector<double> > mixings;
 					List<Sum<Field> > subreps = theory.calculateBreaking(mixings);
-					//std::cout << subreps << std::endl;
 										
 					// Loop over number of subreps, i.e. breaking options 
 					for(int k=0; k<subreps.nterms(); k++) {
@@ -278,29 +327,61 @@ namespace Tomb
 						}
 						
 						//Generate all possible combiations of reps
-       
-/*
-       If[
-        Length[Select[subrep, Attribute[#]["type"] == "Scalar" &]] > 
-         10,
-        nreps = OptionValue[NReps];,
-        nreps = All;
-        ];
-       If[Head[mixing] === String,
-        possiblereps = GenerateReps[subrep, nreps];,
-        possiblereps = GenerateReps[subrep, nreps, mixing];
-        ];
-  */     
-						List<List<Field> > possiblereps;
-						possiblereps.AddTerm(subrep);
-						//std::cout << "number of possible reps = " << possiblereps.nterms() << std::endl;
+						//std::cout << "Calculating possible reps..." << std::endl;
+						// Pasted from the theory and linkedlists code to hopefully speed up things
+						/**************************************************************/
+						List<Field> scalars = subtheory.getScalars();
 						
-						for(List<List<Field> >::iterator it_possreps = possiblereps.begin(); it_possreps != possiblereps.end(); it_possreps ++) 
+						// If there are less than 10 reps, don't worry about numbers
+						/*int nreps = 0;
+						if(scalars.nterms() > 10)
+							nreps = nReps;
+					
+						
+						std::vector<bool> bit_mask(scalars.nterms());
+						bool next_bit_mask = false;
+						do
 						{
-							subtheory = Theory(subgroup, subchain, *it_possreps);
-							newmodel.AddTerm(subtheory);
-							if(newmodels.Index(newmodel) == -1)
+
+							if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
+							{
+								List<Field> subset;
+								for(int i=0; i!=bit_mask.size(); i++)
+									if(bit_mask[i])
+										subset.AddTerm(scalars[i]);
+								newmodel.AddTerm(Theory(subgroup, subchain, subset));
 								newmodels.AddTerm(newmodel);
+							}
+							
+							// next_bitmask
+							std::size_t i = 0 ;
+							for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
+							{
+								bit_mask[i] = false;
+							}
+
+							if( i < bit_mask.size())
+							{
+								if(std::count(bit_mask.begin(), bit_mask.end(), true) < nreps)
+										bit_mask[i] = true;
+								next_bit_mask = 	true;
+								
+							}
+							else 
+								next_bit_mask = false ;
+						}
+						while(next_bit_mask);*/
+						/***********************************************************************/
+						
+						List<List<Field> > possibleReps = subtheory.generatePossibleReps(nReps);
+   
+						//std::cout << "number of possible reps = " << possibleReps.nterms() << std::endl;
+
+						for(List<List<Field> >::iterator it_possreps = possibleReps.begin(); it_possreps != possibleReps.end(); it_possreps ++) 
+						{ 
+							Model newmodel2(newmodel);
+							newmodel2.AddTerm(Theory(subgroup, subchain, *it_possreps));
+							newmodels.AddTerm(newmodel2);
 						}
 						//std::cout << newmodels << std::endl;
 					}
@@ -308,14 +389,19 @@ namespace Tomb
 				}
 			
 				models = newmodels;
-				
 			}
-			return models;
+			
+			std::cout << "Number of successful models: " << success << std::endl;
+			
+			return ;
 
 		} catch (...) {
 			throw;
 		}
 	}
+	
+	/* Exports the model to a file */
+	
 	
 	/* Overloaded << operator with models on the right */
 	std::ostream &operator<<(std::ostream &stream, const Model &m)

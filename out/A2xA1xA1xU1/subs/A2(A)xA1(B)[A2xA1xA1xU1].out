@@ -65,7 +65,7 @@
 		"A",
 		"B"
 	],
-	"maximal" : true,
+	"maximal" : false,
 	"regular" : true,
 	"special" : false
 }

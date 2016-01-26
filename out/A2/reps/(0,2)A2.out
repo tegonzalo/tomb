@@ -1,12 +1,14 @@
 {
 	"id" : "(0,2)A2",
 	"Group" : "A2",
+	"GroupRank" : 2,
 	"HWeight" : [
 		[
 			0,
 			2
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 6,
 	"real" : false,
 	"label" : "6*",
@@ -15,7 +17,7 @@
 	"conjugate" : 1,
 	"congruency" : [
 		[
-			2
+			1
 		]
 	],
 	"hasWeights" : true,

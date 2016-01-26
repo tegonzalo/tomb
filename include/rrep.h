@@ -14,7 +14,8 @@ namespace Tomb
 	class Rrep: public List<Irrep> {
 
 		private:
-			LieGroup *_Group = NULL;
+			std::string _Group = "";
+			int _GroupRank = 0;
 			int _dim = 0;
 			bool _real = true;
 			int _nirreps = 0;
@@ -48,7 +49,9 @@ namespace Tomb
 			
 			void init();
 			std::string id() const;
-			LieGroup &Group() const;
+			LieGroup Group() const;
+			std::string GroupId() const;
+			int GroupRank() const;
 			int dim() const;
 			bool real() const;
 			int nirreps() const;

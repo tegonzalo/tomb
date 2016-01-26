@@ -95,6 +95,7 @@ namespace Tomb
 			std::string Table() const;
 			void FixZeros();
 			static Matrix<TYPE> Identity(int);
+			Matrix Abs() const;
 			JSONNode json(std::string = "") const;
 			void ParseJSON(const JSONNode &);
 	};
@@ -1582,6 +1583,16 @@ namespace Tomb
 			throw;
 		}
 	}
+	
+	/* Returns the absolute value of the elements of the matrix */
+	template <class TYPE> Matrix<TYPE> Matrix<TYPE>::Abs() const
+	{
+		Matrix<TYPE> N(*this);
+		for(int i=0; i<N.rows(); i++)
+			for(int j=0; j<N.cols(); j++)
+				N[i][j] = fabs(N[i][j]);
+		return N;
+	}
 
 	/* Print to json format */
 	template <class TYPE> JSONNode Matrix<TYPE>::json(std::string name) const {
@@ -1686,7 +1697,7 @@ namespace Tomb
 		stream << M.Print();
 		return stream;
 	}
-
+	
 	/**************************************************/
 	/**************Class CVector methods***************/
 	/**************************************************/

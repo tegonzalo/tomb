@@ -1,12 +1,14 @@
 {
 	"id" : "(1,0)A2",
 	"Group" : "A2",
+	"GroupRank" : 2,
 	"HWeight" : [
 		[
 			1,
 			0
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 3,
 	"real" : false,
 	"label" : "3",

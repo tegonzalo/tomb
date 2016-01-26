@@ -8,7 +8,7 @@
 #include "headers.h"
 #include "mathlink.h"
 #include "files.h"
-#include "group_database.h"
+#include "database.h"
 
 
 using namespace Tomb;
@@ -289,7 +289,7 @@ int PASCAL WinMain( HINSTANCE hinstCurrent, HINSTANCE hinstPrevious, LPSTR lpszC
 
 int main(int argc, char *argv[]) {
 	
-	Tomb::database_fill();
+	Tomb::group_database_fill();
 
 	return MLMain(argc,argv);
 

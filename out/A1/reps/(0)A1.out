@@ -1,11 +1,13 @@
 {
 	"id" : "(0)A1",
 	"Group" : "A1",
+	"GroupRank" : 1,
 	"HWeight" : [
 		[
 			0
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 1,
 	"real" : true,
 	"label" : "1",

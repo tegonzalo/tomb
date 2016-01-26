@@ -16,7 +16,7 @@ namespace Tomb
 		
 		protected:
 			
-			LieGroup _Group;
+			std::string _Group;
 			Chain _BreakingChain;
 			List<Field> _Fields;
 			RVector<double>  _Mixing;
@@ -34,9 +34,10 @@ namespace Tomb
 			Theory &operator=(Theory &&);
 			
 			LieGroup Group() const;
+			std::string GroupId() const;
 			Chain BreakingChain() const;
 			List<Field> Fields() const;
-			
+						
 			RVector<double> Mixing() const;
 			void setMixing(RVector<double>);
 			
@@ -58,7 +59,9 @@ namespace Tomb
 			double normaliseMixing(double);
 			double normaliseReps(double);
 			
-			JSONNode json() const;
+			List<List<Field> > generatePossibleReps(int);
+			
+			JSONNode json(std::string = "") const;
 			void ParseJSON(const JSONNode &);
 	};
 	

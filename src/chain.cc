@@ -277,7 +277,6 @@ namespace Tomb
 					subgroup << level.GetObject(j).id() << "(" << labels.GetObject(j) << ")" << "x";
 				subgroup << level.GetObject(-1).id() << "(" << labels.GetObject(-1) << ")";
 				
-				
 				if(i)
 				{
 					subgroup << "[" << supgroup.str() << "]";
@@ -287,6 +286,7 @@ namespace Tomb
 				} else
 				{
 					SubGroup group (LieGroup(subgroup.str()),LieGroup(subgroup.str()));
+					group.setLabels(labels);
 					group.Order();
 					Subgroups.AddTerm(group);
 				}

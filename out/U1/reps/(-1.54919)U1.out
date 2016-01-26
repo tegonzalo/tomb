@@ -1,11 +1,13 @@
 {
 	"id" : "(-1.54919)U1",
 	"Group" : "U1",
+	"GroupRank" : 1,
 	"HWeight" : [
 		[
 			-1.549193
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 1,
 	"real" : true,
 	"label" : "-1.549",

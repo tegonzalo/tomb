@@ -20,6 +20,8 @@ namespace Tomb
 			
 		public:
 			
+			static List<List<Model> > DataBase;
+			
 			Model();
 			Model(Theory);
 			Model(const Model &);
@@ -33,7 +35,13 @@ namespace Tomb
 			int nsteps() const;
 			List<double> scales() const;
 			
-			List<Model> generateModels(int = 0, int = 0, bool = false);
+			void DeleteTerm(int);
+			void AddTerm(const Theory &);
+			
+			void generateModels(int = 0, int = 0);
+			void exportModel(int);
+			
+			RGE RGEs();
 	};
 	
 	std::ostream &operator<<(std::ostream &, const Model &);

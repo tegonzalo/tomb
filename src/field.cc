@@ -242,6 +242,7 @@ namespace Tomb
 				List<SimpleGroup> subgroup = Chain(chain.GetObject(i).Branches()).getLevel(0);
 				List<std::string> labels = Chain(chain.GetObject(i).Branches()).getLabels(0);
 
+
 				// Conditions for breaking on the chain
 				if(subgroup.nterms()==0 or subgroup.nterms() > 1 or group != subgroup.GetObject(0) or label != labels.GetObject(0))
 				{
@@ -269,6 +270,7 @@ namespace Tomb
 		try
 		{
 			Sum<Rrep> gaugesubreps = Rrep::Decompose(subgroup);
+			
 			Sum<Field> subreps;
 			
 			for(Sum<Rrep>::iterator it = gaugesubreps.begin(); it != gaugesubreps.end(); it++)

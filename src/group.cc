@@ -6,7 +6,7 @@
 
 #include "headers.h"
 #include "files.h"
-#include "group_database.h"
+#include "database.h"
 
 using namespace Tomb;
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
 		}
 		
 		// Pull all the available info from the database first of all
-		Tomb::database_fill();
+		Tomb::group_database_fill();
 		
 		if(id.empty()) {
 			SimpleGroup G1(rank, type);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "Invariants = " << Invariants << std::endl;
 */
 		// Flush all the databases to files
-		Tomb::database_flush();
+		Tomb::group_database_flush();
 
 		return 1;
 		

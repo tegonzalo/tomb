@@ -44,14 +44,18 @@ namespace Tomb
 namespace Tomb
 {
 	class Chain;
+	class Theory;
+	class Model;
 }
 
 #include "field.h"
+#include "rge.h"
 
 #include "sm.h"
 
 #include "chain.h"
 #include "theory.h"
 #include "model.h"
+
 
 #endif /* __HEADERS_H */

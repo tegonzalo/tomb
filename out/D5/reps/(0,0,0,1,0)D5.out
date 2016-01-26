@@ -1,6 +1,7 @@
 {
 	"id" : "(0,0,0,1,0)D5",
 	"Group" : "D5",
+	"GroupRank" : 5,
 	"HWeight" : [
 		[
 			0,
@@ -10,6 +11,7 @@
 			0
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 16,
 	"real" : false,
 	"label" : "16",

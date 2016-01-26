@@ -1,6 +1,7 @@
 {
 	"id" : "(1,0,0,-2)A2xA1xU1",
-	"Group" : "A2xA1xU1",
+	"Group" : "A2(A)xA1(B)xU1(D+C)[A2xA1xA1xU1]",
+	"GroupRank" : 4,
 	"HWeight" : [
 		[
 			1,

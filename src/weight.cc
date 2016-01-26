@@ -179,7 +179,7 @@ namespace Tomb
 	Weight::Weight(const Weight &w) : RVector<double>(w) {
 		try {
 			//_Group = new LieGroup(w.Group());
-			_Group = w.Group();
+			_Group = w.GroupId();
 			_positive = w.positive();
 			_multiplicity = w.multiplicity();
 			_level = w.level();
@@ -220,7 +220,7 @@ namespace Tomb
 			//if(_Group != nullptr) delete _Group;
 			RVector<double>::operator=(w);
 			//_Group = new LieGroup(w.Group());
-			_Group = w.Group();
+			_Group = w.GroupId();
 			_positive = w.positive();
 			_multiplicity = w.multiplicity();
 			_level = w.level();
@@ -273,8 +273,13 @@ namespace Tomb
 	}
 
 	/* Returns the Lie Group */
-	//LieGroup &Weight::Group() const {
-	std::string Weight::Group() const {
+	LieGroup Weight::Group() const 
+	{
+		return LieGroup(_Group);
+	}
+	
+	/* Returns the Group id */
+	std::string Weight::GroupId() const {
 		//return *_Group;
 		return _Group;
 	}
@@ -312,7 +317,7 @@ namespace Tomb
 	/* Returns the dual of a weight */
 	Weight Weight::Dual() {
 		try {
-			LieGroup G(Group());
+			LieGroup G(_Group);
 			if(G.nterms() == 1)
 			//if(this->Group().nterms() == 1)
 			{
@@ -455,7 +460,7 @@ namespace Tomb
 	/* Overloaded * operator with matrices */
 	Weight Weight::operator*(Matrix<double> M) {
 		try {
-			Weight w(Group(), RVector<double>(*this)*M);
+			Weight w(_Group, RVector<double>(*this)*M);
 			//Weight w(this->Group(), RVector<double>(*this)*M);
 			return w;
 		} catch (...) {
@@ -487,7 +492,7 @@ namespace Tomb
 				_Group->AddTerm(w.Group().GetObject(i));
 			}*/
 			_Group.push_back('x');
-			_Group.append(w.Group());
+			_Group.append(w.GroupId());
 			
 			if(positive() and w.positive()) {
 				setPositive(true);
@@ -518,7 +523,7 @@ namespace Tomb
 	Weight operator*(Weight w, double n) {
 		try {
 			//Weight v(w.Group(),RVector<double>(w)*n);
-			Weight v(w.Group(), RVector<double>(w)*n);
+			Weight v(w.GroupId(), RVector<double>(w)*n);
 			return v;
 		} catch (...) {
 			throw;
@@ -529,7 +534,7 @@ namespace Tomb
 	Weight operator*(double n, Weight w) {
 		try {
 			//Weight v(w.Group(),RVector<double>(w)*n);
-			Weight v(w.Group(), RVector<double>(w)*n);
+			Weight v(w.GroupId(), RVector<double>(w)*n);
 			return v;
 		} catch (...) {
 			throw;

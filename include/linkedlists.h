@@ -46,10 +46,13 @@ namespace Tomb
 			void Order(std::string = "DESC");
 			void Reverse();
 			int Index(const TYPE &) const;
+			List<List<TYPE> > Subsets(int = 0);
 			std::string Print() const;
 			
 			bool operator==(const List<TYPE> &) const;
 			bool operator!=(const List<TYPE> &) const;
+			bool operator<(const List<TYPE> &) const;
+			bool operator>(const List<TYPE> &) const;
 			
 			JSONNode json(std::string = "") const;
 			void ParseJSON(const JSONNode &);
@@ -418,7 +421,59 @@ namespace Tomb
 		{
 			throw;
 		}
-	} 
+	}
+	
+	/* Creates all possible subsets of the list */
+	template <class TYPE> List<List<TYPE> > List<TYPE>::Subsets(int k)
+	{
+		try
+		{
+			List<List<TYPE> > subsets;
+			
+			int n = k;
+			if(!n)
+				n = nterms();
+			
+			std::vector<bool> bit_mask(nterms());
+			bool next_bit_mask = false;
+			do
+			{
+
+				if(std::count(bit_mask.begin(), bit_mask.end(), true) <= n)
+				{
+					subsets.AddTerm(List<TYPE>());
+					for(int i=0; i!=bit_mask.size(); i++)
+						if(bit_mask[i])
+							subsets[subsets.nterms()-1].AddTerm((*this)[i]);
+				}
+				
+				// next_bitmask
+				std::size_t i = 0 ;
+				for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=n); ++i )
+				{
+					bit_mask[i] = false;
+				}
+
+				if( i < bit_mask.size())
+				{
+					if(std::count(bit_mask.begin(), bit_mask.end(), true) < n)
+							bit_mask[i] = true;
+					next_bit_mask = 	true;
+					
+				}
+				else 
+					next_bit_mask = false ;
+			}
+			while(next_bit_mask);
+			
+			
+			return subsets;
+		}
+		catch (...)
+		{
+			throw;
+		}
+	}
 
 	/* Prints the list */
 	template <class TYPE> std::string List<TYPE>::Print() const
@@ -445,6 +500,18 @@ namespace Tomb
 	template <class TYPE> bool List<TYPE>::operator!=(const List<TYPE> &list) const
 	{
 		return !(*this == list);
+	}
+	
+	/* Overloaded < operator */
+	template <class TYPE> bool List<TYPE>::operator<(const List<TYPE> &list) const
+	{
+		return (nterms() < list.nterms());
+	}
+	
+	/* Overloaded > operator */
+	template <class TYPE> bool List<TYPE>::operator>(const List<TYPE> &list) const
+	{
+		return (nterms() > list.nterms());
 	}
 
 	/* Prints to json format */

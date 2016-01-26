@@ -1,12 +1,13 @@
 {
 	"id" : "(0,1,0,0.333)A2xA1xU1",
 	"Group" : "A2xA1xU1",
+	"GroupRank" : 4,
 	"HWeight" : [
 		[
 			0,
 			1,
 			0,
-			0.333
+			0.333333
 		]
 	],
 	"dim" : 3,
@@ -16,12 +17,12 @@
 	"Casimir" : [
 		1.333333,
 		0,
-		0.110889
+		0.111111
 	],
 	"DynkinIndex" : [
 		0.5,
 		0,
-		0.332667
+		0.333333
 	],
 	"hasWeights" : false,
 	"Weights" : []

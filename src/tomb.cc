@@ -6,30 +6,41 @@
 
 #include "headers.h"
 #include "files.h"
-#include "group_database.h"
+#include "database.h"
 
 using namespace Tomb;
+
+void die()
+{
+	std::cerr << "TOMB::Wrong sintax or file doesn't exists" << std::endl;
+}
 
 bool parsearguments(int argc, char *argv[], std::string &filename) 
 {
 	try {
-		if(argc != 3) return false;
+		switch(argc)
+		{
+			case 2:
+				if(strcmp(argv[1],"-r"))
+					die();
+				Files::EmptyDirectory("./models");
+				return false;
+			case 3:
+				filename = argv[2];
 		
-		filename = argv[2];
+				if(!strcmp(argv[1],"-f") and Files::FileExists(filename))
+					return true;
 		
-		if(!strcmp(argv[1],"-f") and Files::FileExists(filename))
-			return true;
+				return false;
+			default:
+				return false;
+		}
 		
 		return false;
 		
 	} catch (...) {
 		throw;
 	}
-}
-
-void die()
-{
-	std::cerr << "TOMB::Wrong sintax or file doesn't exists" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -46,22 +57,29 @@ int main(int argc, char *argv[])
 			while(i != json.end() and i->name() != "Data") i++;
 			
 			// Pull all the available info from the database first of all
-			Tomb::database_fill();
+			Tomb::group_database_fill();
+			Tomb::model_database_fill();
 			
-			std::cout << "DataBases loaded" << std::endl;
+			//std::cout << "DataBases loaded" << std::endl;
 			
 			Theory theory(*i);
 			Model model(theory);
 			
-			List<Model> models = model.generateModels();
+			// Get the number of reps
+			i = json.begin();
+			while(i != json.end() and i->name() != "NReps") i++;
 			
-			std::cout << models << std::endl;
+			model.generateModels(i->as_int());
 			
+			//std::cout << RGE::DataBase << std::endl;
+			//std::cout << Model::DataBase << std::endl;
+
 			// Flush all the databases to files
-			Tomb::database_flush();
+			Tomb::model_database_flush();
+			Tomb::group_database_flush();
 			
 		} else {
-			die();
+			// Nothing to do here
 		}
 
 	} catch (std::exception &e) {

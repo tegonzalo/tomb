@@ -1,11 +1,13 @@
 {
 	"id" : "(2)A1",
 	"Group" : "A1",
+	"GroupRank" : 1,
 	"HWeight" : [
 		[
 			2
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 3,
 	"real" : true,
 	"label" : "3",
@@ -14,13 +16,13 @@
 	"conjugate" : 0,
 	"congruency" : [
 		[
-			0
+			1
 		]
 	],
 	"hasWeights" : true,
 	"Weights" : [
 		"(2)A1",
-		"(0)A1",
+		"(-2.22045e-16)A1",
 		"(-2)A1"
 	]
 }

@@ -1,6 +1,7 @@
 {
 	"id" : "(1,0,0,0)A4",
 	"Group" : "A4",
+	"GroupRank" : 4,
 	"HWeight" : [
 		[
 			1,
@@ -9,6 +10,7 @@
 			0
 		]
 	],
+	"nirreps" : 1,
 	"dim" : 5,
 	"real" : false,
 	"label" : "5",
