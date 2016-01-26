@@ -242,7 +242,6 @@ namespace Tomb
 		{
 			Matrix<double> RGEs;
 			Chain prevchain;
-			
 			for(int i = 0; i < model.nsteps(); i++)
 			{
 				Theory theory = model[i];

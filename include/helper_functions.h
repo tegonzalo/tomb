@@ -20,11 +20,19 @@ namespace Tomb
 	namespace Combinatorics
 	{
 		template<typename TYPE> List<List<TYPE> > permutations(List<TYPE>, int, bool = true, bool = false);
+		
+		long int factorial(int);
+		
+		long int binomial(int, int);
+		
+		long int sum_of_binomials(int, int);
 	}
 	
 	namespace Progress
 	{
-		void UpdateProgress(int, int);
+		void UpdateModelProgress(int, int);
+		
+		void UpdateRepProgress(int);
 	}
 
 }

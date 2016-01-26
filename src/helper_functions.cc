@@ -56,20 +56,39 @@ namespace Tomb
 	/* Declaration for permutations of SimpleGroups */
 	template List<List<SimpleGroup> > Combinatorics::permutations(List<SimpleGroup>, int, bool, bool);
 	
-	/* Updates the progess bar */
-	void Progress::UpdateProgress(int step, int nmodels)
+	
+	/* Factorial */
+	long int Combinatorics::factorial(int n)
+	{
+		if(n <= 1)
+			return 1;
+		return n*Combinatorics::factorial(n-1);
+	}
+	
+	/* Binomial number */
+	long int Combinatorics::binomial(int n, int k)
+	{
+		long int bin=1;
+		for(int i=0; i < k; i++)
+			bin *= n-i;
+		return double(bin)/Combinatorics::factorial(k);
+	}
+	
+	/* Sum of binomial numbers */
+	long int Combinatorics::sum_of_binomials(int n, int k)
+	{
+		long int sum = 0;
+		for(int i=0; i<=k; i++)
+			sum += Combinatorics::binomial(n,i);
+		return sum;
+	}
+		
+	/* Updates the progess bar for the models */
+	void Progress::UpdateModelProgress(int step, int nmodels)
 	{
 		static int count = 1; // Counter
 		double progress = double(count)/nmodels; // Counts models per step
-		//time = 0;(*Counts run time*)
-		//eta = 0;(*Estimated time to completion*)
-		//status = "";(*Status message string*)
-		//startTime = SessionTime[];(*Start time*)
-		//success = 0;(*Number of successful models *)
 		
-		//time = SessionTime[] - startTime;
-		//eta = time*(Length[models] - count + 1)/(count + 1);
-   
 		// Set up progress message
 		if(count == 1)
 			std::cout << "Generating models for step " << step << std::endl;
@@ -94,12 +113,39 @@ namespace Tomb
 		count++;
 		if(count > nmodels)
 			count = 1;
-  
-//   ];
-/*
 
-    {"Elapsed Time", Dynamic[DisplayTime[time]]},
-    {"ETA for step", Dynamic[DisplayTime[eta]]},
-    {"Successful Models", Dynamic[ToString[success]]})*/
+	}
+	
+	/* Updates the progess bar for the reps */
+	void Progress::UpdateRepProgress(int nreps)
+	{
+		if(nreps <= 500)
+			return ;
+		
+		static int count = 1; // Counter
+   
+		// Set up progress message
+		if(count == 1)
+		{
+			std::cout << "Generating reps " << std::endl;;
+			std::cout << "[";
+		}
+		int barWidth = 70;
+		int pos = nreps/barWidth;
+		
+		if(!((count-1)%pos))
+				std::cout << ".";
+			//else if (i == pos) 
+			//	std::cout << ">";
+			//else 
+		//		std::cout << " ";
+		if(count == nreps)
+			std::cout << "] " << std::endl;
+		std::cout.flush();
+	
+		count++;
+		if(count > nreps)
+			count = 1;
+
 	}
 }

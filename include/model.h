@@ -26,6 +26,8 @@ namespace Tomb
 			Model(Theory);
 			Model(const Model &);
 			Model(const List<Theory> &);
+			Model(std::string);
+			Model(const JSONNode &);
 			Model(Model &&);
 			~Model();
 			Model &operator=(const Model &);
@@ -42,6 +44,8 @@ namespace Tomb
 			void exportModel(int);
 			
 			RGE RGEs();
+			
+			void ParseJSON(const JSONNode &);
 	};
 	
 	std::ostream &operator<<(std::ostream &, const Model &);

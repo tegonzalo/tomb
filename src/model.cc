@@ -65,6 +65,31 @@ namespace Tomb
 		}
 	}
 
+	/* Copy constructor 3, with a string */
+	Model::Model(std::string s) 
+	{
+		try
+		{
+			ParseJSON(libjson::parse(s));
+		}
+		catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Copy constructor 4, with a JSON node */
+	Model::Model(const JSONNode &json)
+	{
+		try
+		{
+			ParseJSON(json);
+		}
+		catch (...)
+		{
+			throw;
+		}
+	}
 	/* Move constructor */
 	Model::Model(Model && M) :
 		List<Theory>(std::move(M)),
@@ -190,8 +215,10 @@ namespace Tomb
 			LieGroup subgroup = group;
 			List<SubGroup> subgroups = chain.extractSubgroups();
 			
-			List<Model> models;
-			models.AddTerm(Model(theory));
+			//List<Model> models;
+			//models.AddTerm(Model(theory)));
+			List<std::string> models;
+			models.AddTerm(Model(theory).json().write_formatted());
     
 			// Count the number of successes
 			int success = 0;
@@ -204,21 +231,23 @@ namespace Tomb
 				chain = subchain;
 				group = LieGroup(subgroup);
    
-				List<Model> newmodels;
+				//List<Model> newmodels;
+				List<std::string> newmodels;
 				
 				if(!models.nterms())
 					std::cout << "No models for step " << step << ", exiting..." << std::endl;
       
-				for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++) {
+				//for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++) {
+				for(List<std::string>::const_iterator i = models.begin() + startAt; i != models.end(); i++) {
       
 					// Iterate for the number of models
-					Model model = *i;
+					Model model(*i);
 					//std::cout << "model = " <<*i << std::endl;
 					theory = model.GetObject(-1);
 					List<Field> fields = theory.Fields();
 					
 					// Update progress
-					Progress::UpdateProgress(step, models.nterms());
+					Progress::UpdateModelProgress(step, models.nterms());
       
 					// Check constraints
 					if(!theory.chirality())
@@ -242,10 +271,11 @@ namespace Tomb
 							// Update the model and add to the models list
 							model.DeleteTerm(-1);
 							model.AddTerm(theory);
+							//std::cout << model << std::endl;
 							//if(newmodels.Index(model) == -1)
 							//{
 								//newmodels.AddTerm(model);
-	
+							
 							// For every successful model calculate the rges and store in the databases
 							RGE rges(model);
 							//std::cout << rges << std::endl;
@@ -333,24 +363,30 @@ namespace Tomb
 						List<Field> scalars = subtheory.getScalars();
 						
 						// If there are less than 10 reps, don't worry about numbers
-						/*int nreps = 0;
+						int nreps = scalars.nterms();
 						if(scalars.nterms() > 10)
 							nreps = nReps;
-					
+						
+						int total = Combinatorics::sum_of_binomials(scalars.nterms(),nreps);
 						
 						std::vector<bool> bit_mask(scalars.nterms());
 						bool next_bit_mask = false;
 						do
 						{
-
+							
+							Progress::UpdateRepProgress(total);
+							
 							if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
 							{
 								List<Field> subset;
 								for(int i=0; i!=bit_mask.size(); i++)
 									if(bit_mask[i])
 										subset.AddTerm(scalars[i]);
-								newmodel.AddTerm(Theory(subgroup, subchain, subset));
-								newmodels.AddTerm(newmodel);
+								Model newmodel2(newmodel);
+								List<Field> fields(subtheory.getFermions());
+								fields.AppendList(subset);
+								newmodel2.AddTerm(Theory(subgroup, subchain, fields));
+								newmodels.AddTerm(newmodel2.json().write_formatted());
 							}
 							
 							// next_bitmask
@@ -370,19 +406,20 @@ namespace Tomb
 							else 
 								next_bit_mask = false ;
 						}
-						while(next_bit_mask);*/
+						while(next_bit_mask);
 						/***********************************************************************/
 						
-						List<List<Field> > possibleReps = subtheory.generatePossibleReps(nReps);
+						//List<List<Field> > possibleReps = subtheory.generatePossibleReps(nReps);
    
 						//std::cout << "number of possible reps = " << possibleReps.nterms() << std::endl;
 
-						for(List<List<Field> >::iterator it_possreps = possibleReps.begin(); it_possreps != possibleReps.end(); it_possreps ++) 
-						{ 
+						/*for(List<List<Field> >::iterator it_possreps = possibleReps.begin(); it_possreps != possibleReps.end(); it_possreps ++) 
+						{
+							Progress::UpdateRepProgress(possibleReps.nterms());
 							Model newmodel2(newmodel);
 							newmodel2.AddTerm(Theory(subgroup, subchain, *it_possreps));
-							newmodels.AddTerm(newmodel2);
-						}
+							newmodels.AddTerm(newmodel2.json().write_formatted());
+						}*/
 						//std::cout << newmodels << std::endl;
 					}
    
@@ -400,7 +437,30 @@ namespace Tomb
 		}
 	}
 	
-	/* Exports the model to a file */
+	/* Parse a JSON node into a model class */
+	void Model::ParseJSON(const JSONNode &json)
+	{
+		try
+		{
+			if(nterms())
+				Clear();
+			
+			for(JSONNode::const_iterator it = json.begin(); it != json.end(); it++)
+			{
+				Theory theory(*it);
+				AddTerm(theory);
+				
+				
+			}
+			
+			_nsteps = nterms();
+			
+		}
+		catch (...) 
+		{
+			throw;
+		}
+	}
 	
 	
 	/* Overloaded << operator with models on the right */
