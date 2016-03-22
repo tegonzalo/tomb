@@ -18,6 +18,11 @@ namespace Tomb
 	std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
 	
 	bool SimpleGroup::database_check(std::string id, std::string what) {
+		if(DataBase.empty())
+		{
+			DataBase.clear();
+			return false;
+		}
 		if(DataBase.find(id) != DataBase.end()) {
 			if (what == "")
 				return true;
@@ -644,6 +649,7 @@ namespace Tomb
 					//Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
 					//_Casimir = Adjoint.DynkinIndex();
 				}
+				
 				
 				database_emplace(id(),*this);
 				

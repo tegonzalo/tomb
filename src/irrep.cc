@@ -20,6 +20,11 @@ namespace Tomb
 	std::map<std::pair<std::string, std::string>, Sum<Irrep> > Irrep::ProductDataBase;
 	
 	bool Irrep::database_check(std::string id, std::string what) {
+		if(DataBase.empty())
+		{
+			DataBase.clear();
+			return false;
+		}
 		if(DataBase.find(id) != DataBase.end()) {
 			if (what == "")
 				return true;

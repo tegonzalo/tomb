@@ -57,5 +57,7 @@ namespace Tomb
 #include "theory.h"
 #include "model.h"
 
+#include "files.h"
+
 
 #endif /* __HEADERS_H */

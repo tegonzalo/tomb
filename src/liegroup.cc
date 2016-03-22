@@ -18,6 +18,11 @@ namespace Tomb
 	std::map<std::string, JSONNode> LieGroup::JSONDataBase;
 	
 	bool LieGroup::database_check(std::string id, std::string what) {
+		if(DataBase.empty())
+		{
+			DataBase.clear();
+			return false;
+		}
 		if(DataBase.find(id) != DataBase.end()) {
 			if (what == "")
 				return true;
@@ -65,7 +70,6 @@ namespace Tomb
 	LieGroup::LieGroup(const std::string id) : Product<SimpleGroup>() {
 		
 		try {
-			
 			this->_ngroups = 0;
 			this->_rank = 0;
 			this->_dim = 0;
@@ -74,13 +78,13 @@ namespace Tomb
 			this->_semisimple = false;
 			
 
-			std::stringstream ss(Strings::split_string(id, '[')[0]);
-			std::string str;
+			std::string liegroupid(Strings::split_string(id, '[')[0]);
+			List<std::string> simplegroupids = Strings::split_string(liegroupid,'x');
 			
-			while(getline(ss, str, 'x')) {
-				AddTerm(SimpleGroup(str));
-			}
-			
+			SimpleGroup sg(simplegroupids[0]);
+
+			for(int i=0; i<simplegroupids.nterms(); i++)
+				AddTerm(SimpleGroup(simplegroupids[i]));
 			
 			this->Order();
 			

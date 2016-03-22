@@ -8,6 +8,7 @@
 #define __MODEL_H
 
 #include "headers.h"
+#include "files.h"
 
 namespace Tomb
 {

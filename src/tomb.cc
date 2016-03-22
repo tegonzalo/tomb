@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
 			// Pull all the available info from the database first of all
 			Tomb::group_database_fill();
 			Tomb::model_database_fill();
-			
+			// Empty the temp directory in case there was leftovers from a previous run
+			Files::EmptyDirectory("./temp");
 			//std::cout << "DataBases loaded" << std::endl;
 			
 			Theory theory(*i);
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 			Tomb::group_database_flush();
 			
 		} else {
-			// Nothing to do here
+			die();
 		}
 
 	} catch (std::exception &e) {
