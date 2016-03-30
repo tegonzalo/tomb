@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
 			Tomb::group_database_fill();
 			Tomb::model_database_fill();
 			// Empty the temp directory in case there was leftovers from a previous run
-			Files::EmptyDirectory("./temp");
-			//std::cout << "DataBases loaded" << std::endl;
+			if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
+			std::cout << "DataBases loaded" << std::endl;
 			
 			Theory theory(*i);
 			Model model(theory);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 			i = json.begin();
 			while(i != json.end() and i->name() != "NReps") i++;
 			
-			model.generateModels(i->as_int());
+			model.generateModelsRec(i->as_int());
 			
 			//std::cout << RGE::DataBase << std::endl;
 			//std::cout << Model::DataBase << std::endl;

@@ -42,7 +42,8 @@ namespace Tomb
 			void AddTerm(const Theory &);
 			
 			void generateModels(int = 0, int = 0);
-			void exportModel(int);
+			void generateModelsRec(int = 0, int = 0);
+			//void exportModel(int);
 			
 			RGE RGEs();
 			

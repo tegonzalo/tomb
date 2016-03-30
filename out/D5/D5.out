@@ -82,8 +82,14 @@
 	],
 	"Casimir" : 8,
 	"repsMaxDim" : 50,
-	"hasReps" : false,
-	"Irreps" : [],
+	"hasReps" : true,
+	"Irreps" : [
+		"(0,0,0,0,0)D5",
+		"(1,0,0,0,0)D5",
+		"(0,0,0,0,1)D5",
+		"(0,0,0,1,0)D5",
+		"(0,1,0,0,0)D5"
+	],
 	"hasSubgroups" : true,
 	"Subgroups" : [
 		"D4(A)xU1(B)[D5]",

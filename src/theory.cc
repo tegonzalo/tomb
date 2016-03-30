@@ -669,8 +669,8 @@ namespace Tomb
 	}
 	
 	/* Parses a json object into the attributes of the class */
-	void Theory::ParseJSON(const JSONNode & json) {
-		
+	void Theory::ParseJSON(const JSONNode & json) 
+	{
 		for(JSONNode::const_iterator i = json.begin(); i != json.end(); i++) {
 			
 			// get the node name and value as a string

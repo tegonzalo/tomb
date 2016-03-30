@@ -24,8 +24,6 @@
 		0,
 		1
 	],
-	"hasWeights" : true,
-	"Weights" : [
-		"(0,0,0,1)A2xA1xU1"
-	]
+	"hasWeights" : false,
+	"Weights" : []
 }

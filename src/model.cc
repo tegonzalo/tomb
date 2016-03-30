@@ -497,6 +497,74 @@ namespace Tomb
 		}
 	}
 	
+	/* Generate models, recursive version */
+	void Model::gereateModelsRec(int nReps, int startAt) {
+		
+		try
+		{
+			Theory theory = GetObject(0);
+			
+			Chain chain = theory.BreakingChain();
+			Chain subchain = chain;
+			int depth = chain.depth();
+			
+			LieGroup group = theory.Group();
+			LieGroup subgroup = group;
+			List<SubGroup> subgroups = chain.extractSubgroups();
+			
+			if(depth == 1)
+			{
+				if(theory.containsSM())
+				{
+					//std::cout << "contains sm" << std::endl;
+					// Check for anomaly cancellation and proton decay
+					theory.calculateAnomaly();
+					//std::cout << "anomlay free = " << theory.anomalyFree() << std::endl;
+					//model = ProtonDecay[model];
+					
+					/*// Update the model and add to the models list
+					model.DeleteTerm(-1);
+					model.AddTerm(theory);
+					//std::cout << model << std::endl;
+					
+					// For every successful model calculate the rges and store in the databases
+					RGE rges(model);
+					//std::cout << rges << std::endl;
+					int index = 0;
+					if((index = RGE::DataBase.Index(rges)) == -1)
+					{
+						index = RGE::DataBase.nterms();
+						RGE::DataBase.AddTerm(rges);
+					}
+					//std::cout << RGE::DataBase << std::endl;
+					if(Model::DataBase.nterms() <= index)
+						Model:DataBase.AddTerm(List<Model>());
+					if(Model::DataBase[index].Index(model) == -1)
+					{
+						Model::DataBase[index].AddTerm(model);
+					
+						// Update the success counter
+						success++;
+					}*/
+													
+				}
+			}
+			else
+			{
+				// Check constraints
+				if(!theory.chirality())
+				{
+					std::cerr << "Theory is not chiral" << std::endl;
+					return ;
+				}
+			}
+			
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
 	/* Parse a JSON node into a model class */
 	void Model::ParseJSON(const JSONNode &json)
 	{

@@ -122,7 +122,6 @@ namespace Tomb
 	Rrep::Rrep(const std::string id) {
 		
 		try {
-			
 			_HWeight = new Weight(id);
 			//_Group = new LieGroup(HWeight().Group());
 			_Group = HWeight().GroupId();

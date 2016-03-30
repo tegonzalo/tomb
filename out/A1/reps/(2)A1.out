@@ -16,13 +16,13 @@
 	"conjugate" : 0,
 	"congruency" : [
 		[
-			1
+			0
 		]
 	],
 	"hasWeights" : true,
 	"Weights" : [
 		"(2)A1",
-		"(-2.22045e-16)A1",
+		"(0)A1",
 		"(-2)A1"
 	]
 }
