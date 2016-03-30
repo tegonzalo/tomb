@@ -1399,6 +1399,42 @@ namespace Tomb
 			throw;
 		}
 	}
+	
+	/* Returns the adjoint reps for the Lie group */
+	List<Rrep> LieGroup::AdjointReps() 
+	{
+		try
+		{
+			List<Rrep> Reps;
+			for(int i=0; i<ngroups(); i++)
+			{
+				Rrep Rep(GetObject(0).AdjointRep());
+				for(int j=1; j<ngroups(); j++)
+					if(j==i)
+						Rep.AddIrrep(GetObject(j).AdjointRep());
+					else
+						Rep.AddIrrep(GetObject(j).SingletRep());
+				Reps.AddTerm(Rep);
+			}
+			return Reps;
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Returns the singlet rep for the Lie group */
+	Rrep LieGroup::SingletRep() 
+	{
+		try
+		{
+			return Rrep(*this, Weight(*this,RVector<double>(_rank)));
+			
+		} catch (...)
+		{
+			throw;
+		}
+	}
 
 	/* Returns all the representations of the group up to dimension maxdim */
 	List<Rrep> &LieGroup::Reps(int maxdim) {

@@ -1000,6 +1000,36 @@ namespace Tomb
 		}
 	}
 
+	/* Returns the adjoint rep of te group */
+	Irrep SimpleGroup::AdjointRep()
+	{
+		try
+		{
+			List<Irrep> irreps = Irreps(dim());
+			if(irreps[-1].dim() == dim())
+				return irreps[-1];
+			else
+				throw "SimpleGroup::Irrep::Could not get the adjoint irrep";
+			
+		} catch (...)
+		{
+			throw;
+		}	
+	}
+	
+	/* Returns a singlet rep */
+	Irrep SimpleGroup::SingletRep()
+	{
+		try
+		{
+			return Irrep(*this, Weight(*this,RVector<double>(_rank)));
+			
+		} catch (...)
+		{
+			throw;
+		}	
+	}
+	
 	/* Returns all the representations of the group up to dimension maxdim */
 	List<Irrep> &SimpleGroup::Irreps(int maxdim) {
 

@@ -498,11 +498,11 @@ namespace Tomb
 	}
 	
 	/* Generate models, recursive version */
-	void Model::gereateModelsRec(int nReps, int startAt) {
+	void Model::generateModelsRec(int nReps, int startAt) {
 		
 		try
 		{
-			Theory theory = GetObject(0);
+			Theory theory = GetObject(-1);
 			
 			Chain chain = theory.BreakingChain();
 			Chain subchain = chain;
@@ -512,23 +512,39 @@ namespace Tomb
 			LieGroup subgroup = group;
 			List<SubGroup> subgroups = chain.extractSubgroups();
 			
+			// Check constraints
+			if(!theory.chirality())
+			{
+				std::cerr << "Theory is not chiral" << std::endl;
+				return ;
+			}
+			
+			// Calculate the anomaly contribution of the newly renormalised reps
+			theory.calculateAnomaly();
+	
+			// Replace the last theory of the model with the current theory
+			if(GetObject(-1) != theory)
+			{
+				DeleteTerm(-1);
+				AddTerm(theory);
+			}
+			
 			if(depth == 1)
 			{
 				if(theory.containsSM())
 				{
 					//std::cout << "contains sm" << std::endl;
-					// Check for anomaly cancellation and proton decay
-					theory.calculateAnomaly();
-					//std::cout << "anomlay free = " << theory.anomalyFree() << std::endl;
-					//model = ProtonDecay[model];
+										
+					//calculateObservables();
 					
-					/*// Update the model and add to the models list
-					model.DeleteTerm(-1);
-					model.AddTerm(theory);
+					// Update the model and add to the models list
+					//model.DeleteTerm(-1);
+					//model.AddTerm(theory);
 					//std::cout << model << std::endl;
 					
 					// For every successful model calculate the rges and store in the databases
-					RGE rges(model);
+					//std::cout << *this << std::endl;
+					RGE rges(*this);
 					//std::cout << rges << std::endl;
 					int index = 0;
 					if((index = RGE::DataBase.Index(rges)) == -1)
@@ -539,26 +555,188 @@ namespace Tomb
 					//std::cout << RGE::DataBase << std::endl;
 					if(Model::DataBase.nterms() <= index)
 						Model:DataBase.AddTerm(List<Model>());
-					if(Model::DataBase[index].Index(model) == -1)
+					if(Model::DataBase[index].Index(*this) == -1)
 					{
-						Model::DataBase[index].AddTerm(model);
+						Model::DataBase[index].AddTerm(*this);
 					
 						// Update the success counter
-						success++;
-					}*/
-													
+						//success++;
+					}
 				}
 			}
 			else
 			{
-				// Check constraints
-				if(!theory.chirality())
-				{
-					std::cerr << "Theory is not chiral" << std::endl;
-					return ;
+				// If it is not the last step, calculate the subgroup and subchain
+				subgroup = subgroups.GetObject(1);
+						
+				// Build the subchain
+				subchain.Clear();
+				for(int j=0; j<chain.nterms(); j++)
+					subchain.AppendList(chain.GetObject(j).Branches());
+				subchain.calculateDepth();
+						
+				//Calculate the breaking, obtaining the subreps and mixings at the end
+				List<RVector<double> > mixings;
+				List<Sum<Field> > subreps = theory.calculateBreaking(mixings);
+				
+				
+				// Loop over number of subreps, i.e. breaking options 
+				for(int k=0; k<subreps.nterms(); k++) {
+					List<Field> subrep = subreps.GetObject(k);
+					Theory subtheory = Theory(subgroup, subchain, subrep);
+					Theory newtheory(theory);
+					Model model(*this);
+					//std::cout << newmodel << std::endl;
+
+					// Check if the next step is last step, and if so, check for SM content and normalise
+					if(subchain.depth() == 1 and subrep.GetObject(0).Group() == StandardModel::Group)
+					{
+						if(subtheory.containsSM())
+						{
+							double norm = subtheory.normaliseToSM();
+							subrep = subtheory.Fields();
+									
+							// Add normalisation, mixing and anomaly to the previous step (ONLY WORKS FOR THE STEP BEFORE SM)
+							if(mixings.nterms() > k and norm != 1)
+							{
+								newtheory.setMixing(mixings.GetObject(k));
+								norm = newtheory.normaliseMixing(norm);
+							}
+							//std::cout << newtheory << std::endl;
+							newtheory.normaliseReps(norm);
+
+							if(model.GetObject(-1) != newtheory)
+							{
+								model.DeleteTerm(-1);
+								model.AddTerm(newtheory);
+							}
+						} else
+							return ;
+					}
+					
+							
+					//Generate all possible combiations of reps
+					//std::cout << "Calculating possible reps..." << std::endl;
+					// Pasted from the theory and linkedlists code to hopefully speed up things
+					/**************************************************************/
+					List<Field> scalars = subtheory.getScalars();
+					
+					// If there are less than 10 reps, don't worry about numbers
+					int nreps = scalars.nterms();
+					if(scalars.nterms() > 10)
+						nreps = nReps;
+					
+					int total = Combinatorics::sum_of_binomials(scalars.nterms(),nreps);
+						
+					std::vector<bool> bit_mask(scalars.nterms());
+					bool next_bit_mask = false;
+					do
+					{	
+						// Update progress
+						Progress::UpdateModelProgress(depth, total*subreps.nterms());
+
+						if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
+						{
+							List<Field> subset;
+							for(int i=0; i!=bit_mask.size(); i++)
+								if(bit_mask[i])
+									subset.AddTerm(scalars[i]);
+							
+							Model newmodel(model);
+							List<Field> fields(subtheory.getFermions());
+							fields.AppendList(subset);
+							newmodel.AddTerm(Theory(subgroup, subchain, fields));
+							
+							// Recursive call
+							newmodel.generateModelsRec(nReps);
+						}
+							
+						// next_bitmask
+						std::size_t i = 0 ;
+						for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
+							bit_mask[i] = false;
+						if( i < bit_mask.size())
+						{
+							if(std::count(bit_mask.begin(), bit_mask.end(), true) < nreps)
+									bit_mask[i] = true;
+							next_bit_mask = true;
+							
+						}
+						else 
+							next_bit_mask = false ;
+					}
+					while(next_bit_mask);
+					/***********************************************************************/
 				}
 			}
 			
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Calculates the observables for every theory of the model */
+	void Model::calculateObservables()
+	{
+		try
+		{
+			for(int i=0; i < nterms(); i++)
+			{
+				// Proton Decay
+				if(GetObject(i).Group() != StandardModel::Group)
+				{
+					List<SubGroup> subgroups = GetObject(i).BreakingChain().extractSubgroups();
+					List<Field> fields(GetObject(i).Fields()), auxfields(GetObject(i).Fields()), gauge;
+					
+					// Calculate the gauge reps for the Lie Group, and cast them to scalar for convenience
+					List<Rrep> adjoints = GetObject(i).Group().AdjointReps();
+					for(auto adj = adjoints.begin(); adj != adjoints.end(); adj++)
+						gauge.AddTerm(Field(*adj,"Scalar"));
+					std::cout << "fields = " << fields << std::endl;
+					std::cout << "gauge = " << gauge << std::endl;
+					
+					// Loop over the subgroups to decompose down the SM group
+					for(int j=1; j < subgroups.nterms(); j++)
+					{
+						SubGroup newsubgroup(subgroups.GetObject(j));
+						std::cout << newsubgroup.id() << std::endl;
+						std::cout << GetObject(i+j-1) << std::endl;
+						std::cout << GetObject(i+j-1).Mixing() << std::endl;
+						if(GetObject(i+j-1).Mixing().cols())
+							newsubgroup = SubGroup(newsubgroup.id(), GetObject(i+j-1).Mixing());
+						
+						auxfields = fields;
+						fields.Clear();
+						for(auto fi = auxfields.begin(); fi != auxfields.end(); fi++)
+							fields.AppendList(fi->Decompose(newsubgroup));
+						auxfields = gauge;
+						gauge.Clear();
+						for(auto fi = auxfields.begin(); fi != auxfields.end(); fi++)
+							gauge.AppendList(fi->Decompose(newsubgroup));
+						std::cout << "fields = " << fields << std::endl;
+						std::cout << "gauge = " << gauge << std::endl;
+						
+						std::cout << GetObject(j).norm() << std::endl;
+					}
+					
+					fields = Theory::normaliseReps(fields,GetObject(-2).norm());
+					gauge = Theory::normaliseReps(gauge,GetObject(-2).norm());
+					std::cout << "fields = " << fields << std::endl;
+					std::cout << "gauge = " << gauge << std::endl;
+					
+					//_observables.emplace("PD_Scalar", Observables::ProtonDecay(fields));
+					//_observables.emplace("PD_Gauge", Observables::ProtonDecay(gauge));
+					
+				exit(0);
+				}
+				//else
+				//	_observables.emplace("PD_Scalar", Observables::ProtonDecay(_Fields));
+					
+					// Update this theory
+				//DeleteTerm(i);
+				//InsertTerm(i, theory);
+			}
 		} catch (...)
 		{
 			throw;

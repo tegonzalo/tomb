@@ -34,6 +34,7 @@ namespace Tomb
 			int nterms() const;
 			TYPE &FirstTerm() const;
 			TYPE &GetObject(int) const;
+			TYPE &operator[](int) const;
 			void AddTerm(const TYPE &);
 			void InsertTerm(int, const TYPE &);
 			void DeleteTerm(int);
@@ -208,9 +209,25 @@ namespace Tomb
 				throw "List::GetObject::Element doesn\'t exist";
 			if(i < 0) 
 				return this->GetObject(this->size()+i);
-			return (TYPE &)(*this)[i];
+			return (TYPE &) std::vector<TYPE>::operator[](i);
 		}
 		catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Returns the ith object of the List */
+	template <class TYPE> TYPE &List<TYPE>::operator[](int i) const
+	{
+		try
+		{	if(i >= this->nterms()) 
+				throw "List::operator[]::Element doesn\'t exist";
+			if(i < 0)
+				return (*this)[nterms()+i];
+			else
+				return (TYPE &) std::vector<TYPE>::operator[](i);
+		} catch (...)
 		{
 			throw;
 		}

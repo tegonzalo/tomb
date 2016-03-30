@@ -83,6 +83,8 @@ namespace Tomb
 			List<Product<Rrep> > Invariants(const List<Rrep> &, const int = 4);
 			List<Rrep> SimpleReps();
 			Rrep GeneratingRep();
+			List<Rrep> AdjointReps();
+			Rrep SingletRep();
 			List<Rrep> &Reps(int=50);
 			List<Rrep> RepsConst() const;
 			List<Rrep> Irreps2Reps(List<Irrep>);

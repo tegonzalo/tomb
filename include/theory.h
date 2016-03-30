@@ -19,9 +19,10 @@ namespace Tomb
 			std::string _Group;
 			Chain _BreakingChain;
 			List<Field> _Fields;
+			double _norm = 1;
 			RVector<double>  _Mixing;
 			bool _anomalyFree;
-			List<std::string> _protonDecay;
+			std::map<std::string, bool> _observables;
 			
 		public:
 			
@@ -37,14 +38,16 @@ namespace Tomb
 			std::string GroupId() const;
 			Chain BreakingChain() const;
 			List<Field> Fields() const;
-						
+			
+			double norm() const;
 			RVector<double> Mixing() const;
 			void setMixing(RVector<double>);
 			
 			bool chirality() const;
 			bool anomalyFree() const;
 			void calculateAnomaly();
-			List<std::string> protonDecay() const;
+			std::map<std::string, bool> observables() const;
+			void calculateObservables();
 			
 			List<Field> getScalars() const;
 			List<Field> getFermions() const;
@@ -58,6 +61,7 @@ namespace Tomb
 			double normaliseToSM();
 			double normaliseMixing(double);
 			double normaliseReps(double);
+			static List<Field> normaliseReps(List<Field>, double);
 			
 			List<List<Field> > generatePossibleReps(int);
 			

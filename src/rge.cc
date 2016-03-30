@@ -320,6 +320,7 @@ namespace Tomb
 				Theory theory = model[i];
 				Chain chain = theory.BreakingChain();
 				RVector<double> Mixing = theory.Mixing();
+				//std::cout << Mixing << std::endl;
 
 				List<int> indices;
 				if(Mixing.cols())
@@ -355,7 +356,10 @@ namespace Tomb
 							for(int k=0; k<prevchain[j].nbranches(); k++)
 							{
 								if(prevchain[j].Branch(k).nbranches() == 1 and prevchain[j].Branch(k).Branch(0).label().find("+") != std::string::npos)
-									column[l] = Mixing[indices[m++]];
+									if(Mixing.cols())
+										column[l] = Mixing[indices[m++]];
+									else
+										throw "Rge::mixingMatrix::No mixing matrix found";
 								if(k)
 									Mix.InsertRow(l,Mix.Row(l-1));
 								l++;

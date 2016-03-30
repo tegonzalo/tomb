@@ -23,9 +23,10 @@ namespace Tomb
 			_BreakingChain = BreakingChain;
 			_Fields = Fields;
 			_Fields.Order();
+			_norm = 1;
 			_Mixing = RVector<double>();
 			_anomalyFree = true;
-			_protonDecay.Clear();
+			_observables.clear();
 			
 		} catch (...) {
 			throw;
@@ -39,9 +40,10 @@ namespace Tomb
 			_Group = T.GroupId();
 			_BreakingChain = T.BreakingChain();
 			_Fields = T.Fields();
+			_norm = T.norm();
 			_Mixing = T.Mixing();
 			_anomalyFree = T.anomalyFree();
-			_protonDecay = T.protonDecay();
+			_observables = T.observables();
 		} catch (...) {
 			throw;
 		}
@@ -62,18 +64,20 @@ namespace Tomb
 		_Group(std::move(T._Group)),
 		_BreakingChain(std::move(T._BreakingChain)),
 		_Fields(std::move(T._Fields)),
+		_norm(std::move(T._norm)),
 		_Mixing(std::move(T._Mixing)),
 		_anomalyFree(std::move(T._anomalyFree)),
-		_protonDecay(std::move(T._protonDecay))
+		_observables(std::move(T._observables))
 	{
 		
 		try {
 			T._Group = "";
 			T._BreakingChain.Clear();
 			T._Fields.Clear();
+			T._norm == 1;
 			T._Mixing = RVector<double>();
 			T._anomalyFree = false;
-			T._protonDecay.Clear();
+			T._observables.clear();
 			
 		} catch (...) {
 			throw;
@@ -93,9 +97,10 @@ namespace Tomb
 			_Group = T.GroupId();
 			_BreakingChain = T.BreakingChain();
 			_Fields = T.Fields();
+			_norm = T.norm();
 			_Mixing = T.Mixing();
 			_anomalyFree = T.anomalyFree();
-			_protonDecay = T.protonDecay();
+			_observables = T.observables();
 			
 			return *this;
 		} catch (...) {
@@ -113,16 +118,18 @@ namespace Tomb
 			_Group = std::move(T._Group);
 			_BreakingChain = std::move(T._BreakingChain);
 			_Fields = std::move(T._Fields);
+			_norm = std::move(T._norm);
 			_Mixing = std::move(T._Mixing);
 			_anomalyFree = std::move(T._anomalyFree);
-			_protonDecay = std::move(T._protonDecay);
+			_observables = std::move(T._observables);
 			
 			T._Group = "";
 			T._BreakingChain.Clear();
 			T._Fields.Clear();
+			T._norm = 1;
 			T._Mixing = RVector<double>();
 			T._anomalyFree = false;
-			T._protonDecay.Clear();
+			T._observables.clear();
 			
 			return *this;
 		} catch (...) {
@@ -153,6 +160,12 @@ namespace Tomb
 	List<Field> Theory::Fields() const
 	{
 		return _Fields;
+	}
+	
+	/* Norm getter */
+	double Theory::norm() const
+	{
+		return _norm;
 	}
 	
 	/* Mixing getter */
@@ -306,8 +319,21 @@ namespace Tomb
 	}
 	
 	/* Proton decay getter */
-	List<std::string> Theory::protonDecay() const {
-		return _protonDecay;
+	std::map<std::string, bool> Theory::observables() const {
+		return _observables;
+	}
+	
+	/* Calculate the observable contribution */
+	void Theory::calculateObservables() 
+	{
+		try
+		{
+			
+				
+		} catch (...)
+		{
+			throw;
+		}
 	}
 	
 	/* Obtain the scalars */
@@ -344,7 +370,7 @@ namespace Tomb
 			Fields() == theory.Fields() and
 			Mixing() == theory.Mixing() and
 			anomalyFree() == theory.anomalyFree() and
-			protonDecay() == protonDecay())
+			observables() == theory.observables())
 			return true;
 		return false;
 	}
@@ -554,6 +580,8 @@ namespace Tomb
 			_Fields.Clear();
 			_Fields = fields;
 			
+			_norm = norm;
+			
 			return norm;
 		}
 		catch (...)
@@ -591,6 +619,8 @@ namespace Tomb
 						}
 					}
 				}
+				_norm = norm2;
+				
 				return norm2;
 			}
 			
@@ -618,7 +648,35 @@ namespace Tomb
 			}
 			_Fields.Clear();
 			_Fields = fields;
+			
+			_norm = norm;
+			
+			return norm;
+			
 		} catch (...)
+		{
+			throw;
+		}
+	}
+	
+	/* Static version of normaliseReps */
+	List<Field> Theory::normaliseReps(List<Field> Fields, double norm)
+	{
+		try
+		{
+			List<Field> fields;
+			for(List<Field>::const_iterator it = Fields.begin(); it != Fields.end(); it++)
+			{
+				Weight w = it->HWeight();
+				w[-1] *= norm; 
+				fields.AddTerm(Field(Rrep(it->Group(), w), it->LorentzRep()));
+				
+
+			}
+			
+			return fields;
+		}
+		catch (...)
 		{
 			throw;
 		}
@@ -661,9 +719,19 @@ namespace Tomb
 		json.push_back(JSONNode("Group", _Group));
 		json.push_back(_BreakingChain.json("BreakingChain"));
 		json.push_back(_Fields.json("Fields"));
+		if(_norm != 1)
+			json.push_back(JSONNode("norm",_norm));
 		if(_Mixing != 0)
 			json.push_back(_Mixing.json("Mixing"));
 		json.push_back(JSONNode("AnomalyFree", _anomalyFree));
+		JSONNode observables;
+		if(_observables.size())
+		{
+			observables.set_name("Observables");
+			for(auto it = _observables.begin(); it != _observables.end(); it++)
+				observables.push_back(JSONNode(it->first, it->second));
+			json.push_back(observables);
+		}
 		
 		return json;
 	}

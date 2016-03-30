@@ -52,6 +52,7 @@ namespace Tomb
 #include "rge.h"
 
 #include "sm.h"
+#include "observables.h"
 
 #include "chain.h"
 #include "theory.h"

@@ -30,7 +30,7 @@ namespace Tomb
 	
 	namespace Progress
 	{
-		void UpdateModelProgress(int, int);
+		void UpdateModelProgress(int, int, bool = false);
 		
 		void UpdateRepProgress(int);
 	}

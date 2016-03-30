@@ -23,6 +23,7 @@ namespace Tomb
 		public:
 			
 			Field(Rrep, Rrep);
+			Field(Rrep, std::string);
 			Field(std::string);
 			Field(const Field &);
 			Field(const JSONNode &);

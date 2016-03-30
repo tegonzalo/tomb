@@ -84,17 +84,30 @@ namespace Tomb
 	}
 		
 	/* Updates the progess bar for the models */
-	void Progress::UpdateModelProgress(int step, int nmodels)
+	void Progress::UpdateModelProgress(int step, int nmodels, bool noUpdate)
 	{
-		static int count = 1; // Counter
-		double progress = double(count)/nmodels; // Counts models per step
+		static List<int> counters(std::vector<int>(10)); // Vector of counters
+		static List<int> nmodelsVec(std::vector<int>(10)); // Vector of number of models
+		double progress = double(counters[step])/nmodels; // Counts models per step
+		
+		if(!nmodels) return ;
 		
 		// Set up progress message
-		if(count == 1)
-			std::cout << "Generating models for step " << step << std::endl;
+		if(counters[step] == 0)
+		{
+			//std::cout << "Step " << step << std::endl;
+			counters[step]++;
+			nmodelsVec[step] = nmodels;
+		}
 		int barWidth = 70;
+		
+		//std::cout << counters << std::endl;
+		//std::cout << nmodelsVec << std::endl;
+		
+		//if(step < 10)
+		//	Progress::UpdateModelProgress(step+1, nmodelsVec[step+1], true);
 
-		std::cout << "[";
+		std::cout <<  "Step " << step << ": [";
 		int pos = barWidth * progress;
 		for (int i = 0; i < barWidth; ++i)
 		{
@@ -105,14 +118,17 @@ namespace Tomb
 			else 
 				std::cout << " ";
 		}
-		std::cout << "] " << int(progress * 100.0) << " % : " << count << "/" << nmodels << "\r";
+		std::cout << "] " << int(progress * 100.0) << " % : " << counters[step] << "/" << nmodels << "\r";
 		std::cout.flush();
 
 		std::cout << std::endl;
 	
-		count++;
-		if(count > nmodels)
-			count = 1;
+		if(!noUpdate) counters[step]++;
+		if(counters[step] > nmodelsVec[step])
+		{
+			counters[step] = 0;
+			nmodelsVec[step] = 0;
+		}
 
 	}
 	

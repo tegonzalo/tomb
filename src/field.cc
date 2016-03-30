@@ -29,6 +29,27 @@ namespace Tomb
 		}
 	}
 	
+	/* Constructor wiht gauge rep and string */
+	Field::Field(Rrep GaugeRep, std::string LorentzRep) : Rrep(GaugeRep)
+	{
+		try
+		{
+			if(LorentzRep == "Scalar")
+				_LorentzRep = Rrep("(0,0)A1xA1");
+			else if(LorentzRep == "Fermion")
+				_LorentzRep = Rrep("(1,0)A1xA1");
+			else if(LorentzRep == "Antifermion")
+				_LorentzRep = Rrep("(0,1)A1xA1");
+			else if(LorentzRep == "Vector")
+				_LorentzRep = Rrep("(1,1)A1xA1");
+			else
+				_LorentzRep = Rrep(LorentzRep);
+		} catch (...)
+		{
+			throw;
+		}
+	}
+	
 	/* Constructor with strings */
 	Field::Field(std::string id)
 	{

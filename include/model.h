@@ -43,10 +43,9 @@ namespace Tomb
 			
 			void generateModels(int = 0, int = 0);
 			void generateModelsRec(int = 0, int = 0);
-			//void exportModel(int);
 			
-			RGE RGEs();
-			
+			void calculateObservables();
+						
 			void ParseJSON(const JSONNode &);
 	};
 	

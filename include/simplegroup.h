@@ -68,6 +68,8 @@ namespace Tomb
 			List<Root> Roots();
 			List<Irrep> SimpleReps();
 			Irrep GeneratingRep();
+			Irrep AdjointRep();
+			Irrep SingletRep();
 			List<Irrep> &Irreps(int=50);
 			List<Irrep> IrrepsConst() const;
 			Matrix<double> ExtendedCartan();
