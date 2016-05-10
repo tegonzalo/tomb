@@ -371,8 +371,13 @@ namespace Tomb
 	/* Overloaded << operator with theories on the right */
 	std::ostream &operator<<(std::ostream &stream, const Field &f)
 	{
-		//stream << f.GaugeRep().label() << "_" << (f.isScalar() ? "S" : "F");
-		stream << f.label() << "_" << (f.isScalar() ? "S" : "F");
+		stream << f.label();
+		if(f.isScalar())
+			stream << "_S";
+		else if(f.isFermion())
+			stream << "_F";
+		else if(f.isVector())
+			stream << "_V";
 		return stream;
 	}
 }

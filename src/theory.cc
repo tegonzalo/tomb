@@ -324,10 +324,15 @@ namespace Tomb
 	}
 	
 	/* Calculate the observable contribution */
-	void Theory::calculateObservables() 
+	void Theory::calculateObservables(List<Field> &fields) 
 	{
 		try
 		{
+			// Proton Decay
+			_observables.emplace("ProtonDecay", Observables::ProtonDecay(fields));
+			
+			// N-N oscillations
+			_observables.emplace("NNOscillations", Observables::NNOscillations(fields));
 			
 				
 		} catch (...)

@@ -47,7 +47,7 @@ namespace Tomb
 			bool anomalyFree() const;
 			void calculateAnomaly();
 			std::map<std::string, bool> observables() const;
-			void calculateObservables();
+			void calculateObservables(List<Field> &);
 			
 			List<Field> getScalars() const;
 			List<Field> getFermions() const;

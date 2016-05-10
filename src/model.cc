@@ -498,7 +498,7 @@ namespace Tomb
 	}
 	
 	/* Generate models, recursive version */
-	void Model::generateModelsRec(int nReps, int startAt) {
+	long int Model::generateModelsRec(int nReps, int startAt) {
 		
 		try
 		{
@@ -516,7 +516,7 @@ namespace Tomb
 			if(!theory.chirality())
 			{
 				std::cerr << "Theory is not chiral" << std::endl;
-				return ;
+				return 0;
 			}
 			
 			// Calculate the anomaly contribution of the newly renormalised reps
@@ -534,14 +534,9 @@ namespace Tomb
 				if(theory.containsSM())
 				{
 					//std::cout << "contains sm" << std::endl;
-										
+					//std::cout << "Calculating observables" << std::endl;
 					//calculateObservables();
-					
-					// Update the model and add to the models list
-					//model.DeleteTerm(-1);
-					//model.AddTerm(theory);
-					//std::cout << model << std::endl;
-					
+										
 					// For every successful model calculate the rges and store in the databases
 					//std::cout << *this << std::endl;
 					RGE rges(*this);
@@ -560,9 +555,16 @@ namespace Tomb
 						Model::DataBase[index].AddTerm(*this);
 					
 						// Update the success counter
-						//success++;
+						Progress::success++;
 					}
+					
+					if(RGE::DataBase.nterms() > 10000)
+						model_database_flush();
+	
 				}
+				else
+					return 0;
+				
 			}
 			else
 			{
@@ -611,7 +613,7 @@ namespace Tomb
 								model.AddTerm(newtheory);
 							}
 						} else
-							return ;
+							return 0;
 					}
 					
 							
@@ -633,7 +635,7 @@ namespace Tomb
 					do
 					{	
 						// Update progress
-						Progress::UpdateModelProgress(depth, total*subreps.nterms());
+						Progress::UpdateModelProgress(depth-1, total*subreps.nterms());
 
 						if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
 						{
@@ -670,6 +672,8 @@ namespace Tomb
 				}
 			}
 			
+			return Progress::success;
+			
 		} catch (...)
 		{
 			throw;
@@ -683,59 +687,46 @@ namespace Tomb
 		{
 			for(int i=0; i < nterms(); i++)
 			{
-				// Proton Decay
+					
+				List<Field> fields(GetObject(i).getScalars()), auxfields;
+				
 				if(GetObject(i).Group() != StandardModel::Group)
 				{
 					List<SubGroup> subgroups = GetObject(i).BreakingChain().extractSubgroups();
-					List<Field> fields(GetObject(i).Fields()), auxfields(GetObject(i).Fields()), gauge;
 					
 					// Calculate the gauge reps for the Lie Group, and cast them to scalar for convenience
 					List<Rrep> adjoints = GetObject(i).Group().AdjointReps();
 					for(auto adj = adjoints.begin(); adj != adjoints.end(); adj++)
-						gauge.AddTerm(Field(*adj,"Scalar"));
-					std::cout << "fields = " << fields << std::endl;
-					std::cout << "gauge = " << gauge << std::endl;
+						fields.AddTerm(Field(*adj,"Vector"));
 					
 					// Loop over the subgroups to decompose down the SM group
 					for(int j=1; j < subgroups.nterms(); j++)
 					{
 						SubGroup newsubgroup(subgroups.GetObject(j));
-						std::cout << newsubgroup.id() << std::endl;
-						std::cout << GetObject(i+j-1) << std::endl;
-						std::cout << GetObject(i+j-1).Mixing() << std::endl;
+						
 						if(GetObject(i+j-1).Mixing().cols())
 							newsubgroup = SubGroup(newsubgroup.id(), GetObject(i+j-1).Mixing());
+						if(GetObject(i+j-1).norm() != 1)
+							fields = Theory::normaliseReps(fields,GetObject(i+j-1).norm());
 						
 						auxfields = fields;
 						fields.Clear();
 						for(auto fi = auxfields.begin(); fi != auxfields.end(); fi++)
 							fields.AppendList(fi->Decompose(newsubgroup));
-						auxfields = gauge;
-						gauge.Clear();
-						for(auto fi = auxfields.begin(); fi != auxfields.end(); fi++)
-							gauge.AppendList(fi->Decompose(newsubgroup));
-						std::cout << "fields = " << fields << std::endl;
-						std::cout << "gauge = " << gauge << std::endl;
 						
-						std::cout << GetObject(j).norm() << std::endl;
 					}
 					
-					fields = Theory::normaliseReps(fields,GetObject(-2).norm());
-					gauge = Theory::normaliseReps(gauge,GetObject(-2).norm());
-					std::cout << "fields = " << fields << std::endl;
-					std::cout << "gauge = " << gauge << std::endl;
+					//std::cout << "fields = " << fields << std::endl;
 					
-					//_observables.emplace("PD_Scalar", Observables::ProtonDecay(fields));
-					//_observables.emplace("PD_Gauge", Observables::ProtonDecay(gauge));
-					
-				exit(0);
 				}
-				//else
-				//	_observables.emplace("PD_Scalar", Observables::ProtonDecay(_Fields));
-					
-					// Update this theory
-				//DeleteTerm(i);
-				//InsertTerm(i, theory);
+				
+				
+				// Update this theory
+				Theory theory(GetObject(i));
+				theory.calculateObservables(fields);
+				
+				DeleteTerm(i);
+				InsertTerm(i, theory);
 			}
 		} catch (...)
 		{

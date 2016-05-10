@@ -25,6 +25,7 @@ namespace Tomb
 			List(const TYPE *, const TYPE *);
 			List(const List<TYPE> &);
 			List(const std::vector<TYPE> &);
+			List(const JSONNode &);
 			List(List<TYPE> &&);
 
 			~List();
@@ -131,6 +132,16 @@ namespace Tomb
 	template <class TYPE> List<TYPE>::List(const std::vector<TYPE> &otherList) : std::vector<TYPE>(otherList)
 	{
 
+	}
+	
+	/* Copy constructor 2 */
+	template <class TYPE> List<TYPE>::List(const JSONNode &json)
+	{
+		if(std::is_same<TYPE, std::string>::value)
+			for(auto i=json.begin(); i!=json.end(); i++)
+				AddTerm(TYPE(i->as_string()));
+		//else
+		//	ParseJSON(json);
 	}
 
 	/* Move constructor */
@@ -569,7 +580,7 @@ namespace Tomb
 
 			while(it != n.end())
 			{
-				if(it->as_string() != "")
+				if(it->as_string() != "" or std::is_same<TYPE, std::string>::value)
 				{
 					TYPE Object(it->as_string());
 					//std::cout << it->as_string() << " ---> " << Object << std::endl;

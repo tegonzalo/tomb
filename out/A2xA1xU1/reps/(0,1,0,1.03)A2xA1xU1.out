@@ -1,6 +1,6 @@
 {
 	"id" : "(0,1,0,1.03)A2xA1xU1",
-	"Group" : "A2xA1xU1",
+	"Group" : "A2(A)xA1(B)xU1(D+C)[A2xA1xA1xU1]",
 	"GroupRank" : 4,
 	"HWeight" : [
 		[
@@ -24,6 +24,10 @@
 		0,
 		3.2
 	],
-	"hasWeights" : false,
-	"Weights" : []
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,1,0,1.03)A2xA1xU1",
+		"(1,-1,0,1.03)A2xA1xU1",
+		"(-1,0,0,1.03)A2xA1xU1"
+	]
 }

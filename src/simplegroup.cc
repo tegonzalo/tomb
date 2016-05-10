@@ -1062,6 +1062,7 @@ namespace Tomb
 				return _Irreps;
 			}
 			
+			
 			// If not, calculate it
 			List<Irrep> Reps;
 			Weight HW(*this, this->rank());
@@ -1887,8 +1888,16 @@ namespace Tomb
 				_hasSubgroups = i->as_bool();
 			} else if(node_name == "Irreps" and (what == "Reps")) {
 				_Irreps.ParseJSON(*i);
+				if(_Irreps.nterms())
+					_hasReps = true;
+				else
+					_hasReps = false;
 			} else if(node_name == "Subgroups" and (what == "Subgroups")) {
 				_Subgroups.ParseJSON(*i);
+				if(_Subgroups.nterms())
+					_hasSubgroups = true;
+				else
+					_hasSubgroups = false;
 			}
 				
 			//increment the iterator

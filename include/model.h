@@ -8,7 +8,7 @@
 #define __MODEL_H
 
 #include "headers.h"
-#include "files.h"
+//#include "database.h"
 
 namespace Tomb
 {
@@ -42,7 +42,7 @@ namespace Tomb
 			void AddTerm(const Theory &);
 			
 			void generateModels(int = 0, int = 0);
-			void generateModelsRec(int = 0, int = 0);
+			long int generateModelsRec(int = 0, int = 0);
 			
 			void calculateObservables();
 						

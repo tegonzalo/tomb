@@ -35,6 +35,11 @@ bool parsearguments(int argc, char *argv[], std::string &filename, std::string &
 					mode = "file";
 					return true;
 				}
+				else if(!strcmp(argv[1],"-o") and Files::FileExists(filename))
+				{
+					mode = "observables";
+					return true;
+				}
 		
 				return false;
 			default:
@@ -72,7 +77,7 @@ int main(int argc, char *argv[])
 				Tomb::model_database_fill();
 				// Empty the temp directory in case there was leftovers from a previous run
 				if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
-				std::cout << "DataBases loaded" << std::endl;
+				std::cout << "Databases loaded" << std::endl;
 			
 				Theory theory(*i);
 				Model model(theory);
@@ -80,15 +85,35 @@ int main(int argc, char *argv[])
 				// Get the number of reps
 				i = json.begin();
 				while(i != json.end() and i->name() != "NReps") i++;
-			
-				model.generateModelsRec(i->as_int());
-			
-				//std::cout << RGE::DataBase << std::endl;
-				//std::cout << Model::DataBase << std::endl;
-
+				int nreps = i->as_int();
+				
+				long int success = model.generateModelsRec(nreps);
+				std::cout << "Number of successful models: " << success << std::endl;
+				
+				std::cout << "Flushing Databases" << std::endl;
 				// Flush all the databases to files
 				Tomb::model_database_flush();
 				Tomb::group_database_flush();
+				
+				// Filter with the observables
+				i = json.begin();
+				while(i != json.end() and i->name() != "Observables") i++;
+				
+				List<std::string> observables(*i);
+				Tomb::model_database_filter(observables);
+				
+				std::cout << "END" << std::endl;
+			}
+			else if(mode == "observables")
+			{
+				JSONNode json = libjson::parse(Files::ReadFileString(filename));
+			
+				JSONNode::iterator i = json.begin();
+				while(i != json.end() and i->name() != "Observables") i++;
+				
+				List<std::string> observables(*i);
+				Tomb::model_database_filter(observables);
+				
 			}
 		} else {
 			die();

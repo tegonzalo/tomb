@@ -27,9 +27,16 @@
 		]
 	],
 	"Casimir" : 3,
-	"repsMaxDim" : 50,
-	"hasReps" : false,
+	"repsMaxDim" : 8,
+	"hasReps" : true,
 	"hasSubgroups" : false,
-	"Irreps" : [],
+	"Irreps" : [
+		"(0,0)A2",
+		"(1,0)A2",
+		"(0,1)A2",
+		"(2,0)A2",
+		"(0,2)A2",
+		"(1,1)A2"
+	],
 	"Subgroups" : []
 }

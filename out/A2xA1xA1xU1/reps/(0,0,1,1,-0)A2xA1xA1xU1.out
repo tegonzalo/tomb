@@ -27,6 +27,11 @@
 		1,
 		0
 	],
-	"hasWeights" : false,
-	"Weights" : []
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,0,1,1,-0)A2xA1xA1xU1",
+		"(0,0,1,-1,-0)A2xA1xA1xU1",
+		"(0,0,-1,1,-0)A2xA1xA1xU1",
+		"(0,0,-1,-1,-0)A2xA1xA1xU1"
+	]
 }

@@ -15,6 +15,8 @@ namespace Tomb
 	namespace Observables
 	{
 		bool ProtonDecay(List<Field> &);
+		
+		bool NNOscillations(List<Field> &);
 	}
 }
 

@@ -30,6 +30,8 @@ namespace Tomb
 	
 	namespace Progress
 	{
+		static long int success = 0;
+		
 		void UpdateModelProgress(int, int, bool = false);
 		
 		void UpdateRepProgress(int);
