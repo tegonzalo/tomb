@@ -421,15 +421,31 @@ namespace Tomb
 			
 			List<std::string> OutputContents = Files::GetDirectoryContents(filepath.str());
 			
+			std::cout << OutputContents.nterms() << std::endl;
+			int count = 0;
+			
 			for(auto it_Contents = OutputContents.begin(); it_Contents != OutputContents.end(); it_Contents++)
 			{
-				std::stringstream filename;
-				filename << filepath.str() << *it_Contents;
-				if(Files::IsDirectory(filename.str()))
-					std::cout << filename.str() << std::endl;
-				if(Files::FileExists(filename.str())) {
-					JSONNode json = libjson::parse(Files::ReadFileString(filename.str()));
+				std::cout << count << std::endl;
+				count++;
+				std::stringstream dirname;
+				dirname << filepath.str() << *it_Contents;
+				if(Files::IsDirectory(dirname.str()))
+				{
+					List<std::string> DirContents = Files::GetDirectoryContents(dirname.str());
 
+					//std::cout << DirContents.nterms() << std::endl;
+					for(auto it_files = DirContents.begin(); it_files != DirContents.end(); it_files++)
+					{
+						std::stringstream filename;
+						filename << dirname.str() << "/" << *it_files;
+
+						if(Files::FileExists(filename.str())) {
+							JSONNode json = libjson::parse(Files::ReadFileString(filename.str()));
+							Model model(json);
+							//std::cout << filename.str() << std::endl;
+						}
+					}
 				}
 			}
 			
