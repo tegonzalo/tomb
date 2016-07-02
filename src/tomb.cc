@@ -99,8 +99,11 @@ int main(int argc, char *argv[])
 				i = json.begin();
 				while(i != json.end() and i->name() != "Observables") i++;
 				
-				List<std::string> observables(*i);
-				Tomb::model_database_filter(observables);
+				if(i != json.end())
+                                {
+                                  List<std::string> observables(*i);
+				  Tomb::model_database_filter(observables);
+                                }
 				
 				std::cout << "END" << std::endl;
 			}

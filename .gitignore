@@ -3,8 +3,9 @@ build
 models
 
 # Ignore any executables
-./group
-./mathgroup
+group
+mathgroup
+tomb
 
 # Ignore any temporary files
 *~

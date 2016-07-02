@@ -54,9 +54,6 @@
 		]
 	},
 	
-	"NReps": 2,
+	"NReps": 2
 	
-	"Observables": [
-			"ProtonDecay"
-			]
 }
