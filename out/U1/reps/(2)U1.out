@@ -1,0 +1,24 @@
+{
+	"id" : "(2)U1",
+	"Group" : "U1",
+	"GroupRank" : 1,
+	"HWeight" : [
+		[
+			2
+		]
+	],
+	"nirreps" : 1,
+	"dim" : 1,
+	"real" : true,
+	"label" : "2.000",
+	"Casimir" : 4,
+	"DynkinIndex" : 4,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			0
+		]
+	],
+	"hasWeights" : false,
+	"Weights" : []
+}

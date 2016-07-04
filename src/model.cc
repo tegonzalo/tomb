@@ -558,7 +558,7 @@ namespace Tomb
 						Progress::success++;
 					}
 					
-					if(RGE::DataBase.nterms() > 10000)
+					if(RGE::DataBase.nterms() > 1000)
 						model_database_flush();
 	
 				}
@@ -631,6 +631,7 @@ namespace Tomb
 					int total = Combinatorics::sum_of_binomials(scalars.nterms(),nreps);
 						
 					std::vector<bool> bit_mask(scalars.nterms());
+
 					bool next_bit_mask = false;
 					do
 					{	
@@ -669,6 +670,7 @@ namespace Tomb
 					}
 					while(next_bit_mask);
 					/***********************************************************************/
+					
 				}
 			}
 			

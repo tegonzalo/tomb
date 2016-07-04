@@ -9,6 +9,7 @@
 
 #include "headers.h"
 //#include "database.h"
+#include "omp.h"
 
 namespace Tomb
 {

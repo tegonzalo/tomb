@@ -1,6 +1,6 @@
 # Ignore the build and models dirs
-build
-models
+./build
+./models
 
 # Ignore any executables
 group

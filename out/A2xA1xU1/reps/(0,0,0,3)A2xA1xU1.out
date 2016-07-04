@@ -1,0 +1,31 @@
+{
+	"id" : "(0,0,0,3)A2xA1xU1",
+	"Group" : "A2(A)xA1(B)xU1(D)[A2xA1xA1xU1]",
+	"GroupRank" : 4,
+	"HWeight" : [
+		[
+			0,
+			0,
+			0,
+			3
+		]
+	],
+	"dim" : 1,
+	"real" : true,
+	"label" : "{1, 1, 3.000}",
+	"nirreps" : 3,
+	"Casimir" : [
+		0,
+		0,
+		9
+	],
+	"DynkinIndex" : [
+		0,
+		0,
+		9
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,0,0,3)A2xA1xU1"
+	]
+}

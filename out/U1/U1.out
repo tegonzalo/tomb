@@ -1,0 +1,25 @@
+{
+	"id" : "U1",
+	"rank" : 1,
+	"type" : "U",
+	"dim" : 1,
+	"order" : 1,
+	"label" : "U(1)",
+	"abelian" : true,
+	"Cartan" : [
+		[
+			1
+		]
+	],
+	"G" : [
+		[
+			1
+		]
+	],
+	"Casimir" : 0,
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Irreps" : [],
+	"Subgroups" : []
+}

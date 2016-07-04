@@ -1,0 +1,36 @@
+{
+	"id" : "(2,0,0,-1)A2xA1xU1",
+	"Group" : "A2(A)xA1(B)xU1(D+C)[A2xA1xA1xU1]",
+	"GroupRank" : 4,
+	"HWeight" : [
+		[
+			2,
+			0,
+			0,
+			-1
+		]
+	],
+	"dim" : 6,
+	"real" : false,
+	"label" : "{6, 1, -1.000}",
+	"nirreps" : 3,
+	"Casimir" : [
+		3.333334,
+		0,
+		1
+	],
+	"DynkinIndex" : [
+		2.5,
+		0,
+		6
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(2,0,0,-1)A2xA1xU1",
+		"(0,1,0,-1)A2xA1xU1",
+		"(-2,2,0,-1)A2xA1xU1",
+		"(1,-1,0,-1)A2xA1xU1",
+		"(-1,0,0,-1)A2xA1xU1",
+		"(0,-2,0,-1)A2xA1xU1"
+	]
+}

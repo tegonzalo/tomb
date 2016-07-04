@@ -1,0 +1,31 @@
+{
+	"id" : "(0,0,1)A3",
+	"Group" : "A3",
+	"GroupRank" : 3,
+	"HWeight" : [
+		[
+			0,
+			0,
+			1
+		]
+	],
+	"nirreps" : 1,
+	"dim" : 4,
+	"real" : false,
+	"label" : "4*",
+	"Casimir" : 1.875,
+	"DynkinIndex" : 0.5,
+	"conjugate" : 1,
+	"congruency" : [
+		[
+			1
+		]
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,0,1)A3",
+		"(0,1,-1)A3",
+		"(1,-1,0)A3",
+		"(-1,0,0)A3"
+	]
+}

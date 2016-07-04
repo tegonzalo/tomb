@@ -1,0 +1,26 @@
+{
+	"rank" : 0,
+	"dim" : 0,
+	"label" : "",
+	"simple" : false,
+	"semisimple" : false,
+	"ngroups" : 0,
+	"nabelians" : 0,
+	"Casimir" : [],
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Reps" : [],
+	"Subgroups" : [],
+	"id" : "",
+	"SuperGroups" : [
+		{
+			"U1(A)" : []
+		}
+	],
+	"Projection" : [],
+	"labels" : [],
+	"maximal" : false,
+	"regular" : true,
+	"special" : false
+}

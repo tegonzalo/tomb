@@ -1,0 +1,33 @@
+{
+	"id" : "(1,0,0,0)A4",
+	"Group" : "A4",
+	"GroupRank" : 4,
+	"HWeight" : [
+		[
+			1,
+			0,
+			0,
+			0
+		]
+	],
+	"nirreps" : 1,
+	"dim" : 5,
+	"real" : false,
+	"label" : "5",
+	"Casimir" : 2.4,
+	"DynkinIndex" : 0.5,
+	"conjugate" : 0,
+	"congruency" : [
+		[
+			1
+		]
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(1,0,0,0)A4",
+		"(-1,1,0,0)A4",
+		"(0,-1,1,0)A4",
+		"(0,0,-1,1)A4",
+		"(0,0,0,-1)A4"
+	]
+}

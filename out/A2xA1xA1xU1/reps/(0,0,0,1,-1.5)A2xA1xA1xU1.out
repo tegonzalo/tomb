@@ -1,0 +1,35 @@
+{
+	"id" : "(0,0,0,1,-1.5)A2xA1xA1xU1",
+	"Group" : "A2(A)xA1(B)xA1(C)xU1(D)[D5]",
+	"GroupRank" : 5,
+	"HWeight" : [
+		[
+			0,
+			0,
+			0,
+			1,
+			-1.5
+		]
+	],
+	"dim" : 2,
+	"real" : true,
+	"label" : "{1, 1, 2, -1.500}",
+	"nirreps" : 4,
+	"Casimir" : [
+		0,
+		0,
+		0.75,
+		2.25
+	],
+	"DynkinIndex" : [
+		0,
+		0,
+		0.5,
+		4.5
+	],
+	"hasWeights" : true,
+	"Weights" : [
+		"(0,0,0,1,-1.5)A2xA1xA1xU1",
+		"(0,0,0,-1,-1.5)A2xA1xA1xU1"
+	]
+}

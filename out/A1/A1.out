@@ -1,0 +1,25 @@
+{
+	"id" : "A1",
+	"rank" : 1,
+	"type" : "A",
+	"dim" : 3,
+	"order" : 2,
+	"label" : "SU(2)",
+	"abelian" : false,
+	"Cartan" : [
+		[
+			2
+		]
+	],
+	"G" : [
+		[
+			0.5
+		]
+	],
+	"Casimir" : 2,
+	"repsMaxDim" : 50,
+	"hasReps" : false,
+	"hasSubgroups" : false,
+	"Irreps" : [],
+	"Subgroups" : []
+}
