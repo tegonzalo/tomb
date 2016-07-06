@@ -84,50 +84,78 @@ namespace Tomb
 	}
 		
 	/* Updates the progess bar for the models */
-	void Progress::UpdateModelProgress(int step, int nmodels, bool noUpdate)
+	void Progress::UpdateModelProgress(int step, int nModels, bool noUpdate)
 	{
-		static List<int> counters(std::vector<int>(10)); // Vector of counters
-		static List<int> nmodelsVec(std::vector<int>(10)); // Vector of number of models
-		double progress = double(counters[step])/nmodels; // Counts models per step
+		//static List<int> counters(std::vector<int>(10)); // Vector of counters
+		//static List<int> nModelsVec(std::vector<int>(10)); // Vector of number of models
+		//double progress = double(counters[step])/nModels; // Counts models per step
 		
-		if(!nmodels) return ;
-		
-		// Set up progress message
-		if(counters[step] == 0)
-		{
-			//std::cout << "Step " << step << std::endl;
-			counters[step]++;
-			nmodelsVec[step] = nmodels;
-		}
-		int barWidth = 70;
-		
-		//std::cout << counters << std::endl;
-		//std::cout << nmodelsVec << std::endl;
-		
-		//if(step < 10)
-		//	Progress::UpdateModelProgress(step+1, nmodelsVec[step+1], true);
+                int thread_id = omp_get_thread_num();
+                int thread_max = omp_get_max_threads();
 
-		std::cout <<  "Step " << step << ": [";
-		int pos = barWidth * progress;
-		for (int i = 0; i < barWidth; ++i)
+                //std::cout << "thread id = " << thread_id << " of " << thread_max << " in step " << step << std::endl;
+
+                static std::vector<std::vector<int> > counters(thread_max); // Vector of counters
+                static std::vector<std::vector<int> > nModelsVec(thread_max); // Vector of number of models
+                double progress = 0, totalcounter = 0;
+
+
+		if(!nModels) return ;
+		
+                // Initialze the vectors
+                if(counters[thread_id].size() <= step)
+                  counters[thread_id].push_back(0);
+                if(nModelsVec[thread_id].size() <= step)
+                  nModelsVec[thread_id].push_back(0);
+		
+                //std::cout << counters[thread_id][step] << std::endl;
+                //std::cout << nModelsVec[thread_id][step] << std::endl;
+                // Set up progress message
+		if(counters[thread_id][step] == 0)
 		{
+			counters[thread_id][step] ++;
+			nModelsVec[thread_id][step] = nModels;
+		}
+		//std::cout << counters[thread_id][step] << std::endl;
+                //std::cout << nModelsVec[thread_id][step] << std::endl;
+                
+                int barWidth = 70;
+		
+                for(int i=0; i<thread_max; i++)
+                {
+                  if(counters[i].size() > step)
+                  {
+                    totalcounter += counters[i][step];
+                    progress += double(counters[i][step])/nModels;
+                  }
+                }
+               // std::cout << totalcounter << std::endl;
+
+                if(!thread_id and (!step or step and nModels > 100))
+                {
+	          std::cout <<  "Step " << step << ": [";
+		  int pos = barWidth * progress;
+		  for (int i = 0; i < barWidth; ++i)
+		  {
 			if (i < pos) 
 				std::cout << "=";
 			else if (i == pos) 
 				std::cout << ">";
 			else 
 				std::cout << " ";
-		}
-		std::cout << "] " << int(progress * 100.0) << " % : " << counters[step] << "/" << nmodels << "\r";
-		std::cout.flush();
+		  }
+		  std::cout << "] " << int(progress * 100.0) << " % : " << totalcounter << "/" << nModels << "\r";
+		  std::cout.flush();
 
-		std::cout << std::endl;
-	
-		if(!noUpdate) counters[step]++;
-		if(counters[step] > nmodelsVec[step])
+		  std::cout << std::endl;
+	        }
+
+		if(!noUpdate) counters[thread_id][step] ++;
+
+		if(totalcounter >= nModelsVec[thread_id][step])
 		{
-			counters[step] = 0;
-			nmodelsVec[step] = 0;
+			counters[thread_id][step] = 0;
+			nModelsVec[thread_id][step] = 0;
 		}
 
 	}

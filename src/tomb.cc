@@ -87,8 +87,10 @@ int main(int argc, char *argv[])
 				while(i != json.end() and i->name() != "NReps") i++;
 				int nreps = i->as_int();
 				
+				double time1 = omp_get_wtime();
 				long int success = model.generateModelsRec(nreps);
 				std::cout << "Number of successful models: " << success << std::endl;
+				std::cout << "Time used to generate models = " << omp_get_wtime() - time1 << std::endl;
 				
 				std::cout << "Flushing Databases" << std::endl;
 				// Flush all the databases to files

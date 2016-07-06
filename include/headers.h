@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <map>
+#include <omp.h>
 
 #include "linkedlists.h"
 #include "trees.h"

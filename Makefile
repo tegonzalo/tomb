@@ -23,7 +23,7 @@ LIBS = -lm
 
 # FLAGS
 # CFLAGS = -Wall -g -I$(IDIR)
-CFLAGS = -w -g -std=c++11
+CFLAGS = -w -g -std=c++11 -fopenmp
 
 # SOURCE FILES
 SDIR = ./src

@@ -15,6 +15,11 @@ namespace Tomb
 
 	// Member functions
 
+	/* Empty constructor */
+	Theory::Theory()
+	{
+	}
+	
 	/* Constructor */
 	Theory::Theory(LieGroup &Group, Chain &BreakingChain, List<Field> &Fields) {
 

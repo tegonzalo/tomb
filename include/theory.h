@@ -26,6 +26,7 @@ namespace Tomb
 			
 		public:
 			
+			Theory();
 			Theory(LieGroup &, Chain &, List<Field> &);
 			Theory(const Theory &);
 			Theory(const JSONNode &);
