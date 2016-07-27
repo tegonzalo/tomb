@@ -358,8 +358,8 @@ static struct func {
 
 static const char* evalstrs[] = {
 	"GetGroup::usage = \"GetGroup[rank, type] gets the information of ",
-	"the group defined by rank and type.         GetGroup[id] gets th",
-	"e information of the group defined by id\"",
+	"the group defined by rank and type.                 GetGroup[id]",
+	" gets the information of the group defined by id\"",
 	(const char*)0,
 	"GetReps::usage = \"GetReps[id, maxdim] gets the representations o",
 	"f the group identified by id up to dimension maxdim.\"",
@@ -368,8 +368,9 @@ static const char* evalstrs[] = {
 	"e group identified by id.\"",
 	(const char*)0,
 	"GetRep::usage = \"GetRep[id] gets the information of the rep defi",
-	"ned by id.        GetRep[dimId, groupId] gets the information of",
-	" the first rep of dimension dim of the group defined by groupId\"",
+	"ned by id.               GetRep[dimId, groupId] gets the informa",
+	"tion of the first rep of dimension dim of the group defined by g",
+	"roupId\"",
 	(const char*)0,
 	"GetSubgroup::usage = \"GetSubgroup[id] gets the information of th",
 	"e subgroup defined by id and GetSubgroup[id, MixingId] gets the ",

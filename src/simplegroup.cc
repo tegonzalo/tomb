@@ -1,8 +1,8 @@
 /*
- * simplegroup.cc
- * Created by T.Gonzalo on 15/02/2012.
- * Last modified on 10/11/2015
- */
+* simplegroup.cc
+* Created by T.Gonzalo on 15/02/2012.
+* Last modified on 10/11/2015
+*/
 
 #include "headers.h"
 
@@ -12,1925 +12,1925 @@
 
 namespace Tomb
 {
-	// Definition of static variables and helper functions
-	
-	std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
-	std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
-	
-	bool SimpleGroup::database_check(std::string id, std::string what) {
-		if(DataBase.empty())
-		{
-			DataBase.clear();
-			return false;
-		}
-		if(DataBase.find(id) != DataBase.end()) {
-			if (what == "")
-				return true;
-			if(what == "Reps" and DataBase.at(id).hasReps())
-				return true;
-			if(what == "Subgroups" and DataBase.at(id).hasSubgroups())
-				return true;
-		}
-		if(JSONDataBase.find(id) != JSONDataBase.end()) {
-			SimpleGroup G(JSONDataBase.at(id));
-			if(what == "Reps" or (what == "Subgroups" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasReps()))
-				G.ParseJSON(JSONDataBase.at(id),"Reps");
-			if(what == "Subgroups" or (what == "Reps" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasSubgroups()))
-				G.ParseJSON(JSONDataBase.at(id),"Subgroups");
-			if(DataBase.find(id) != DataBase.end())
-				DataBase.erase(id);
-			DataBase.emplace(id, G);
-			return true;
-		}
-		return false;
-	}
-	
-	void SimpleGroup::database_emplace(std::string id, SimpleGroup G) {
-		if(database_check(id))
-			DataBase.erase(id);
-		DataBase.emplace(id, G);
-	}
-	
-	// Member functions
-
-	/* Constructor */
-	SimpleGroup::SimpleGroup(int rank, char type) {
-
-		try {
-			_rank = rank;
-			_type = type;
-			init();
-		} catch (...) {
-			throw;
-		}
-
-	}
-
-	/* Constructor 2 */
-	SimpleGroup::SimpleGroup(int rank, const Matrix<double> &Cartan) {	
-
-		try {
-			
-			_rank = rank;
-
-			//std::cout << "Group indentification" << std::endl;
-			if(rank == 1) {
-				if(Cartan[0][0] == 1) {
-					_type = 'U';
-				} else {
-					_type = 'A';
-				}
-			} else if(rank == 2 and Cartan[0][1] == -3) {
-				_type = 'G';
-			} else if(rank == 4 and Cartan[1][2] == -2) {
-				_type = 'F';
-			} else if(Cartan != Cartan.Transpose()) {
-				int row, col;
-				for(int i=0; i<rank; i++) {
-					for(int j=0; j<rank; j++) {
-						if(Cartan[i][j] == -2) {
-							row = i;
-							col = j;
-						}
-					}
-				}
-				if(rank == 2) {
-					if(row < col) {
-						_type = 'B';
-					} else {
-						_type = 'C';
-					}
-				} else {
-					if(((row < col and col == rank-1) or (row > col and col == 0))) {
-						_type = 'B';
-					} else {
-						_type = 'C';
-					}
-				}
-			} else {
-				bool typeA = true;
-				for(int i=0; i<rank; i++) {
-					int nlinks = 0;
-					for(int j=0; j<rank; j++) {
-						if(Cartan[i][j] == -1) {
-							nlinks++;
-						}
-					}
-					if(nlinks > 2 or nlinks == 0) {
-						typeA = false;
-					}
-				}
-
-				if(typeA) {
-					//std::cout << "The group is of type A" << std::endl;
-					_type = 'A';
-				} else if (Cartan[rank-3][rank-1] != 0 or Cartan[1][rank-1] != 0) {
-					_type = 'D';
-				} else {
-					_type = 'E';
-				}
-			
-				bool typedore = false;
-				int junction;
-				for(int i=0; i<rank; i++) {
-					int numberoflinks = 0;
-					for(int j=0; j<rank; j++) {
-						if(Cartan[i][j] == -1) {
-							numberoflinks++;
-						}
-					}
-					if(numberoflinks == 3) {
-						typedore = true;
-						junction = i;
-					}
-				}
-				if(typedore) {
-					if((rank != 6 and rank != 7 and rank != 8) or (Cartan[rank-3][rank-1] != 0 or Cartan[1][rank-1] != 0 or Cartan[1][3] != 0)) {
-						_type = 'D';
-					} else {
-						int numberofbrancheswithonlyonedot = 3;
-						for(int i=0; i<rank; i++) {
-							if(Cartan[junction][i] == -1) {
-								bool hasotherconnections = false;
-								for(int j=0;j<rank;j++) {
-									if(Cartan[i][j] == -1 and j!=junction) {
-										hasotherconnections = true;
-									}
-								}
-								numberofbrancheswithonlyonedot--;
-							}
-						}
-						if(numberofbrancheswithonlyonedot == 1) {
-							_type = 'E';
-						} else {
-							_type = 'D';
-						}
-					}
-				} else {
-					_type = 'A';
-				}
-
-			}
-			
-			init();
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Constructor 3, with strings */
-	SimpleGroup::SimpleGroup(const std::string id) {
-		
-		try {
-			std::string label = id;
-			label.erase(std::remove(label.begin(), label.end(), ' '), label.end());
-			
-			switch(toupper(label[0])) {
-				case 'A':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					break;
-			
-				case 'B':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					break;
-					
-				case 'C':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					break;
-			
-				case 'D':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					break;
-				
-				case 'E':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					if(_rank < 6 or _rank > 8) {
-						throw "SimpleGroup::SimpleGroup::Group does not exist";
-					}
-					break;
-				
-				case 'F':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					if(_rank != 4) {
-						throw "SimpleGroup::SimpleGroup::Group does not exist";
-					}
-					break;
-
-				case 'G':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					if(_rank != 2) {
-						throw "SimpleGroup::SimpleGroup::Group does not exist";
-					}
-					break;
-				
-				case 'S':
-					switch(toupper(label[1])) {
-						case 'U':
-							_type = 'A';
-							if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
-								_order = atoi((label.substr(3,label.length()-4)).c_str());
-							} else {
-								_order = atoi((label.substr(2,label.length()-2)).c_str());
-							}
-							_rank = _order - 1;
-							break;
-						
-						case 'O':
-							if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
-								_order = atoi((label.substr(3,label.length()-4)).c_str());
-							} else {
-								_order = atoi((label.substr(2,label.length()-2)).c_str());
-							}
-							if(_order%2) {
-								_type = 'B';
-								_rank = (_order-1)/2;
-							} else {
-								_type = 'D';
-								_rank = _order/2;
-							}
-							break;
-						
-						case 'P':
-							_type = 'C';
-							if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
-								_order = atoi((label.substr(3,label.length()-4)).c_str());
-							} else {
-								_order = atoi((label.substr(2,label.length()-2)).c_str());
-							}
-							if(_order%2) {
-								throw "SimpleGroup::SimpleGroup::Group does not exist";
-							} else {
-								_rank = _order/2;
-							}
-							break;
-							
-						default:
-							throw "SimpleGroup::SimpleGroup::Group does not exist";
-					}
-					break;
-			
-				case 'U':
-					_type = toupper(label[0]);
-					_rank = atoi((label.substr(1,label.length()-1)).c_str());
-					if(_rank != 1) {
-						throw "SimpleGroup::SimpleGroup::This is not a Lie Group";
-					}
-					break;
-				
-				default:
-					throw "SimpleGroup::SimpleGroup::Group does not exist";
-			}
-			
-			init();
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Constructor 4, with json nodes */
-	SimpleGroup::SimpleGroup(const JSONNode &n) {
-		
-		if(n.as_string() != "") {
-			SimpleGroup(n.as_string());
-		} else {
-			ParseJSON(n);
-		}
-	}
-
-	/* Copy constructor */
-	SimpleGroup::SimpleGroup(const SimpleGroup &G) {
-		
-		try {
-			_rank = G.rank();
-			_type = G.type();
-			_dim = G.dim();
-			_order = G.order();
-			_label = G.label();
-			_Cartan = Matrix<double>(G.Cartan());
-			_G = Matrix<double>(G.G());
-			_abelian = G.abelian();
-			_Casimir = G.Casimir();
-			_repsMaxDim = G.repsMaxDim();
-			_hasReps = G.hasReps();
-			_hasSubgroups = G.hasSubgroups();
-			if(_hasReps) _Irreps = G.IrrepsConst();
-			if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Move constructor */
-	SimpleGroup::SimpleGroup(SimpleGroup &&G) :
-		_rank(std::move(G._rank)),
-		_type(std::move(G._type)),
-		_dim(std::move(G._dim)),
-		_order(std::move(G._order)),
-		_label(std::move(G._label)),
-		_Cartan(std::move(G._Cartan)),
-		_G(std::move(G._G)),
-		_abelian(std::move(G._abelian)),
-		_Casimir(std::move(G._Casimir)),
-		_repsMaxDim(std::move(G._repsMaxDim)),
-		_hasReps(std::move(G._hasReps)),
-		_hasSubgroups(std::move(G._hasSubgroups)),
-		_Irreps(std::move(G._Irreps)),
-		_Subgroups(std::move(G._Subgroups))
-	{
-		
-		try {
-			G._rank = 0;
-			G._type = '\0';
-			G._dim = 0;
-			G._order = 0;
-			G._label = "";
-			G._Cartan = Matrix<double>();
-			G._G = Matrix<double>();
-			G._abelian = false;
-			G._Casimir = 0;
-			G._repsMaxDim = 0;
-			G._hasReps = false;
-			G._hasSubgroups = false;
-			G._Irreps.Clear();
-			G._Subgroups.Clear();
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Destructor */
-	SimpleGroup::~SimpleGroup() {
-		//std::cout << "deleting group " << std::endl;
-	}
-
-	/* Assignment operator */
-	SimpleGroup &SimpleGroup::operator=(const SimpleGroup &G) {
-		
-		try {
-			if(this == &G) return *this;
-			
-			_rank = G.rank();
-			_type = G.type();
-			_dim = G.dim();
-			_order = G.order();
-			_label = G.label();
-			_Cartan = Matrix<double>(G.Cartan());
-			_G = Matrix<double>(G.G());
-			_abelian = G.abelian();
-			_Casimir = G.Casimir();
-			_repsMaxDim = G.repsMaxDim();
-			_hasReps = G.hasReps();
-			_hasSubgroups = G.hasSubgroups();
-			if(_hasReps) _Irreps = G.IrrepsConst();
-			if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
-			
-			return *this;
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Move assignment operator */
-	SimpleGroup &SimpleGroup::operator=(SimpleGroup &&G) {
-		
-		try {
-			if(this == &G) return *this;
-			
-			_rank = std::move(G._rank);
-			_type = std::move(G._type);
-			_dim = std::move(G._dim);
-			_order = std::move(G._order);
-			_label = std::move(G._label);
-			_Cartan = std::move(G._Cartan);
-			_G = std::move(G._G);
-			_abelian = std::move(G._abelian);
-			_Casimir = std::move(G._Casimir);
-			_repsMaxDim = std::move(G._repsMaxDim);
-			_hasReps = std::move(G._hasReps);
-			_hasSubgroups = std::move(G._hasSubgroups);
-			_Irreps = std::move(G._Irreps);
-			_Subgroups = std::move(G._Subgroups);
-			
-			G._rank = 0;
-			G._type = '\0';
-			G._dim = 0;
-			G._order = 0;
-			G._label = "";
-			G._Cartan = Matrix<double>();
-			G._G = Matrix<double>();
-			G._abelian = false;
-			G._Casimir = 0;
-			G._repsMaxDim = 0;
-			G._hasReps = false;
-			G._hasSubgroups = false;
-			G._Irreps.Clear();
-			G._Subgroups.Clear();
-			
-			return *this;
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Initialise variables */
-	void SimpleGroup::init() {
-
-		try {
-
-			if(_rank == 0 or _type == 0) {
-				throw "SimpleGroup::init::Not enough variables no initialise";
-			}
-						
-			if(database_check(id())) {
-				*this = DataBase.at(id());
-			} else {
-				
-				_abelian = false;
-
-				char label[10];
-				_Cartan = Matrix<double>(rank());
-				
-				switch(type()) {
-					case 'A':
-						_Cartan[0][0] = 2;
-						for(int i=1; i<rank(); i++) {
-							_Cartan[i][i] = 2;
-							_Cartan[i-1][i] = -1;
-							_Cartan[i][i-1] = -1;
-						}
-						sprintf(label,"SU(%d)", rank()+1);
-						_label = label;
-						_dim = rank()*(rank() + 2);
-						_order = rank() + 1;
-						break;
-				
-					case 'B':
-						_Cartan[0][0] = 2;
-						for(int i=1; i<rank(); i++) {
-							_Cartan[i][i] = 2;
-							_Cartan[i-1][i] = -1;
-							_Cartan[i][i-1] = -1;
-						}
-						if(rank()>1) {
-							_Cartan[rank()-2][rank()-1] = -2;
-						}
-						sprintf(label,"SO(%d)", 2*rank()+1);
-						_label = label;
-						if(rank() == 1) {
-							_type = 'A';
-							_label = "SU(2)";	
-						//} else if(rank() == 2) {
-						//	_type = 'C';
-						//	_Cartan = _Cartan.Transpose();
-						}
-						_dim = rank()*(2*rank() + 1);
-						_order = 2*rank() + 1;
-						break;
-			
-					case 'C':
-						_Cartan[0][0] = 2;
-						for(int i=1; i<rank(); i++) {
-							_Cartan[i][i] = 2;
-							_Cartan[i-1][i] = -1;
-							_Cartan[i][i-1] = -1;
-						}
-						if(rank()>1) {
-							_Cartan[rank()-1][rank()-2] = -2;
-						}
-						sprintf(label,"Sp(%d)", 2*rank());
-						_label = label;
-						if(rank() == 1) {
-							_type = 'A';
-							_label = "SU(2)";
-						}
-						_dim = rank()*(2*rank() + 1);
-						_order = 2*rank() + 1;
-						break;
-			
-					case 'D':
-						_Cartan[0][0] = 2;
-						for(int i=1; i<rank()-1; i++) {
-							_Cartan[i][i] = 2;
-							_Cartan[i-1][i] = -1;
-							_Cartan[i][i-1] = -1;
-						}
-						if(rank()>2) {
-							_Cartan[rank()-3][rank()-1] = -1;
-							_Cartan[rank()-1][rank()-3] = -1;
-						} 
-						if(rank()>1) {
-							_Cartan[rank()-1][rank()-1] = 2;
-						}
-						sprintf(label,"SO(%d)", 2*rank());
-						_label = label;
-						if(rank() == 1) {
-							_Cartan[0][0] = 1;
-							_abelian = true;
-							_type = 'U';
-							_label = "U(1)";
-						} else if(rank() == 3) {
-							_type = 'A';
-							_Cartan.ChangeBasis(0,1);
-							_label = "SU(4)";
-						}
-						_dim = rank()*(2*rank() - 1);
-						_order = 2*rank();
-						break;
-					
-					case 'E':
-						if(rank()>=6 && rank()<=8) {
-							for(int i=0;i<rank()-2;i++) {
-								_Cartan[i][i] = 2;
-								_Cartan[i][i+1] = -1;
-								_Cartan[i+1][i] = -1;
-							}	
-							_Cartan[rank()-2][rank()-2] = 2;
-							_Cartan[rank()-1][rank()-1] = 2;
-							_Cartan[2][rank()-1] = -1;
-							_Cartan[rank()-1][2] = -1;
-							sprintf(label,"E%d", rank());
-							_label = label;
-						} else {
-							throw "SimpleGroup::init::Group does not exist";
-						}
-						if(rank()==6) {
-							_dim = 78;
-							_order = 27;
-						} else if(rank()==7) {
-							_dim = 133;
-							_order = 55;
-						} else {	
-							_order = 3875;
-							_dim = 248;
-						}
-						break;
-			
-					case 'F':
-						if(rank() == 4) {
-							for(int i=0;i<rank()-1;i++) {
-								_Cartan[i][i] = 2;
-								_Cartan[i][i+1] = -1;
-								_Cartan[i+1][i] = -1;
-							}
-							_Cartan[rank()-1][rank()-1] = 2;
-							_Cartan[1][2] = -2;
-							_label = "F4";
-						} else {
-							throw "SimpleGroup::init::Group does not exist";
-						}
-						_dim = 52;
-						_order = 52;
-						break;
-						
-					case 'G':
-						if(rank() == 2) {
-							_Cartan[0][0] = 2;
-							_Cartan[0][1] = -3;
-							_Cartan[1][0] = -1;
-							_Cartan[1][1] = 2;
-							_label = "G2";
-						} else {
-							throw "SimpleGroup::init::Group does not exist";
-						}
-						_dim = 14;
-						_order = 14;
-						break;
-						
-					case 'U':
-						if(rank() == 1) {
-							_abelian = true;
-							_Cartan[0][0] = 1;
-							_label = "U(1)";
-						} else {
-							throw "SimpleGroup::init::Group does not exist";
-						}
-						_dim = 1;
-						_order = 1;
-						break;
-		
-					default:
-						throw "SimpleGroup::init::Group does not exist";
-				}		
-		
-				_G = Matrix<double>(rank());
-				_G = _Cartan.Inverse();
-				
-				if(rank() != 1 and _Cartan != _Cartan.Transpose()) {
-					for(int i=0; i<rank(); i++) {
-						for(int j=0; j<rank(); j++) {
-							Root alpha = this->SRoot(j);
-							_G[i][j] *= 0.5*alpha.length();
-						}	
-					}
-				}
-
-				_PRoots = this->PRoots();
-				
-				if(abelian()) {
-					_Casimir = 0;
-				} else {
-					Weight w(*this, PRoots().GetObject(0));
-					_Casimir = 0;
-					for(int i=0; i<_rank; i++) {
-						for(int j=0; j<_rank; j++) {
-							_Casimir += 0.5*w[i]*_G[i][j]*(w[j]+2);
-						}
-					}
-					//Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
-					//_Casimir = Adjoint.DynkinIndex();
-				}
-				
-				
-				database_emplace(id(),*this);
-				
-				// Output the info
-				/*std::ostringstream OutputDirectory;
-				OutputDirectory << "./out/" << id();
-
-				mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-				std::ostringstream OutputFileName;
-				OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
-
-				std::ofstream OutputFile;
-				OutputFile.open(OutputFileName.str().c_str());
-				OutputFile << json().write_formatted() << std::endl;
-				OutputFile.close();*/
-		
-			}
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Identifier of the group */
-	std::string SimpleGroup::id() const {
-		std::stringstream s;
-		s << _type << _rank;
-		return s.str();
-	}
-
-	/* Returns rank */
-	int SimpleGroup::rank() const {
-		return _rank;
-	}
-
-	/* Returns type */
-	char SimpleGroup::type() const {
-	return _type;
-	}
-
-	/* Returns dimension */
-	int SimpleGroup::dim() const {
-		return _dim;
-	}
-
-	/* Returns order */
-	int SimpleGroup::order() const {
-		return _order;
-	}
-
-	/* Returns the label */
-	std::string SimpleGroup::label() const {
-		return _label;
-	}
-
-	/* Returns whether the group is abelian */
-	bool SimpleGroup::abelian() const {
-		return _abelian;
-	}
-
-	/* Returns Cartan matrix */
-	Matrix<double> SimpleGroup::Cartan() const {
-	return _Cartan;
-	}
-
-	/* Returns the matrix G, inverse of the Cartan matrix */
-	Matrix<double> SimpleGroup::G() const {
-		return _G;
-	}
-
-	/* Returns the Casimir of the group */
-	double SimpleGroup::Casimir() const {
-		return _Casimir;
-	}
-
-	/* Returns the maximum dimension of the calculated reps */
-	int SimpleGroup::repsMaxDim() const {
-		return _repsMaxDim;
-	}
-
-	/* Returns whether the SimpleGroup has calculated its reps */
-	bool SimpleGroup::hasReps() const {
-		return _hasReps;
-	}
-	
-	/* Returns whether the SimpleGroup has calculated its subgroups */
-	bool SimpleGroup::hasSubgroups() const {
-		return _hasSubgroups;
-	}
-	
-	/* Returns Simple Root i */
-	Root SimpleGroup::SRoot(int i){
-		
-		try {
-			if(i>=_rank) {
-				throw "SimpleGroup::SRoot::Element doesn\'t exist";
-			}
-			RVector<double> Vector(Cartan().Row(i));
-			Root alpha(*this, Vector);
-			return alpha;
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates all positive roots */
-	List<Root> SimpleGroup::PRoots(std::string _basis) {
-
-		try {
-
-			std::string basis = _basis;
-			
-			std::string::iterator init = basis.begin();
-			std::string::iterator end = basis.end();
-
-			while (init != end) {
-				*init = std::toupper((unsigned char)*init);
-				++init;
-			}
-			
-			if(basis.compare("DYNKIN") and basis.compare("DUAL")) {
-				throw "SimpleGroup::PRoots::Basis has to be either Dynkin or Dual";
-			}
-			
-			if(!_PRoots.Empty()) {
-				if(basis=="DUAL") {
-					List<Root> DualRoots;
-					for(int i=0; i<_PRoots.nterms(); i++) {
-						DualRoots.AddTerm(_PRoots.GetObject(i).Dual());
-					}
-					return DualRoots;
-				} else {
-					return _PRoots;
-				}
-			}
-		
-			int nproots = (int)(0.5*(this->dim()-this->rank()));
-			List<Root> Roots;
-			for(int i=0; i<this->rank(); i++) {
-				Roots.AddTerm(this->SRoot(i));
-			}
-
-			double n = 0;
-
-			for (int i=0; i<nproots; i++) {
-				//std::cout << "i = " << i << std::endl;
-				for(int j=0; j<_rank; j++) {
-					//std::cout << "-j = "<< j << std::endl;
-					if(i!=j) {
-						n = -Roots.GetObject(i)[j];
-						//std::cout << "n = " << n << std::endl;
-						if(n>0){
-							for(int l=1; l<=n; l++) {
-								//std::cout << "l = " << l << std::endl;
-								//std::cout << this->SRoot(j) << std::endl;
-								Root alpha = Roots.GetObject(i) + this->SRoot(j)*(double)l;
-								//std::cout << alpha << std::endl;
-								if(Roots.Index(alpha) < 0) {
-									Roots.AddTerm(alpha);
-						}						
-						}
-					}
-				}
-			}
-			}
-		
-			//std::cout << "Roots = " << Roots << std::endl;
-			Roots.Reverse();
-			//std::cout << "Roots = " << Roots << std::endl;
-			
-			if(basis=="DUAL") {
-				List<Root> DualRoots;
-				for(int i=0; i<Roots.nterms(); i++) {
-					DualRoots.AddTerm(Roots.GetObject(i).Dual());
-				}
-				return DualRoots;
-			}
-
-			//std::cout << Roots << std::endl;
-			return Roots;
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates all roots */
-	List<Root> SimpleGroup::Roots() {
-		
-		try {
-			/*if(json.find_nocase("Roots")) {
-				
-			}*/
-			//std::cout << "Calculating the roots..." << std::endl;
-		
-			List<Root> Roots = this->PRoots();
-			int nproots = Roots.nterms();
-			for(int i=0; i<this->rank(); i++) {
-				RVector<double> V(this->rank());
-				Roots.AddTerm(Root(*this, V));
-			}
-
-			for(int i=0; i<nproots; i++) {
-				Root beta = Roots.GetObject(nproots-i-1);
-				beta *= -1;
-				Roots.AddTerm(beta);
-			}
-				
-			return Roots;
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the simple representations of a group */
-	List<Irrep> SimpleGroup::SimpleReps() {
-		
-		try {
-			Weight HWeight(*this, this->rank());
-
-			List<Irrep> SimpleReps;
-			std::string label;
-
-			switch(_type) {
-		
-				case 'A':
-					HWeight[0] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					HWeight[0] = 0;
-					HWeight[_rank-1] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'B':
-					HWeight[0] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					HWeight[0] = 0;
-					HWeight[_rank-1] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'C':
-					HWeight[0] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'D':
-					HWeight[0] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					HWeight[0] = 0;
-					HWeight[_rank-1] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					HWeight[_rank-1] = 0;
-					HWeight[_rank-2] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'E':
-					if(_rank==6) {
-						HWeight[0] = 1;
-						SimpleReps.AddTerm(Irrep(*this,HWeight));
-						HWeight[0] = 0;
-						HWeight[_rank-2] = 1;
-						SimpleReps.AddTerm(Irrep(*this,HWeight));
-					} else if(_rank==7) {
-						HWeight[_rank-2] = 1;
-						SimpleReps.AddTerm(Irrep(*this,HWeight));
-					} else if(_rank==8) {
-						HWeight[_rank-2] = 1;
-						SimpleReps.AddTerm(Irrep(*this,HWeight));
-					}
-					break;
-
-				case 'F':
-					HWeight[_rank-1] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'G':
-					HWeight[1] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-					break;
-
-				case 'U':
-					HWeight[0] = 1;
-					SimpleReps.AddTerm(Irrep(*this,HWeight));
-			}
-			
-			return SimpleReps;
-			
-		} catch (...) {
-			throw;
-		}
-
-	}
-
-	/* Returns the generating rep of the group */
-	Irrep SimpleGroup::GeneratingRep() {
-
-		try {
-			//clock_t  time1 = clock();
-			Weight HWeight(*this, this->rank());
-				
-			switch(_type) {
-
-				case 'A':
-					HWeight[0] = 1;
-					break;
-				case 'B':
-					HWeight[0] = 1;
-					break;
-				case 'C':
-					HWeight[0] = 1;
-					break;
-				case 'D':
-					HWeight[_rank-2] = 1;
-					break;
-				case 'E':
-					if(_rank==6) {
-						HWeight[0] = 1;
-					} else if(_rank==7) {
-						HWeight[_rank-2] = 1;
-					} else if(_rank==8) {
-						HWeight[_rank-2] = 1;
-					}
-					break;
-				case 'F':
-					HWeight[_rank-1] = 1;
-					break;
-				case 'G':
-					HWeight[1] = 1;
-					break;
-				case 'U':
-					HWeight[0] = 1;
-					break;
-				default:
-					throw "SimpleGroup::GeneratingRep::Group does not exist";
-			}
-			//std::cout << "Time in generating rep = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl; 
-
-			return Irrep(*this,HWeight);
-		
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the adjoint rep of te group */
-	Irrep SimpleGroup::AdjointRep()
-	{
-		try
-		{
-			List<Irrep> irreps = Irreps(dim());
-			if(irreps[-1].dim() == dim())
-				return irreps[-1];
-			else
-				throw "SimpleGroup::Irrep::Could not get the adjoint irrep";
-			
-		} catch (...)
-		{
-			throw;
-		}	
-	}
-	
-	/* Returns a singlet rep */
-	Irrep SimpleGroup::SingletRep()
-	{
-		try
-		{
-			return Irrep(*this, Weight(*this,RVector<double>(_rank)));
-			
-		} catch (...)
-		{
-			throw;
-		}	
-	}
-	
-	/* Returns all the representations of the group up to dimension maxdim */
-	List<Irrep> &SimpleGroup::Irreps(int maxdim) {
-
-		try {
-			// If the reps are calculated already
-			if(_Irreps.nterms() and _repsMaxDim >= maxdim) {
-				int i = _Irreps.nterms()-1;
-				while(_Irreps.GetObject(i).dim() > maxdim) {
-					_Irreps.DeleteTerm(i);
-					i--;
-				}
-				_repsMaxDim = maxdim;
-				return _Irreps;
-			}
-			
- 			if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
-				_Irreps = DataBase.at(id()).Irreps(maxdim);
-				if(_Irreps.nterms()) _hasReps = true;
-				_repsMaxDim = maxdim;
-				return _Irreps;
-			}
-			
-			if(maxdim == -1) maxdim = 50;
-			
-			// If the group is abelian just return {0.0}
-			if(abelian()) {
-				_Irreps =  List<Irrep>(Irrep(*this,Weight(*this,1)));
-				if(_Irreps.nterms()) _hasReps = true;
-				_repsMaxDim = maxdim;
-				return _Irreps;
-			}
-			
-			
-			// If not, calculate it
-			List<Irrep> Reps;
-			Weight HW(*this, this->rank());
-			List<Weight> HWs(HW);
-			Irrep Rep(*this, HW);
-			//std::cout << Rep << std::endl;
-			Reps.AddTerm(Rep);
-			int dim = 1;
-
-			// List of labels so avoid repetition
-			List<std::string> labels("1");
-			for(int i = 0; i<HWs.nterms(); i++) {
-				HW = HWs.GetObject(i);
-				
-				for(int k=0; k<_rank; k++) {
-					HW[k] ++;
-					//std::cout << HW << std::endl;
-					if(HWs.Index(HW) < 0) {
-						Irrep Rep(*this, HW);
-						//std::cout << Rep << std::endl;
-						dim = Rep.dim();
-						if(dim<=maxdim && dim>0) {
-							std::string label = std::to_string(Rep.dim());
-							do {
-								int index = labels.Index(label);
-								if(index >= 0) {
-									if(Rep.isConjugateOf(Reps.GetObject(index))) {
-										label.append("*");
-									} else {
-										label.append("'");
-									}
-								}
-							} while(labels.Index(label) >= 0);
-							Rep.setLabel(label);
-							Reps.AddTerm(Rep);
-							HWs.AddTerm(HW);
-							labels.AddTerm(label);
-						}	
-						//std::cout << Reps << std::endl;
-						//std::cout << HWs << std::endl;
-					}
-					HW[k] --;
-				}
-				//std::cout << "i = " << i << std::endl;
-			}
-			//std::cout << Reps << std::endl;
-
-			Reps.Order("ASC");
-			_Irreps = Reps;
-			
-			//std::cout << _Irreps << std::endl;
-			
-			// Set th hasReps flag to true and repsMaxDim to the current maxdim
-			if(_Irreps.nterms()) _hasReps = true;
-			_repsMaxDim = maxdim;
-			
-			// If there is an entry in the database delete it and dump this
-			database_emplace(id(), *this);
-
-			//for(List<Irrep>::iterator it_Irreps = _Irreps.begin(); it_Irreps != _Irreps.end(); it_Irreps++)
-			//	std::cout << it_Irreps->json().write_formatted() << std::endl;
-			
-			//std::cout << "Irreps = " << _Irreps << std::endl;
-			
-			return _Irreps;
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the variable Irreps */
-	List<Irrep> SimpleGroup::IrrepsConst() const {
-		return _Irreps;
-	}
-	
-	/* Returns the extended Cartan matrix */
-	Matrix<double> SimpleGroup::ExtendedCartan(){
-
-		try {
-			Matrix<double> ExtCartan(this->rank()+1);
-			for(int i=0; i<this->rank(); i++) {
-				for(int j=0; j<this->rank(); j++) {
-					ExtCartan[i][j] = this->Cartan()[i][j];
-				}
-			}
-			ExtCartan[this->rank()][this->rank()] = 2;
-			switch(this->type()) {
-				case 'A':
-					ExtCartan[0][this->rank()] = -1;
-					ExtCartan[this->rank()][0] = -1;
-					ExtCartan[this->rank()][this->rank()-1] = -1;
-					ExtCartan[this->rank()-1][this->rank()] = -1;
-					break;
-				case 'B':
-					if(this->rank()>2) {
-						ExtCartan[this->rank()][1] = -1;
-						ExtCartan[1][this->rank()] = -1;
-					} else if(this->rank() == 2) {
-						ExtCartan[this->rank()][1] = -2;
-						ExtCartan[1][this->rank()] = -1;
-					} else {
-						ExtCartan[1][0] = -1;
-						ExtCartan[0][1] = -1;
-					}
-					break;
-				case 'C':
-					if(this->rank()>1) {
-						ExtCartan[this->rank()][0] = -2;
-						ExtCartan[0][this->rank()] = -1;
-					} else {
-						ExtCartan[1][0] = -1;
-						ExtCartan[0][1] = -1;
-					}
-					break;
-				case 'D':
-					if(this->rank()>3) {
-						ExtCartan[this->rank()][1] = -1;
-						ExtCartan[1][this->rank()] = -1;
-						//ExtCartan.MoveRow(this->rank(),0);
-						//ExtCartan.MoveColumn(this->rank(),0);
-					} else if(this->rank() == 3 or this->rank() == 2) {
-						ExtCartan[this->rank()-2][this->rank()] = -1;
-						ExtCartan[this->rank()][this->rank()-2] = -1;
-						ExtCartan[this->rank()][this->rank()-1] = -1;
-						ExtCartan[this->rank()-1][this->rank()] = -1;			
-					} else {
-						ExtCartan[1][0] = -1;
-						ExtCartan[0][1] = -1;
-					}
-					break;
-				case 'G':
-					ExtCartan[0][2] = -1;
-					ExtCartan[2][0] = -1;
-					break;
-				case 'F':
-					ExtCartan[0][4] = -1;
-					ExtCartan[4][0] = -1;
-					break;
-				case 'E':
-					if(this->rank() == 6) {
-						ExtCartan[6][5] = -1;
-						ExtCartan[5][6] = -1;
-					} else if(this->rank() == 7) {
-						ExtCartan[7][0] = -1;
-						ExtCartan[0][7] = -1;
-					} else if(this->rank() == 8) {
-						ExtCartan[8][6] = -1;
-						ExtCartan[6][8] = -1;
-					}
-					break;
-				case 'U':
-					ExtCartan[0][1] = -1;
-					ExtCartan[1][0] = -1;
-					break;
-			}
-			ExtCartan.MoveRow(this->rank(),0);
-			ExtCartan.MoveColumn(this->rank(),0);
-			return ExtCartan;
-				
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates the maximal subgroups of simple group */
-	List<SubGroup> &SimpleGroup::MaximalSubgroups() {
-
-		try {
-			// If the maximal subgroups have been calculated already return them
-			if(_MaxSubgroups.nterms()) return _MaxSubgroups;
-			
-			// If the group is abelian return the empty list
-			if(abelian()) return _MaxSubgroups;
-			
-			// First, the semisimple groups obtained by removing a dot from the extended Dynkin diagram
-			//clock_t time1 = clock();
-			if(this->type() != 'A' and this->type() != 'U' and this->rank() >= 1) {
-				
-				// Create the extended root
-				List<Root> PRoots = this->PRoots();
-				Root ExtendedRoot(PRoots.GetObject(0)*-1);
-				//std::cout << "ExtendedRoot = " << ExtendedRoot << std::endl;
-				
-				// Calculate the projection matrix for this subgroup, first get the weights of the generating representation of the group
-				List<Weight> Weights = this->GeneratingRep().Weights();
-				Matrix<double> Superweights(this->rank(), Weights.nterms());
-				Matrix<double> Subweights(this->rank(), Weights.nterms());
-				int col = 0;
-				//for(int col=0; col<Superweights.cols(); col++) {
-				for(List<Weight>::iterator it_Weights = Weights.begin(); it_Weights != Weights.end(); it_Weights++) {
-					Superweights.SetColumn(col,it_Weights->Transpose());
-					col++;
-				}
-				//std::cout << Superweights << std::endl;
-
-				// Calculate the weight coefficient for the new root
-				RVector<double> ExtendedWeight(Subweights.cols());
-				for(int col=0; col<Subweights.cols(); col++) {
-					ExtendedWeight[col] = Weights.GetObject(col)*ExtendedRoot; 
-				}
-				//std::cout << "ExtendedWeight = " << ExtendedWeight << std::endl;
-
-				//clock_t time1 = clock();
-				for(int i=0; i<this->rank()+1; i++) {
-					//clock_t time2 = clock();
-					// Create the SubCartan matrix by eliminating the row and column of the eliminated root from the extended Cartan matrix
-					Matrix<double> SubCartan(this->ExtendedCartan().Adjoint(i,i));
-					//std::cout << ExtendedCartan() << std::endl;
-					SubGroup Subgroup(*this);
-					//std::cout << SubCartan << std::endl;
-					//std::cout << "in 1 = " << double(clock()-time2)/CLOCKS_PER_SEC << std::endl;
-					//time2 = clock();
-					Subweights = Superweights;
-					// Insert the extended weight and delete the row of the subweights corresponding with the deleted root
-					//std::cout << Subweights << std::endl;
-					//std::cout << " adsf" << std::endl;
-					Subweights.InsertRow(0, ExtendedWeight);
-					//std::cout << Subweights << std::endl;
-					Subweights.DeleteRow(i);
-					//std::cout << Subweights << std::endl;
-					//if(i) {
-					//	Subweights.MoveRow(0,i-1);
-					//}
-					//std::cout << Subweights << std::endl;
-					
-					// Identify within the SubCartan matrix the Cartan matrices of Simple Groups
-					int from = 0;
-					for(int j=0; j<SubCartan.rows(); j++) {
-						//std::cout << "j = " << j << std::endl;
-						Matrix<double> Piece1(SubCartan.ExtractMatrix(from,j,0,from-1));
-						Matrix<double> Piece2(SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1));
-						if(Piece1 == 0 && Piece2 == 0) {
-							Matrix<double> BlockMatrix(SubCartan.ExtractMatrix(from,j));
-							//std::cout << BlockMatrix <<std::endl;
-							SimpleGroup AuxGroup(j-from+1, BlockMatrix);
-							Matrix<double> Auxweights = Subweights;
-							//std::cout << "======" << std::endl;
-							//std::cout << BlockMatrix << std::endl;
-							//std::cout << "------" << std::endl;
-							//std::cout << AuxGroup.Cartan() << std::endl;
-							//std::cout << "======" << std::endl;
-							int k=0;
-							while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows()) {
-								BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
-								BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
-								Subweights.MoveRow(from,j);
-								//std::cout << BlockMatrix << std::endl;
-								//std::cout << "------" << std::endl;
-								//std::cout << Subweights << std::endl;
-								//std::cout << "------" << std::endl;
-								k++;
-							}
-							if(AuxGroup.Cartan() != BlockMatrix) {
-								BlockMatrix = SubCartan.ExtractMatrix(from,j);
-								Subweights = Auxweights;
-								for(int k=0; k<BlockMatrix.rows()/2; k++) {
-									BlockMatrix.ChangeBasis(k,BlockMatrix.rows()-k-1);
-									Subweights.SwapRows(from+k,from+BlockMatrix.rows()-1-k);
-								}
-							}
-							//std::cout << BlockMatrix << std::endl;
-							//std::cout << "======" << std::endl;
-							//std::cout << AuxGroup << std::endl;
-							Subgroup.AddTerm(AuxGroup);
-							from = j+1;
-						}
-					}
-					
-					//std::cout << Subweights << std::endl;
-					//std::cout << Subgroup << std::endl;
-
-					
-					// And the projection matrix
-					Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
-					//std::cout << Subgroup.Projection() << std::endl;
-					
-					// Final changes
-					Subgroup.setMaximal(true);
-					Subgroup.setRegular(true);
-					
-					// Order the projection matrix columns with respect to the rank of the groups
-					Subgroup.Order();
-					//std::cout << Subgroup << std::endl;
-					//std::cout << Subgroup.Projection() << std::endl;
-					
-					
-					// Add to the list
-					if(_MaxSubgroups.Index(Subgroup) == -1) {
-						_MaxSubgroups.AddTerm(Subgroup);
-					}
-					
-					//std::cout << Subgroup << std::endl;
-				
-				}
-				//std::cout << "time in loop = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
-				
-
-			}
-			
-			//std::cout << _MaxSubgroups << std::endl;
-		
-			// Second, the non-semisimple groups obtained by removing a dot from the Dynkin diagram
-			//clock_t time2 = clock();
-			if(this->type() != 'U' and this->rank() >= 1) {
-				
-				// To calculate the projection matrix for a subgroup, first get the weights of the generating representation of the group
-				List<Weight> Weights = this->GeneratingRep().Weights();
-				//std::cout << Weights << std::endl;
-				List<Weight> WeightsDual = this->GeneratingRep().Weights("Dual");
-				//std::cout << WeightsDual << std::endl;
-
-				Matrix<double> Superweights(this->rank(), Weights.nterms());
-				Matrix<double> Subweights(this->rank(), Weights.nterms());
-				for(int col=0; col<Superweights.cols(); col++) {
-					Superweights.SetColumn(col, Weights.GetObject(col).Transpose());
-				}	
-				//std::cout << Superweights << std::endl;
-				
-				for(int i=0; i<this->rank(); i++) {
-					//std::cout << "i = " << i << std::endl;
-					// Create the SubCartan matrix by eliminating the row and column of the eliminated root from the Cartan matrix
-					Matrix<double> SubCartan = Cartan().Adjoint(i,i);
-					SubGroup Subgroup(*this);
-					//std::cout << "SubCartan" << std::endl << SubCartan << std::endl;
-
-					// Construct the subweights by moving the deleted node row to the end and substituting it with its dual values
-					Subweights = Superweights;
-					for(int col=0; col<Superweights.cols(); col++) {
-						Subweights[i][col] = WeightsDual.GetObject(col)[i];
-					}
-					//std::cout << Subweights << std::endl;
-					//for(int j=i+1; j<Subweights.rows(); j++) {
-					//	Subweights.MoveRow(Subweights.rows()-1,0);
-					//}
-					Subweights.MoveRow(i, Subweights.rows()-1);
-					if(!((Subweights.rows()-i)%2)) {
-						Subweights *= -1;
-					}
-					//for(int j=i; j<Subweights.rows(); j++) {
-					//	Subweights.SetRow(j,Subweights.Row(j)*(-1));
-					//}
-					
-					//std::cout << Subweights << std::endl;
-				
-					// Identify within the SubCartan matrix the Cartan matrices of Simple Groups
-					int from = 0;
-					for(int j=0; j<SubCartan.rows(); j++) {
-						//std::cout << "j = " << j << std::endl;
-						Matrix<double> Piece1 = SubCartan.ExtractMatrix(from,j,0,from-1);
-						Matrix<double> Piece2 = SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1);
-						if(Piece1 == 0 && Piece2 == 0) {
-							Matrix<double> BlockMatrix = SubCartan.ExtractMatrix(from,j);
-							SimpleGroup AuxGroup(j-from+1, BlockMatrix);
-							Matrix<double> Auxweights = Subweights;
-							int k=0;
-							while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows()) {
-								BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
-								BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
-								Subweights.MoveRow(from,j);
-								//std::cout << BlockMatrix << std::endl;
-								//std::cout << "------" << std::endl;
-								//std::cout << Subweights << std::endl;
-								//std::cout << "------" << std::endl;
-								k++;
-							}
-							if(AuxGroup.Cartan() != BlockMatrix) {
-								BlockMatrix = SubCartan.ExtractMatrix(from,j);
-								Subweights = Auxweights;
-								for(int k=0; k<BlockMatrix.rows()/2; k++) {
-									BlockMatrix.ChangeBasis(k,BlockMatrix.rows()-k-1);
-									Subweights.SwapRows(k,BlockMatrix.rows()-1-k);
-								}
-							}
-							
-							Subgroup.AddTerm(AuxGroup);
-							from = j+1;
-						}
-					}	
-					
-					SimpleGroup AuxGroup(1,'U');
-					Subgroup.AddTerm(AuxGroup);
-
-					//std::cout << Subgroup << std::endl;
-					//std::cout << Subweights << std::endl;
-					
-					// And the projection matrix
-					//Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
-					Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
-					//Projection.SwapRows(i, Projection.rows()-1);
-					//Projection.SwapColumns(i, Projection.cols()-1);
-					Subgroup.SetProjection(Projection);
-					//std::cout << Subgroup.Projection() << std::endl;
-					
-					// Final changes
-					Subgroup.setMaximal(true);
-					Subgroup.setRegular(true);
-					Subgroup.setSpecial(false);
-					//std::cout << Subgroup << std::endl;
-					
-					//std::cout << Subgroup << std::endl;
-					//std::cout << Subgroup.Projection() << std::endl;
-					// Order the projection matrix columns with respect to the rank of the groups
-					Subgroup.Order();
-					//std::cout << Subgroup << std::endl;
-					//std::cout << Subgroup.Projection() << std::endl;
-					
-					//std::cout << Projection*Superweights << std::endl;
-					
-					//std::cout << Subgroup.json().write_formatted() << std::endl;
-					
-					// Add to the list
-					if(_MaxSubgroups.Index(Subgroup) == -1) {
-						_MaxSubgroups.AddTerm(Subgroup);
-					}
-					
-					//time3 = clock();
-				
-				}
-			}
-
-			//std::cout << "---> " << double(clock()-time2)/CLOCKS_PER_SEC << std::endl;
-
-			// Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
-			/*_MaxSubgroups.DeleteObject(SubGroup(*this,*this));
-			if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
-				_MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
-			}
-			for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-				List<SubGroup> AuxMax = _MaxSubgroups.GetObject(i).MaximalSubgroups();
-				for(int j=i; j<_MaxSubgroups.nterms(); j++) {
-					if(AuxMax.Index(_MaxSubgroups.GetObject(j)) != -1) {
-						_MaxSubgroups.DeleteTerm(j);
-						j--;
-					}
-				}
-			}*/
-		
-			//std::cout << "Regular subgroups " << *this << "->" << _MaxSubgroups << std::endl;
-
-			//std::cout << "First step = " << double(time2 - time1)/CLOCKS_PER_SEC << std::endl;
-			//std::cout << "Second step = " << double(clock() - time2)/CLOCKS_PER_SEC << std::endl;
-
-			// Finally, calculate singular subgroups
-			//List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
-			//_MaxSubgroups.AppendList(SpecialSubgroups);
-			
-			// Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
-			if(_MaxSubgroups.nterms() and LieGroup(_MaxSubgroups.GetObject(0)) == LieGroup(*this)) _MaxSubgroups.DeleteTerm(0);
-			if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
-				_MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
-			}
-			//for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-				//List<SubGroup> AuxMax = _MaxSubgroups.GetObject(i).MaximalSubgroups();
-				/*for(int j=i; j<_MaxSubgroups.nterms(); j++) {
-					if(AuxMax.Index(_MaxSubgroups.GetObject(j)) != -1) {
-						_MaxSubgroups.DeleteTerm(j);
-						j--;
-					}
-				}*/
-			//}
-			
-			_MaxSubgroups.EliminateRepeated();	
-			//std::cout << "total time = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
-			
-			//for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-			//	std::cout << _MaxSubgroups.GetObject(i).json().write_formatted() << std::endl;
-			//}
-			
-			return _MaxSubgroups;
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates the special subroups of a simple group */
-	List<SubGroup> SimpleGroup::SpecialSubgroups() {
-
-		try {
-			
-			List<SubGroup> SpecialSubgroups;
-			
-			// Exit if rank = 1
-			if(rank() == 1) return SpecialSubgroups;
-			
-			// Get the generating rep for this grou
-			Irrep GenRep = GeneratingRep();
-			std::cout << "Generating Rep " << GenRep << std::endl;
-			Matrix<double> Superweights(rank(), GenRep.dim());
-			for(int col=0; col<Superweights.cols(); col++) {
-				Superweights.SetColumn(col, GenRep.Weights().GetObject(col).Transpose());
-			}
-			
-			// Create candidate special subgroups
-			List<LieGroup> CandidateSpecialGroups;
-			List<SimpleGroup> SimpleGroups;
-			for(int j=rank()-1; j>0; j--) {
-				for(int k='A'; k<='G'; k++) {
-					if(GroupExists(j,k)) {
-						SimpleGroup Simplegroup(j,k);
-						if(!Simplegroup.abelian() and Simplegroup.dim() < dim() and SimpleGroups.Index(Simplegroup) == -1) {
-							SimpleGroups.AddTerm(Simplegroup);
-							CandidateSpecialGroups.AddTerm(LieGroup(Simplegroup));
-						}
-					}
-				}
-			}
-			SimpleGroups.EliminateRepeated();
-			CandidateSpecialGroups.EliminateRepeated();
-			//std::cout << "rank = " << rank() << ", dim = " << dim() << std::endl;
-			
-			for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
-				if(it_CSG->rank() < rank()) {
-					LieGroup SpecialSubgroup(*it_CSG);
-					for(List<SimpleGroup>::iterator it_SimpleGroups = SimpleGroups.begin(); it_SimpleGroups != SimpleGroups.end(); it_SimpleGroups++) {
-						if(SpecialSubgroup.rank() + it_SimpleGroups->rank() < rank() and SpecialSubgroup.dim() + it_SimpleGroups->dim() < dim()) {
-							LieGroup AuxSubgroup(SpecialSubgroup);
-							AuxSubgroup.AddTerm(*it_SimpleGroups);
-							AuxSubgroup.Order();
-							CandidateSpecialGroups.AddTerm(AuxSubgroup);
-						}
-					}
-				}
-			}
-			
-			std::cout << CandidateSpecialGroups << std::endl;
-
-			// Check the representation dimensions and calculate the subgroup properties
-			//std::cout << Superweights << std::endl;
-			for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
-				List<Rrep> ListofReps = it_CSG->Reps(GenRep.dim());
-				//std::cout << ListofReps << std::endl;
-				for(List<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++) {
-					if(it_ListofReps->dim() == GenRep.dim() and !it_ListofReps->hasSinglet() and (!GenRep.real() or (GenRep.real() and it_ListofReps->real()))) {
-						SubGroup Subgroup(*it_CSG,*this);
-						//std::cout << Subgroup << std::endl;
-						// Add projection matrix and other properties
-						Matrix<double> Subweights(Subgroup.rank(), it_ListofReps->dim());
-						for(int col=0; col<Subweights.cols(); col++) {
-							Subweights.SetColumn(col, it_ListofReps->Weights().GetObject(col).Transpose());
-						}
-						//std::cout << Subweights << std::endl;
-						Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
-						//std::cout << Projection << std::endl;
-						Subgroup.SetProjection(Projection);
-						Subgroup.setMaximal(true);
-						Subgroup.setRegular(false);
-						Subgroup.setSpecial(true);
-						
-						// Check if it's already a special subgroup and if so don't add it
-						
-						bool flag = false;
-						for(List<SubGroup>::iterator it_SS = SpecialSubgroups.begin(); it_SS != SpecialSubgroups.end(); it_SS++) {
-							//std::cout << "---- " << *it_SS << std::endl;
-							//std::cout << "---- " << it_SS->SpecialSubgroups() << std::endl;
-							if(it_SS->SpecialSubgroups().Index(Subgroup) != -1) {
-								flag = true;
-							}
-						}
-						if(SpecialSubgroups.Index(Subgroup) == -1 and !flag) {
-							SpecialSubgroups.AddTerm(Subgroup);
-						}
-					}
-				}
-			}
-			
-			std::cout << "Special Subgroups = " << *this << "->" << SpecialSubgroups << std::endl;
-			
-			return SpecialSubgroups;
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates all the subgroups of a simple group */
-	List<SubGroup> &SimpleGroup::Subgroups() {
-		
-		try {
-
-			// If the group is abelian, return empty
-			if(abelian()) return _Subgroups;
-			
-			if(_Subgroups.nterms()) return _Subgroups;
-			
-			if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
-				_Subgroups = DataBase.at(id()).Subgroups();
-				if(_Subgroups.nterms()) _hasSubgroups = true;
-				return _Subgroups;
-			}
-			
-			// Use LieGroup function
-			LieGroup G(*this);
-			_Subgroups = G.Subgroups();
-			
-			// Set the hasSubgroups flag to true
-			if(_Subgroups.nterms()) _hasSubgroups = true;
-			
-			// If there is an entry in the database delete it and dump this
-			database_emplace(id(), *this);
-			
-			return _Subgroups;
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the variable Subgroups */
-	List<SubGroup> SimpleGroup::SubgroupsConst() const {
-		return _Subgroups;
-	}
-	
-	/* Calculates the subgroups with rank greater that specified */
-	List<SubGroup> SimpleGroup::Subgroups(int rank) {
-		
-		try {
-
-			// If the group is abelian, return empty
-			if(abelian()) return List<SubGroup>();
-			
-			// Use LieGroup function
-			LieGroup G(*this);
-			return G.Subgroups(rank);
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Calculates the subgroups with ranks between rank1 and rank2 */
-	List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2) {
-		try {
-			
-			// If the group is abelian, return empty
-			if(abelian()) return List<SubGroup>();
-			
-			// Use LieGroup function
-			LieGroup G(*this);
-			return G.Subgroups(rank1, rank2);
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the breaking chain from a simple group to a simple group */
-	List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup) {
-		try {
-			return BreakingChains(LieGroup(Subgroup));	
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the breaking chain from a simple group to a lie group */
-	List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup) {
-		try {
-			LieGroup Group(*this);
-			return Group.BreakingChains(Subgroup);
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
-	List<Product<Irrep> > SimpleGroup::Invariants(const List<Irrep> &irreps, int dim) {
-		
-		try {
-			LieGroup Group(*this);
-			
-			List<Irrep> Irreps(irreps);
-			List<Rrep> Reps;
-			
-			for(List<Irrep>::iterator it_Irreps = Irreps.begin(); it_Irreps != Irreps.end(); it_Irreps++)
-				Reps.AddTerm(Rrep(*it_Irreps));
-			
-			List<Product<Rrep> > Invariants = Group.Invariants(Reps, dim);
-			List<Product<Irrep> > Invariants2;
-			
-			for(List<Product<Rrep> >::iterator it_Invariants = Invariants.begin(); it_Invariants != Invariants.end(); it_Invariants++) {
-				Product<Rrep> Invariant = *it_Invariants;
-				Product<Irrep> Invariant2;
-				for(Product<Rrep>::iterator it_Invariant = Invariant.begin(); it_Invariant != Invariant.end(); it_Invariant++)
-					Invariant2.AddTerm(Irrep(it_Invariant->GetObject(0)));
-				Invariants2.AddTerm(Invariant2);
-			}
-			
-			return Invariants2;
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns whether the simple group is a subgroup of a Lie Group */
-	bool SimpleGroup::isSubgroupOf(LieGroup Group) const {
-
-		try {
-			LieGroup G(*this);	
-			return G.isSubgroupOf(Group);
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Returns whether the Lie group is a subgroup of another simple Group */
-	bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const {
-
-		try {
-			LieGroup G(*this);
-			return G.isSubgroupOf(Group);
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Overloaded == operator */
-	bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
-
-		if(this->rank() == OtherSimpleGroup.rank() and this->type() == OtherSimpleGroup.type()) return true;
-
-		if(rank() == 2 and OtherSimpleGroup.rank() == 2 and (type() == 'B' or type() == 'C') and (OtherSimpleGroup.type() == 'B' or OtherSimpleGroup.type() == 'C')) {
-			return true;
-		}
-		
-		return false;
-	}
-
-	/* Overloaded != operator */
-	bool SimpleGroup::operator!=(const SimpleGroup &OtherSimpleGroup) const {
-		return !((*this) == OtherSimpleGroup);
-
-	}
-
-	/* Overloaded > operator */
-	bool SimpleGroup::operator>(const SimpleGroup &OtherSimpleGroup) const {
-		if(this->rank() > OtherSimpleGroup.rank()) {
-			return true;
-		} else if(this->rank() == OtherSimpleGroup.rank()) {
-			if(this->dim() > OtherSimpleGroup.dim()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/* Overloaded < operator */
-	bool SimpleGroup::operator<(const SimpleGroup &OtherSimpleGroup) const {
-		if(this->rank() < OtherSimpleGroup.rank()) {
-			return true;
-		} else if(this->rank() == OtherSimpleGroup.rank()) {
-			if(this->dim() < OtherSimpleGroup.dim()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/* Returns the json string */
-	JSONNode SimpleGroup::json(std::string name) const {
-		
-		if(name == "id") {
-			return JSONNode("", id());
-		}
-		
-		JSONNode json;
-		
-		json.push_back(JSONNode("id", id()));
-		json.push_back(JSONNode("rank", _rank));
-		json.push_back(JSONNode("type", std::string(1,_type)));
-		json.push_back(JSONNode("dim", _dim));
-		json.push_back(JSONNode("order", _order));
-		json.push_back(JSONNode("label", _label));
-		json.push_back(JSONNode("abelian", _abelian));
-		json.push_back(_Cartan.json("Cartan"));
-		json.push_back(_G.json("G"));
-		json.push_back(JSONNode("Casimir", _Casimir));
-		json.push_back(JSONNode("repsMaxDim", _repsMaxDim));
-		json.push_back(JSONNode("hasReps", _hasReps));
-		json.push_back(JSONNode("hasSubgroups", _hasSubgroups));
-		json.push_back(_Irreps.json("Irreps"));
-		json.push_back(_Subgroups.json("Subgroups"));
-		
-		return json;
-	}
-
-	/* Parses a json object into the attributes of the class */
-	void SimpleGroup::ParseJSON(const JSONNode & n, std::string what) {
-		
-		JSONNode::const_iterator i = n.begin();
-			
-		while (i != n.end()){
-		
-			// get the node name and value as a string
-			std::string node_name = i -> name();
-
-			// find out where to store the values
-			if(node_name == "rank") {
-				_rank = i->as_int();
-			} else if(node_name =="type") {
-				_type = (i->as_string())[0];
-			} else if(node_name == "dim") {
-				_dim = i->as_int();
-			} else if(node_name == "order") {
-				_order = i->as_int();
-			} else if(node_name == "label") {
-				_label = i->as_string();
-			} else if(node_name == "abelian") {
-				_abelian = i->as_bool();
-			} else if(node_name == "Cartan") {
-				_Cartan.ParseJSON(*i);
-			} else if(node_name == "G") {
-				_G.ParseJSON(*i);
-			} else if(node_name == "Casimir") {
-				_Casimir = i->as_float();
-			} else if(node_name == "repsMaxDim") {
-				_repsMaxDim = i->as_int();
-			} else if(node_name == "hasReps" and (what == "Reps")) {
-				_hasReps = i->as_bool();
-			} else if(node_name == "hasSubgroups" and what == "Subgroups") {
-				_hasSubgroups = i->as_bool();
-			} else if(node_name == "Irreps" and (what == "Reps")) {
-				_Irreps.ParseJSON(*i);
-				if(_Irreps.nterms())
-					_hasReps = true;
-				else
-					_hasReps = false;
-			} else if(node_name == "Subgroups" and (what == "Subgroups")) {
-				_Subgroups.ParseJSON(*i);
-				if(_Subgroups.nterms())
-					_hasSubgroups = true;
-				else
-					_hasSubgroups = false;
-			}
-				
-			//increment the iterator
-			++i;
-		}
-	}
-
-	/* Checks whether the group exists or not */
-	bool SimpleGroup::GroupExists(int rank, char type) {
-		try {
-		
-			if(type < 'A' or type > 'G') return false;
-			
-			if(rank <= 0) return false;
-			
-			if(type == 'D' and rank == 2) return false;
-			
-			if(type == 'E' and (rank < 6 or rank > 8)) return false;
-			
-			if(type == 'F' and rank != 4) return false;
-			
-			if(type == 'G' and rank != 2) return false;
-			
-			return true;
-			
-		} catch (...) {
-			throw;
-		}
-	}
-
-	/* Overloaded << operator with simple groups on the right */
-	std::ostream &operator<<(std::ostream &stream, const SimpleGroup &g) {
-		stream << g.label();
-		return stream;
-	}
+  // Definition of static variables and helper functions
+  
+  std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
+  std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
+  
+  bool SimpleGroup::database_check(std::string id, std::string what) {
+    if(DataBase.empty())
+    {
+      DataBase.clear();
+      return false;
+    }
+    if(DataBase.find(id) != DataBase.end()) {
+      if (what == "")
+        return true;
+      if(what == "Reps" and DataBase.at(id).hasReps())
+        return true;
+      if(what == "Subgroups" and DataBase.at(id).hasSubgroups())
+        return true;
+    }
+    if(JSONDataBase.find(id) != JSONDataBase.end()) {
+      SimpleGroup G(JSONDataBase.at(id));
+      if(what == "Reps" or (what == "Subgroups" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasReps()))
+        G.ParseJSON(JSONDataBase.at(id),"Reps");
+      if(what == "Subgroups" or (what == "Reps" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasSubgroups()))
+        G.ParseJSON(JSONDataBase.at(id),"Subgroups");
+      if(DataBase.find(id) != DataBase.end())
+        DataBase.erase(id);
+      DataBase.emplace(id, G);
+      return true;
+    }
+    return false;
+  }
+  
+  void SimpleGroup::database_emplace(std::string id, SimpleGroup G) {
+    if(database_check(id))
+      DataBase.erase(id);
+    DataBase.emplace(id, G);
+  }
+  
+  // Member functions
+
+  /* Constructor */
+  SimpleGroup::SimpleGroup(int rank, char type) {
+
+    try {
+      _rank = rank;
+      _type = type;
+      init();
+    } catch (...) {
+      throw;
+    }
+
+  }
+
+  /* Constructor 2 */
+  SimpleGroup::SimpleGroup(int rank, const Matrix<double> &Cartan) {	
+
+    try {
+      
+      _rank = rank;
+
+      //std::cout << "Group indentification" << std::endl;
+      if(rank == 1) {
+        if(Cartan[0][0] == 1) {
+          _type = 'U';
+        } else {
+          _type = 'A';
+        }
+      } else if(rank == 2 and Cartan[0][1] == -3) {
+        _type = 'G';
+      } else if(rank == 4 and Cartan[1][2] == -2) {
+        _type = 'F';
+      } else if(Cartan != Cartan.Transpose()) {
+        int row, col;
+        for(int i=0; i<rank; i++) {
+          for(int j=0; j<rank; j++) {
+            if(Cartan[i][j] == -2) {
+              row = i;
+              col = j;
+            }
+          }
+        }
+        if(rank == 2) {
+          if(row < col) {
+            _type = 'B';
+          } else {
+            _type = 'C';
+          }
+        } else {
+          if(((row < col and col == rank-1) or (row > col and col == 0))) {
+            _type = 'B';
+          } else {
+            _type = 'C';
+          }
+        }
+      } else {
+        bool typeA = true;
+        for(int i=0; i<rank; i++) {
+          int nlinks = 0;
+          for(int j=0; j<rank; j++) {
+            if(Cartan[i][j] == -1) {
+              nlinks++;
+            }
+          }
+          if(nlinks > 2 or nlinks == 0) {
+            typeA = false;
+          }
+        }
+
+        if(typeA) {
+          //std::cout << "The group is of type A" << std::endl;
+          _type = 'A';
+        } else if (Cartan[rank-3][rank-1] != 0 or Cartan[1][rank-1] != 0) {
+          _type = 'D';
+        } else {
+          _type = 'E';
+        }
+      
+        bool typedore = false;
+        int junction;
+        for(int i=0; i<rank; i++) {
+          int numberoflinks = 0;
+          for(int j=0; j<rank; j++) {
+            if(Cartan[i][j] == -1) {
+              numberoflinks++;
+            }
+          }
+          if(numberoflinks == 3) {
+            typedore = true;
+            junction = i;
+          }
+        }
+        if(typedore) {
+          if((rank != 6 and rank != 7 and rank != 8) or (Cartan[rank-3][rank-1] != 0 or Cartan[1][rank-1] != 0 or Cartan[1][3] != 0)) {
+            _type = 'D';
+          } else {
+            int numberofbrancheswithonlyonedot = 3;
+            for(int i=0; i<rank; i++) {
+              if(Cartan[junction][i] == -1) {
+                bool hasotherconnections = false;
+                for(int j=0;j<rank;j++) {
+                  if(Cartan[i][j] == -1 and j!=junction) {
+                    hasotherconnections = true;
+                  }
+                }
+                numberofbrancheswithonlyonedot--;
+              }
+            }
+            if(numberofbrancheswithonlyonedot == 1) {
+              _type = 'E';
+            } else {
+              _type = 'D';
+            }
+          }
+        } else {
+          _type = 'A';
+        }
+
+      }
+      
+      init();
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Constructor 3, with strings */
+  SimpleGroup::SimpleGroup(const std::string id) {
+    
+    try {
+      std::string label = id;
+      label.erase(std::remove(label.begin(), label.end(), ' '), label.end());
+      
+      switch(toupper(label[0])) {
+        case 'A':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          break;
+      
+        case 'B':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          break;
+          
+        case 'C':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          break;
+      
+        case 'D':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          break;
+        
+        case 'E':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          if(_rank < 6 or _rank > 8) {
+            throw "SimpleGroup::SimpleGroup::Group does not exist";
+          }
+          break;
+        
+        case 'F':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          if(_rank != 4) {
+            throw "SimpleGroup::SimpleGroup::Group does not exist";
+          }
+          break;
+
+        case 'G':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          if(_rank != 2) {
+            throw "SimpleGroup::SimpleGroup::Group does not exist";
+          }
+          break;
+        
+        case 'S':
+          switch(toupper(label[1])) {
+            case 'U':
+              _type = 'A';
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+                _order = atoi((label.substr(3,label.length()-4)).c_str());
+              } else {
+                _order = atoi((label.substr(2,label.length()-2)).c_str());
+              }
+              _rank = _order - 1;
+              break;
+            
+            case 'O':
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+                _order = atoi((label.substr(3,label.length()-4)).c_str());
+              } else {
+                _order = atoi((label.substr(2,label.length()-2)).c_str());
+              }
+              if(_order%2) {
+                _type = 'B';
+                _rank = (_order-1)/2;
+              } else {
+                _type = 'D';
+                _rank = _order/2;
+              }
+              break;
+            
+            case 'P':
+              _type = 'C';
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+                _order = atoi((label.substr(3,label.length()-4)).c_str());
+              } else {
+                _order = atoi((label.substr(2,label.length()-2)).c_str());
+              }
+              if(_order%2) {
+                throw "SimpleGroup::SimpleGroup::Group does not exist";
+              } else {
+                _rank = _order/2;
+              }
+              break;
+              
+            default:
+              throw "SimpleGroup::SimpleGroup::Group does not exist";
+          }
+          break;
+      
+        case 'U':
+          _type = toupper(label[0]);
+          _rank = atoi((label.substr(1,label.length()-1)).c_str());
+          if(_rank != 1) {
+            throw "SimpleGroup::SimpleGroup::This is not a Lie Group";
+          }
+          break;
+        
+        default:
+          throw "SimpleGroup::SimpleGroup::Group does not exist";
+      }
+      
+      init();
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Constructor 4, with json nodes */
+  SimpleGroup::SimpleGroup(const JSONNode &n) {
+    
+    if(n.as_string() != "") {
+      SimpleGroup(n.as_string());
+    } else {
+      ParseJSON(n);
+    }
+  }
+
+  /* Copy constructor */
+  SimpleGroup::SimpleGroup(const SimpleGroup &G) {
+    
+    try {
+      _rank = G.rank();
+      _type = G.type();
+      _dim = G.dim();
+      _order = G.order();
+      _label = G.label();
+      _Cartan = Matrix<double>(G.Cartan());
+      _G = Matrix<double>(G.G());
+      _abelian = G.abelian();
+      _Casimir = G.Casimir();
+      _repsMaxDim = G.repsMaxDim();
+      _hasReps = G.hasReps();
+      _hasSubgroups = G.hasSubgroups();
+      if(_hasReps) _Irreps = G.IrrepsConst();
+      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Move constructor */
+  SimpleGroup::SimpleGroup(SimpleGroup &&G) :
+    _rank(std::move(G._rank)),
+    _type(std::move(G._type)),
+    _dim(std::move(G._dim)),
+    _order(std::move(G._order)),
+    _label(std::move(G._label)),
+    _Cartan(std::move(G._Cartan)),
+    _G(std::move(G._G)),
+    _abelian(std::move(G._abelian)),
+    _Casimir(std::move(G._Casimir)),
+    _repsMaxDim(std::move(G._repsMaxDim)),
+    _hasReps(std::move(G._hasReps)),
+    _hasSubgroups(std::move(G._hasSubgroups)),
+    _Irreps(std::move(G._Irreps)),
+    _Subgroups(std::move(G._Subgroups))
+  {
+    
+    try {
+      G._rank = 0;
+      G._type = '\0';
+      G._dim = 0;
+      G._order = 0;
+      G._label = "";
+      G._Cartan = Matrix<double>();
+      G._G = Matrix<double>();
+      G._abelian = false;
+      G._Casimir = 0;
+      G._repsMaxDim = 0;
+      G._hasReps = false;
+      G._hasSubgroups = false;
+      G._Irreps.Clear();
+      G._Subgroups.Clear();
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Destructor */
+  SimpleGroup::~SimpleGroup() {
+    //std::cout << "deleting group " << std::endl;
+  }
+
+  /* Assignment operator */
+  SimpleGroup &SimpleGroup::operator=(const SimpleGroup &G) {
+    
+    try {
+      if(this == &G) return *this;
+      
+      _rank = G.rank();
+      _type = G.type();
+      _dim = G.dim();
+      _order = G.order();
+      _label = G.label();
+      _Cartan = Matrix<double>(G.Cartan());
+      _G = Matrix<double>(G.G());
+      _abelian = G.abelian();
+      _Casimir = G.Casimir();
+      _repsMaxDim = G.repsMaxDim();
+      _hasReps = G.hasReps();
+      _hasSubgroups = G.hasSubgroups();
+      if(_hasReps) _Irreps = G.IrrepsConst();
+      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+      
+      return *this;
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Move assignment operator */
+  SimpleGroup &SimpleGroup::operator=(SimpleGroup &&G) {
+    
+    try {
+      if(this == &G) return *this;
+      
+      _rank = std::move(G._rank);
+      _type = std::move(G._type);
+      _dim = std::move(G._dim);
+      _order = std::move(G._order);
+      _label = std::move(G._label);
+      _Cartan = std::move(G._Cartan);
+      _G = std::move(G._G);
+      _abelian = std::move(G._abelian);
+      _Casimir = std::move(G._Casimir);
+      _repsMaxDim = std::move(G._repsMaxDim);
+      _hasReps = std::move(G._hasReps);
+      _hasSubgroups = std::move(G._hasSubgroups);
+      _Irreps = std::move(G._Irreps);
+      _Subgroups = std::move(G._Subgroups);
+      
+      G._rank = 0;
+      G._type = '\0';
+      G._dim = 0;
+      G._order = 0;
+      G._label = "";
+      G._Cartan = Matrix<double>();
+      G._G = Matrix<double>();
+      G._abelian = false;
+      G._Casimir = 0;
+      G._repsMaxDim = 0;
+      G._hasReps = false;
+      G._hasSubgroups = false;
+      G._Irreps.Clear();
+      G._Subgroups.Clear();
+      
+      return *this;
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Initialise variables */
+  void SimpleGroup::init() {
+
+    try {
+
+      if(_rank == 0 or _type == 0) {
+        throw "SimpleGroup::init::Not enough variables no initialise";
+      }
+            
+      if(database_check(id())) {
+        *this = DataBase.at(id());
+      } else {
+        
+        _abelian = false;
+
+        char label[10];
+        _Cartan = Matrix<double>(rank());
+        
+        switch(type()) {
+          case 'A':
+            _Cartan[0][0] = 2;
+            for(int i=1; i<rank(); i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i-1][i] = -1;
+              _Cartan[i][i-1] = -1;
+            }
+            sprintf(label,"SU(%d)", rank()+1);
+            _label = label;
+            _dim = rank()*(rank() + 2);
+            _order = rank() + 1;
+            break;
+        
+          case 'B':
+            _Cartan[0][0] = 2;
+            for(int i=1; i<rank(); i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i-1][i] = -1;
+              _Cartan[i][i-1] = -1;
+            }
+            if(rank()>1) {
+              _Cartan[rank()-2][rank()-1] = -2;
+            }
+            sprintf(label,"SO(%d)", 2*rank()+1);
+            _label = label;
+            if(rank() == 1) {
+              _type = 'A';
+              _label = "SU(2)";	
+            //} else if(rank() == 2) {
+            //	_type = 'C';
+            //	_Cartan = _Cartan.Transpose();
+            }
+            _dim = rank()*(2*rank() + 1);
+            _order = 2*rank() + 1;
+            break;
+      
+          case 'C':
+            _Cartan[0][0] = 2;
+            for(int i=1; i<rank(); i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i-1][i] = -1;
+              _Cartan[i][i-1] = -1;
+            }
+            if(rank()>1) {
+              _Cartan[rank()-1][rank()-2] = -2;
+            }
+            sprintf(label,"Sp(%d)", 2*rank());
+            _label = label;
+            if(rank() == 1) {
+              _type = 'A';
+              _label = "SU(2)";
+            }
+            _dim = rank()*(2*rank() + 1);
+            _order = 2*rank() + 1;
+            break;
+      
+          case 'D':
+            _Cartan[0][0] = 2;
+            for(int i=1; i<rank()-1; i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i-1][i] = -1;
+              _Cartan[i][i-1] = -1;
+            }
+            if(rank()>2) {
+              _Cartan[rank()-3][rank()-1] = -1;
+              _Cartan[rank()-1][rank()-3] = -1;
+            } 
+            if(rank()>1) {
+              _Cartan[rank()-1][rank()-1] = 2;
+            }
+            sprintf(label,"SO(%d)", 2*rank());
+            _label = label;
+            if(rank() == 1) {
+              _Cartan[0][0] = 1;
+              _abelian = true;
+              _type = 'U';
+              _label = "U(1)";
+            } else if(rank() == 3) {
+              _type = 'A';
+              _Cartan.ChangeBasis(0,1);
+              _label = "SU(4)";
+            }
+            _dim = rank()*(2*rank() - 1);
+            _order = 2*rank();
+            break;
+          
+          case 'E':
+            if(rank()>=6 && rank()<=8) {
+              for(int i=0;i<rank()-2;i++) {
+                _Cartan[i][i] = 2;
+                _Cartan[i][i+1] = -1;
+                _Cartan[i+1][i] = -1;
+              }	
+              _Cartan[rank()-2][rank()-2] = 2;
+              _Cartan[rank()-1][rank()-1] = 2;
+              _Cartan[2][rank()-1] = -1;
+              _Cartan[rank()-1][2] = -1;
+              sprintf(label,"E%d", rank());
+              _label = label;
+            } else {
+              throw "SimpleGroup::init::Group does not exist";
+            }
+            if(rank()==6) {
+              _dim = 78;
+              _order = 27;
+            } else if(rank()==7) {
+              _dim = 133;
+              _order = 55;
+            } else {	
+              _order = 3875;
+              _dim = 248;
+            }
+            break;
+      
+          case 'F':
+            if(rank() == 4) {
+              for(int i=0;i<rank()-1;i++) {
+                _Cartan[i][i] = 2;
+                _Cartan[i][i+1] = -1;
+                _Cartan[i+1][i] = -1;
+              }
+              _Cartan[rank()-1][rank()-1] = 2;
+              _Cartan[1][2] = -2;
+              _label = "F4";
+            } else {
+              throw "SimpleGroup::init::Group does not exist";
+            }
+            _dim = 52;
+            _order = 52;
+            break;
+            
+          case 'G':
+            if(rank() == 2) {
+              _Cartan[0][0] = 2;
+              _Cartan[0][1] = -3;
+              _Cartan[1][0] = -1;
+              _Cartan[1][1] = 2;
+              _label = "G2";
+            } else {
+              throw "SimpleGroup::init::Group does not exist";
+            }
+            _dim = 14;
+            _order = 14;
+            break;
+            
+          case 'U':
+            if(rank() == 1) {
+              _abelian = true;
+              _Cartan[0][0] = 1;
+              _label = "U(1)";
+            } else {
+              throw "SimpleGroup::init::Group does not exist";
+            }
+            _dim = 1;
+            _order = 1;
+            break;
+    
+          default:
+            throw "SimpleGroup::init::Group does not exist";
+        }		
+    
+        _G = Matrix<double>(rank());
+        _G = _Cartan.Inverse();
+        
+        if(rank() != 1 and _Cartan != _Cartan.Transpose()) {
+          for(int i=0; i<rank(); i++) {
+            for(int j=0; j<rank(); j++) {
+              Root alpha = this->SRoot(j);
+              _G[i][j] *= 0.5*alpha.length();
+            }	
+          }
+        }
+
+        _PRoots = this->PRoots();
+        
+        if(abelian()) {
+          _Casimir = 0;
+        } else {
+          Weight w(*this, PRoots().GetObject(0));
+          _Casimir = 0;
+          for(int i=0; i<_rank; i++) {
+            for(int j=0; j<_rank; j++) {
+              _Casimir += 0.5*w[i]*_G[i][j]*(w[j]+2);
+            }
+          }
+          //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
+          //_Casimir = Adjoint.DynkinIndex();
+        }
+        
+        
+        database_emplace(id(),*this);
+        
+        // Output the info
+        /*std::ostringstream OutputDirectory;
+        OutputDirectory << "./out/" << id();
+
+        mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+        std::ostringstream OutputFileName;
+        OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
+
+        std::ofstream OutputFile;
+        OutputFile.open(OutputFileName.str().c_str());
+        OutputFile << json().write_formatted() << std::endl;
+        OutputFile.close();*/
+    
+      }
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Identifier of the group */
+  std::string SimpleGroup::id() const {
+    std::stringstream s;
+    s << _type << _rank;
+    return s.str();
+  }
+
+  /* Returns rank */
+  int SimpleGroup::rank() const {
+    return _rank;
+  }
+
+  /* Returns type */
+  char SimpleGroup::type() const {
+  return _type;
+  }
+
+  /* Returns dimension */
+  int SimpleGroup::dim() const {
+    return _dim;
+  }
+
+  /* Returns order */
+  int SimpleGroup::order() const {
+    return _order;
+  }
+
+  /* Returns the label */
+  std::string SimpleGroup::label() const {
+    return _label;
+  }
+
+  /* Returns whether the group is abelian */
+  bool SimpleGroup::abelian() const {
+    return _abelian;
+  }
+
+  /* Returns Cartan matrix */
+  Matrix<double> SimpleGroup::Cartan() const {
+  return _Cartan;
+  }
+
+  /* Returns the matrix G, inverse of the Cartan matrix */
+  Matrix<double> SimpleGroup::G() const {
+    return _G;
+  }
+
+  /* Returns the Casimir of the group */
+  double SimpleGroup::Casimir() const {
+    return _Casimir;
+  }
+
+  /* Returns the maximum dimension of the calculated reps */
+  int SimpleGroup::repsMaxDim() const {
+    return _repsMaxDim;
+  }
+
+  /* Returns whether the SimpleGroup has calculated its reps */
+  bool SimpleGroup::hasReps() const {
+    return _hasReps;
+  }
+  
+  /* Returns whether the SimpleGroup has calculated its subgroups */
+  bool SimpleGroup::hasSubgroups() const {
+    return _hasSubgroups;
+  }
+  
+  /* Returns Simple Root i */
+  Root SimpleGroup::SRoot(int i){
+    
+    try {
+      if(i>=_rank) {
+        throw "SimpleGroup::SRoot::Element doesn\'t exist";
+      }
+      RVector<double> Vector(Cartan().Row(i));
+      Root alpha(*this, Vector);
+      return alpha;
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates all positive roots */
+  List<Root> SimpleGroup::PRoots(std::string _basis) {
+
+    try {
+
+      std::string basis = _basis;
+      
+      std::string::iterator init = basis.begin();
+      std::string::iterator end = basis.end();
+
+      while (init != end) {
+        *init = std::toupper((unsigned char)*init);
+        ++init;
+      }
+      
+      if(basis.compare("DYNKIN") and basis.compare("DUAL")) {
+        throw "SimpleGroup::PRoots::Basis has to be either Dynkin or Dual";
+      }
+      
+      if(!_PRoots.Empty()) {
+        if(basis=="DUAL") {
+          List<Root> DualRoots;
+          for(int i=0; i<_PRoots.nterms(); i++) {
+            DualRoots.AddTerm(_PRoots.GetObject(i).Dual());
+          }
+          return DualRoots;
+        } else {
+          return _PRoots;
+        }
+      }
+    
+      int nproots = (int)(0.5*(this->dim()-this->rank()));
+      List<Root> Roots;
+      for(int i=0; i<this->rank(); i++) {
+        Roots.AddTerm(this->SRoot(i));
+      }
+
+      double n = 0;
+
+      for (int i=0; i<nproots; i++) {
+        //std::cout << "i = " << i << std::endl;
+        for(int j=0; j<_rank; j++) {
+          //std::cout << "-j = "<< j << std::endl;
+          if(i!=j) {
+            n = -Roots.GetObject(i)[j];
+            //std::cout << "n = " << n << std::endl;
+            if(n>0){
+              for(int l=1; l<=n; l++) {
+                //std::cout << "l = " << l << std::endl;
+                //std::cout << this->SRoot(j) << std::endl;
+                Root alpha = Roots.GetObject(i) + this->SRoot(j)*(double)l;
+                //std::cout << alpha << std::endl;
+                if(Roots.Index(alpha) < 0) {
+                  Roots.AddTerm(alpha);
+            }						
+            }
+          }
+        }
+      }
+      }
+    
+      //std::cout << "Roots = " << Roots << std::endl;
+      Roots.Reverse();
+      //std::cout << "Roots = " << Roots << std::endl;
+      
+      if(basis=="DUAL") {
+        List<Root> DualRoots;
+        for(int i=0; i<Roots.nterms(); i++) {
+          DualRoots.AddTerm(Roots.GetObject(i).Dual());
+        }
+        return DualRoots;
+      }
+
+      //std::cout << Roots << std::endl;
+      return Roots;
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates all roots */
+  List<Root> SimpleGroup::Roots() {
+    
+    try {
+      /*if(json.find_nocase("Roots")) {
+        
+      }*/
+      //std::cout << "Calculating the roots..." << std::endl;
+    
+      List<Root> Roots = this->PRoots();
+      int nproots = Roots.nterms();
+      for(int i=0; i<this->rank(); i++) {
+        RVector<double> V(this->rank());
+        Roots.AddTerm(Root(*this, V));
+      }
+
+      for(int i=0; i<nproots; i++) {
+        Root beta = Roots.GetObject(nproots-i-1);
+        beta *= -1;
+        Roots.AddTerm(beta);
+      }
+        
+      return Roots;
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the simple representations of a group */
+  List<Irrep> SimpleGroup::SimpleReps() {
+    
+    try {
+      Weight HWeight(*this, this->rank());
+
+      List<Irrep> SimpleReps;
+      std::string label;
+
+      switch(_type) {
+    
+        case 'A':
+          HWeight[0] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          HWeight[0] = 0;
+          HWeight[_rank-1] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'B':
+          HWeight[0] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          HWeight[0] = 0;
+          HWeight[_rank-1] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'C':
+          HWeight[0] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'D':
+          HWeight[0] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          HWeight[0] = 0;
+          HWeight[_rank-1] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          HWeight[_rank-1] = 0;
+          HWeight[_rank-2] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'E':
+          if(_rank==6) {
+            HWeight[0] = 1;
+            SimpleReps.AddTerm(Irrep(*this,HWeight));
+            HWeight[0] = 0;
+            HWeight[_rank-2] = 1;
+            SimpleReps.AddTerm(Irrep(*this,HWeight));
+          } else if(_rank==7) {
+            HWeight[_rank-2] = 1;
+            SimpleReps.AddTerm(Irrep(*this,HWeight));
+          } else if(_rank==8) {
+            HWeight[_rank-2] = 1;
+            SimpleReps.AddTerm(Irrep(*this,HWeight));
+          }
+          break;
+
+        case 'F':
+          HWeight[_rank-1] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'G':
+          HWeight[1] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+          break;
+
+        case 'U':
+          HWeight[0] = 1;
+          SimpleReps.AddTerm(Irrep(*this,HWeight));
+      }
+      
+      return SimpleReps;
+      
+    } catch (...) {
+      throw;
+    }
+
+  }
+
+  /* Returns the generating rep of the group */
+  Irrep SimpleGroup::GeneratingRep() {
+
+    try {
+      //clock_t  time1 = clock();
+      Weight HWeight(*this, this->rank());
+        
+      switch(_type) {
+
+        case 'A':
+          HWeight[0] = 1;
+          break;
+        case 'B':
+          HWeight[0] = 1;
+          break;
+        case 'C':
+          HWeight[0] = 1;
+          break;
+        case 'D':
+          HWeight[_rank-2] = 1;
+          break;
+        case 'E':
+          if(_rank==6) {
+            HWeight[0] = 1;
+          } else if(_rank==7) {
+            HWeight[_rank-2] = 1;
+          } else if(_rank==8) {
+            HWeight[_rank-2] = 1;
+          }
+          break;
+        case 'F':
+          HWeight[_rank-1] = 1;
+          break;
+        case 'G':
+          HWeight[1] = 1;
+          break;
+        case 'U':
+          HWeight[0] = 1;
+          break;
+        default:
+          throw "SimpleGroup::GeneratingRep::Group does not exist";
+      }
+      //std::cout << "Time in generating rep = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl; 
+
+      return Irrep(*this,HWeight);
+    
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the adjoint rep of te group */
+  Irrep SimpleGroup::AdjointRep()
+  {
+    try
+    {
+      List<Irrep> irreps = Irreps(dim());
+      if(irreps[-1].dim() == dim())
+        return irreps[-1];
+      else
+        throw "SimpleGroup::Irrep::Could not get the adjoint irrep";
+      
+    } catch (...)
+    {
+      throw;
+    }	
+  }
+  
+  /* Returns a singlet rep */
+  Irrep SimpleGroup::SingletRep()
+  {
+    try
+    {
+      return Irrep(*this, Weight(*this,RVector<double>(_rank)));
+      
+    } catch (...)
+    {
+      throw;
+    }	
+  }
+  
+  /* Returns all the representations of the group up to dimension maxdim */
+  List<Irrep> &SimpleGroup::Irreps(int maxdim) {
+
+    try {
+      // If the reps are calculated already
+      if(_Irreps.nterms() and _repsMaxDim >= maxdim) {
+        int i = _Irreps.nterms()-1;
+        while(_Irreps.GetObject(i).dim() > maxdim) {
+          _Irreps.DeleteTerm(i);
+          i--;
+        }
+        _repsMaxDim = maxdim;
+        return _Irreps;
+      }
+      
+      if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
+        _Irreps = DataBase.at(id()).Irreps(maxdim);
+        if(_Irreps.nterms()) _hasReps = true;
+        _repsMaxDim = maxdim;
+        return _Irreps;
+      }
+      
+      if(maxdim == -1) maxdim = 50;
+      
+      // If the group is abelian just return {0.0}
+      if(abelian()) {
+        _Irreps =  List<Irrep>(Irrep(*this,Weight(*this,1)));
+        if(_Irreps.nterms()) _hasReps = true;
+        _repsMaxDim = maxdim;
+        return _Irreps;
+      }
+      
+      
+      // If not, calculate it
+      List<Irrep> Reps;
+      Weight HW(*this, this->rank());
+      List<Weight> HWs(HW);
+      Irrep Rep(*this, HW);
+      //std::cout << Rep << std::endl;
+      Reps.AddTerm(Rep);
+      int dim = 1;
+
+      // List of labels so avoid repetition
+      List<std::string> labels("1");
+      for(int i = 0; i<HWs.nterms(); i++) {
+        HW = HWs.GetObject(i);
+        
+        for(int k=0; k<_rank; k++) {
+          HW[k] ++;
+          //std::cout << HW << std::endl;
+          if(HWs.Index(HW) < 0) {
+            Irrep Rep(*this, HW);
+            //std::cout << Rep << std::endl;
+            dim = Rep.dim();
+            if(dim<=maxdim && dim>0) {
+              std::string label = std::to_string(Rep.dim());
+              do {
+                int index = labels.Index(label);
+                if(index >= 0) {
+                  if(Rep.isConjugateOf(Reps.GetObject(index))) {
+                    label.append("*");
+                  } else {
+                    label.append("'");
+                  }
+                }
+              } while(labels.Index(label) >= 0);
+              Rep.setLabel(label);
+              Reps.AddTerm(Rep);
+              HWs.AddTerm(HW);
+              labels.AddTerm(label);
+            }	
+            //std::cout << Reps << std::endl;
+            //std::cout << HWs << std::endl;
+          }
+          HW[k] --;
+        }
+        //std::cout << "i = " << i << std::endl;
+      }
+      //std::cout << Reps << std::endl;
+
+      Reps.Order("ASC");
+      _Irreps = Reps;
+      
+      //std::cout << _Irreps << std::endl;
+      
+      // Set th hasReps flag to true and repsMaxDim to the current maxdim
+      if(_Irreps.nterms()) _hasReps = true;
+      _repsMaxDim = maxdim;
+      
+      // If there is an entry in the database delete it and dump this
+      database_emplace(id(), *this);
+
+      //for(List<Irrep>::iterator it_Irreps = _Irreps.begin(); it_Irreps != _Irreps.end(); it_Irreps++)
+      //	std::cout << it_Irreps->json().write_formatted() << std::endl;
+      
+      //std::cout << "Irreps = " << _Irreps << std::endl;
+      
+      return _Irreps;
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the variable Irreps */
+  List<Irrep> SimpleGroup::IrrepsConst() const {
+    return _Irreps;
+  }
+  
+  /* Returns the extended Cartan matrix */
+  Matrix<double> SimpleGroup::ExtendedCartan(){
+
+    try {
+      Matrix<double> ExtCartan(this->rank()+1);
+      for(int i=0; i<this->rank(); i++) {
+        for(int j=0; j<this->rank(); j++) {
+          ExtCartan[i][j] = this->Cartan()[i][j];
+        }
+      }
+      ExtCartan[this->rank()][this->rank()] = 2;
+      switch(this->type()) {
+        case 'A':
+          ExtCartan[0][this->rank()] = -1;
+          ExtCartan[this->rank()][0] = -1;
+          ExtCartan[this->rank()][this->rank()-1] = -1;
+          ExtCartan[this->rank()-1][this->rank()] = -1;
+          break;
+        case 'B':
+          if(this->rank()>2) {
+            ExtCartan[this->rank()][1] = -1;
+            ExtCartan[1][this->rank()] = -1;
+          } else if(this->rank() == 2) {
+            ExtCartan[this->rank()][1] = -2;
+            ExtCartan[1][this->rank()] = -1;
+          } else {
+            ExtCartan[1][0] = -1;
+            ExtCartan[0][1] = -1;
+          }
+          break;
+        case 'C':
+          if(this->rank()>1) {
+            ExtCartan[this->rank()][0] = -2;
+            ExtCartan[0][this->rank()] = -1;
+          } else {
+            ExtCartan[1][0] = -1;
+            ExtCartan[0][1] = -1;
+          }
+          break;
+        case 'D':
+          if(this->rank()>3) {
+            ExtCartan[this->rank()][1] = -1;
+            ExtCartan[1][this->rank()] = -1;
+            //ExtCartan.MoveRow(this->rank(),0);
+            //ExtCartan.MoveColumn(this->rank(),0);
+          } else if(this->rank() == 3 or this->rank() == 2) {
+            ExtCartan[this->rank()-2][this->rank()] = -1;
+            ExtCartan[this->rank()][this->rank()-2] = -1;
+            ExtCartan[this->rank()][this->rank()-1] = -1;
+            ExtCartan[this->rank()-1][this->rank()] = -1;			
+          } else {
+            ExtCartan[1][0] = -1;
+            ExtCartan[0][1] = -1;
+          }
+          break;
+        case 'G':
+          ExtCartan[0][2] = -1;
+          ExtCartan[2][0] = -1;
+          break;
+        case 'F':
+          ExtCartan[0][4] = -1;
+          ExtCartan[4][0] = -1;
+          break;
+        case 'E':
+          if(this->rank() == 6) {
+            ExtCartan[6][5] = -1;
+            ExtCartan[5][6] = -1;
+          } else if(this->rank() == 7) {
+            ExtCartan[7][0] = -1;
+            ExtCartan[0][7] = -1;
+          } else if(this->rank() == 8) {
+            ExtCartan[8][6] = -1;
+            ExtCartan[6][8] = -1;
+          }
+          break;
+        case 'U':
+          ExtCartan[0][1] = -1;
+          ExtCartan[1][0] = -1;
+          break;
+      }
+      ExtCartan.MoveRow(this->rank(),0);
+      ExtCartan.MoveColumn(this->rank(),0);
+      return ExtCartan;
+        
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates the maximal subgroups of simple group */
+  List<SubGroup> &SimpleGroup::MaximalSubgroups() {
+
+    try {
+      // If the maximal subgroups have been calculated already return them
+      if(_MaxSubgroups.nterms()) return _MaxSubgroups;
+      
+      // If the group is abelian return the empty list
+      if(abelian()) return _MaxSubgroups;
+      
+      // First, the semisimple groups obtained by removing a dot from the extended Dynkin diagram
+      //clock_t time1 = clock();
+      if(this->type() != 'A' and this->type() != 'U' and this->rank() >= 1) {
+        
+        // Create the extended root
+        List<Root> PRoots = this->PRoots();
+        Root ExtendedRoot(PRoots.GetObject(0)*-1);
+        //std::cout << "ExtendedRoot = " << ExtendedRoot << std::endl;
+        
+        // Calculate the projection matrix for this subgroup, first get the weights of the generating representation of the group
+        List<Weight> Weights = this->GeneratingRep().Weights();
+        Matrix<double> Superweights(this->rank(), Weights.nterms());
+        Matrix<double> Subweights(this->rank(), Weights.nterms());
+        int col = 0;
+        //for(int col=0; col<Superweights.cols(); col++) {
+        for(List<Weight>::iterator it_Weights = Weights.begin(); it_Weights != Weights.end(); it_Weights++) {
+          Superweights.SetColumn(col,it_Weights->Transpose());
+          col++;
+        }
+        //std::cout << Superweights << std::endl;
+
+        // Calculate the weight coefficient for the new root
+        RVector<double> ExtendedWeight(Subweights.cols());
+        for(int col=0; col<Subweights.cols(); col++) {
+          ExtendedWeight[col] = Weights.GetObject(col)*ExtendedRoot; 
+        }
+        //std::cout << "ExtendedWeight = " << ExtendedWeight << std::endl;
+
+        //clock_t time1 = clock();
+        for(int i=0; i<this->rank()+1; i++) {
+          //clock_t time2 = clock();
+          // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the extended Cartan matrix
+          Matrix<double> SubCartan(this->ExtendedCartan().Adjoint(i,i));
+          //std::cout << ExtendedCartan() << std::endl;
+          SubGroup Subgroup(*this);
+          //std::cout << SubCartan << std::endl;
+          //std::cout << "in 1 = " << double(clock()-time2)/CLOCKS_PER_SEC << std::endl;
+          //time2 = clock();
+          Subweights = Superweights;
+          // Insert the extended weight and delete the row of the subweights corresponding with the deleted root
+          //std::cout << Subweights << std::endl;
+          //std::cout << " adsf" << std::endl;
+          Subweights.InsertRow(0, ExtendedWeight);
+          //std::cout << Subweights << std::endl;
+          Subweights.DeleteRow(i);
+          //std::cout << Subweights << std::endl;
+          //if(i) {
+          //	Subweights.MoveRow(0,i-1);
+          //}
+          //std::cout << Subweights << std::endl;
+          
+          // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
+          int from = 0;
+          for(int j=0; j<SubCartan.rows(); j++) {
+            //std::cout << "j = " << j << std::endl;
+            Matrix<double> Piece1(SubCartan.ExtractMatrix(from,j,0,from-1));
+            Matrix<double> Piece2(SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1));
+            if(Piece1 == 0 && Piece2 == 0) {
+              Matrix<double> BlockMatrix(SubCartan.ExtractMatrix(from,j));
+              //std::cout << BlockMatrix <<std::endl;
+              SimpleGroup AuxGroup(j-from+1, BlockMatrix);
+              Matrix<double> Auxweights = Subweights;
+              //std::cout << "======" << std::endl;
+              //std::cout << BlockMatrix << std::endl;
+              //std::cout << "------" << std::endl;
+              //std::cout << AuxGroup.Cartan() << std::endl;
+              //std::cout << "======" << std::endl;
+              int k=0;
+              while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows()) {
+                BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
+                BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
+                Subweights.MoveRow(from,j);
+                //std::cout << BlockMatrix << std::endl;
+                //std::cout << "------" << std::endl;
+                //std::cout << Subweights << std::endl;
+                //std::cout << "------" << std::endl;
+                k++;
+              }
+              if(AuxGroup.Cartan() != BlockMatrix) {
+                BlockMatrix = SubCartan.ExtractMatrix(from,j);
+                Subweights = Auxweights;
+                for(int k=0; k<BlockMatrix.rows()/2; k++) {
+                  BlockMatrix.ChangeBasis(k,BlockMatrix.rows()-k-1);
+                  Subweights.SwapRows(from+k,from+BlockMatrix.rows()-1-k);
+                }
+              }
+              //std::cout << BlockMatrix << std::endl;
+              //std::cout << "======" << std::endl;
+              //std::cout << AuxGroup << std::endl;
+              Subgroup.AddTerm(AuxGroup);
+              from = j+1;
+            }
+          }
+          
+          //std::cout << Subweights << std::endl;
+          //std::cout << Subgroup << std::endl;
+
+          
+          // And the projection matrix
+          Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
+          //std::cout << Subgroup.Projection() << std::endl;
+          
+          // Final changes
+          Subgroup.setMaximal(true);
+          Subgroup.setRegular(true);
+          
+          // Order the projection matrix columns with respect to the rank of the groups
+          Subgroup.Order();
+          //std::cout << Subgroup << std::endl;
+          //std::cout << Subgroup.Projection() << std::endl;
+          
+          
+          // Add to the list
+          if(_MaxSubgroups.Index(Subgroup) == -1) {
+            _MaxSubgroups.AddTerm(Subgroup);
+          }
+          
+          //std::cout << Subgroup << std::endl;
+        
+        }
+        //std::cout << "time in loop = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
+        
+
+      }
+      
+      //std::cout << _MaxSubgroups << std::endl;
+    
+      // Second, the non-semisimple groups obtained by removing a dot from the Dynkin diagram
+      //clock_t time2 = clock();
+      if(this->type() != 'U' and this->rank() >= 1) {
+        
+        // To calculate the projection matrix for a subgroup, first get the weights of the generating representation of the group
+        List<Weight> Weights = this->GeneratingRep().Weights();
+        //std::cout << Weights << std::endl;
+        List<Weight> WeightsDual = this->GeneratingRep().Weights("Dual");
+        //std::cout << WeightsDual << std::endl;
+
+        Matrix<double> Superweights(this->rank(), Weights.nterms());
+        Matrix<double> Subweights(this->rank(), Weights.nterms());
+        for(int col=0; col<Superweights.cols(); col++) {
+          Superweights.SetColumn(col, Weights.GetObject(col).Transpose());
+        }	
+        //std::cout << Superweights << std::endl;
+        
+        for(int i=0; i<this->rank(); i++) {
+          //std::cout << "i = " << i << std::endl;
+          // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the Cartan matrix
+          Matrix<double> SubCartan = Cartan().Adjoint(i,i);
+          SubGroup Subgroup(*this);
+          //std::cout << "SubCartan" << std::endl << SubCartan << std::endl;
+
+          // Construct the subweights by moving the deleted node row to the end and substituting it with its dual values
+          Subweights = Superweights;
+          for(int col=0; col<Superweights.cols(); col++) {
+            Subweights[i][col] = WeightsDual.GetObject(col)[i];
+          }
+          //std::cout << Subweights << std::endl;
+          //for(int j=i+1; j<Subweights.rows(); j++) {
+          //	Subweights.MoveRow(Subweights.rows()-1,0);
+          //}
+          Subweights.MoveRow(i, Subweights.rows()-1);
+          if(!((Subweights.rows()-i)%2)) {
+            Subweights *= -1;
+          }
+          //for(int j=i; j<Subweights.rows(); j++) {
+          //	Subweights.SetRow(j,Subweights.Row(j)*(-1));
+          //}
+          
+          //std::cout << Subweights << std::endl;
+        
+          // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
+          int from = 0;
+          for(int j=0; j<SubCartan.rows(); j++) {
+            //std::cout << "j = " << j << std::endl;
+            Matrix<double> Piece1 = SubCartan.ExtractMatrix(from,j,0,from-1);
+            Matrix<double> Piece2 = SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1);
+            if(Piece1 == 0 && Piece2 == 0) {
+              Matrix<double> BlockMatrix = SubCartan.ExtractMatrix(from,j);
+              SimpleGroup AuxGroup(j-from+1, BlockMatrix);
+              Matrix<double> Auxweights = Subweights;
+              int k=0;
+              while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows()) {
+                BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
+                BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
+                Subweights.MoveRow(from,j);
+                //std::cout << BlockMatrix << std::endl;
+                //std::cout << "------" << std::endl;
+                //std::cout << Subweights << std::endl;
+                //std::cout << "------" << std::endl;
+                k++;
+              }
+              if(AuxGroup.Cartan() != BlockMatrix) {
+                BlockMatrix = SubCartan.ExtractMatrix(from,j);
+                Subweights = Auxweights;
+                for(int k=0; k<BlockMatrix.rows()/2; k++) {
+                  BlockMatrix.ChangeBasis(k,BlockMatrix.rows()-k-1);
+                  Subweights.SwapRows(k,BlockMatrix.rows()-1-k);
+                }
+              }
+              
+              Subgroup.AddTerm(AuxGroup);
+              from = j+1;
+            }
+          }	
+          
+          SimpleGroup AuxGroup(1,'U');
+          Subgroup.AddTerm(AuxGroup);
+
+          //std::cout << Subgroup << std::endl;
+          //std::cout << Subweights << std::endl;
+          
+          // And the projection matrix
+          //Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
+          Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
+          //Projection.SwapRows(i, Projection.rows()-1);
+          //Projection.SwapColumns(i, Projection.cols()-1);
+          Subgroup.SetProjection(Projection);
+          //std::cout << Subgroup.Projection() << std::endl;
+          
+          // Final changes
+          Subgroup.setMaximal(true);
+          Subgroup.setRegular(true);
+          Subgroup.setSpecial(false);
+          //std::cout << Subgroup << std::endl;
+          
+          //std::cout << Subgroup << std::endl;
+          //std::cout << Subgroup.Projection() << std::endl;
+          // Order the projection matrix columns with respect to the rank of the groups
+          Subgroup.Order();
+          //std::cout << Subgroup << std::endl;
+          //std::cout << Subgroup.Projection() << std::endl;
+          
+          //std::cout << Projection*Superweights << std::endl;
+          
+          //std::cout << Subgroup.json().write_formatted() << std::endl;
+          
+          // Add to the list
+          if(_MaxSubgroups.Index(Subgroup) == -1) {
+            _MaxSubgroups.AddTerm(Subgroup);
+          }
+          
+          //time3 = clock();
+        
+        }
+      }
+
+      //std::cout << "---> " << double(clock()-time2)/CLOCKS_PER_SEC << std::endl;
+
+      // Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
+      /*_MaxSubgroups.DeleteObject(SubGroup(*this,*this));
+      if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
+        _MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
+      }
+      for(int i=0; i<_MaxSubgroups.nterms(); i++) {
+        List<SubGroup> AuxMax = _MaxSubgroups.GetObject(i).MaximalSubgroups();
+        for(int j=i; j<_MaxSubgroups.nterms(); j++) {
+          if(AuxMax.Index(_MaxSubgroups.GetObject(j)) != -1) {
+            _MaxSubgroups.DeleteTerm(j);
+            j--;
+          }
+        }
+      }*/
+    
+      //std::cout << "Regular subgroups " << *this << "->" << _MaxSubgroups << std::endl;
+
+      //std::cout << "First step = " << double(time2 - time1)/CLOCKS_PER_SEC << std::endl;
+      //std::cout << "Second step = " << double(clock() - time2)/CLOCKS_PER_SEC << std::endl;
+
+      // Finally, calculate singular subgroups
+      //List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
+      //_MaxSubgroups.AppendList(SpecialSubgroups);
+      
+      // Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
+      if(_MaxSubgroups.nterms() and LieGroup(_MaxSubgroups.GetObject(0)) == LieGroup(*this)) _MaxSubgroups.DeleteTerm(0);
+      if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
+        _MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
+      }
+      //for(int i=0; i<_MaxSubgroups.nterms(); i++) {
+        //List<SubGroup> AuxMax = _MaxSubgroups.GetObject(i).MaximalSubgroups();
+        /*for(int j=i; j<_MaxSubgroups.nterms(); j++) {
+          if(AuxMax.Index(_MaxSubgroups.GetObject(j)) != -1) {
+            _MaxSubgroups.DeleteTerm(j);
+            j--;
+          }
+        }*/
+      //}
+      
+      _MaxSubgroups.EliminateRepeated();	
+      //std::cout << "total time = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
+      
+      //for(int i=0; i<_MaxSubgroups.nterms(); i++) {
+      //	std::cout << _MaxSubgroups.GetObject(i).json().write_formatted() << std::endl;
+      //}
+      
+      return _MaxSubgroups;
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates the special subroups of a simple group */
+  List<SubGroup> SimpleGroup::SpecialSubgroups() {
+
+    try {
+      
+      List<SubGroup> SpecialSubgroups;
+      
+      // Exit if rank = 1
+      if(rank() == 1) return SpecialSubgroups;
+      
+      // Get the generating rep for this grou
+      Irrep GenRep = GeneratingRep();
+      std::cout << "Generating Rep " << GenRep << std::endl;
+      Matrix<double> Superweights(rank(), GenRep.dim());
+      for(int col=0; col<Superweights.cols(); col++) {
+        Superweights.SetColumn(col, GenRep.Weights().GetObject(col).Transpose());
+      }
+      
+      // Create candidate special subgroups
+      List<LieGroup> CandidateSpecialGroups;
+      List<SimpleGroup> SimpleGroups;
+      for(int j=rank()-1; j>0; j--) {
+        for(int k='A'; k<='G'; k++) {
+          if(GroupExists(j,k)) {
+            SimpleGroup Simplegroup(j,k);
+            if(!Simplegroup.abelian() and Simplegroup.dim() < dim() and SimpleGroups.Index(Simplegroup) == -1) {
+              SimpleGroups.AddTerm(Simplegroup);
+              CandidateSpecialGroups.AddTerm(LieGroup(Simplegroup));
+            }
+          }
+        }
+      }
+      SimpleGroups.EliminateRepeated();
+      CandidateSpecialGroups.EliminateRepeated();
+      //std::cout << "rank = " << rank() << ", dim = " << dim() << std::endl;
+      
+      for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
+        if(it_CSG->rank() < rank()) {
+          LieGroup SpecialSubgroup(*it_CSG);
+          for(List<SimpleGroup>::iterator it_SimpleGroups = SimpleGroups.begin(); it_SimpleGroups != SimpleGroups.end(); it_SimpleGroups++) {
+            if(SpecialSubgroup.rank() + it_SimpleGroups->rank() < rank() and SpecialSubgroup.dim() + it_SimpleGroups->dim() < dim()) {
+              LieGroup AuxSubgroup(SpecialSubgroup);
+              AuxSubgroup.AddTerm(*it_SimpleGroups);
+              AuxSubgroup.Order();
+              CandidateSpecialGroups.AddTerm(AuxSubgroup);
+            }
+          }
+        }
+      }
+      
+      std::cout << CandidateSpecialGroups << std::endl;
+
+      // Check the representation dimensions and calculate the subgroup properties
+      //std::cout << Superweights << std::endl;
+      for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
+        List<Rrep> ListofReps = it_CSG->Reps(GenRep.dim());
+        //std::cout << ListofReps << std::endl;
+        for(List<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++) {
+          if(it_ListofReps->dim() == GenRep.dim() and !it_ListofReps->hasSinglet() and (!GenRep.real() or (GenRep.real() and it_ListofReps->real()))) {
+            SubGroup Subgroup(*it_CSG,*this);
+            //std::cout << Subgroup << std::endl;
+            // Add projection matrix and other properties
+            Matrix<double> Subweights(Subgroup.rank(), it_ListofReps->dim());
+            for(int col=0; col<Subweights.cols(); col++) {
+              Subweights.SetColumn(col, it_ListofReps->Weights().GetObject(col).Transpose());
+            }
+            //std::cout << Subweights << std::endl;
+            Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
+            //std::cout << Projection << std::endl;
+            Subgroup.SetProjection(Projection);
+            Subgroup.setMaximal(true);
+            Subgroup.setRegular(false);
+            Subgroup.setSpecial(true);
+            
+            // Check if it's already a special subgroup and if so don't add it
+            
+            bool flag = false;
+            for(List<SubGroup>::iterator it_SS = SpecialSubgroups.begin(); it_SS != SpecialSubgroups.end(); it_SS++) {
+              //std::cout << "---- " << *it_SS << std::endl;
+              //std::cout << "---- " << it_SS->SpecialSubgroups() << std::endl;
+              if(it_SS->SpecialSubgroups().Index(Subgroup) != -1) {
+                flag = true;
+              }
+            }
+            if(SpecialSubgroups.Index(Subgroup) == -1 and !flag) {
+              SpecialSubgroups.AddTerm(Subgroup);
+            }
+          }
+        }
+      }
+      
+      std::cout << "Special Subgroups = " << *this << "->" << SpecialSubgroups << std::endl;
+      
+      return SpecialSubgroups;
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates all the subgroups of a simple group */
+  List<SubGroup> &SimpleGroup::Subgroups() {
+    
+    try {
+
+      // If the group is abelian, return empty
+      if(abelian()) return _Subgroups;
+      
+      if(_Subgroups.nterms()) return _Subgroups;
+      
+      if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
+        _Subgroups = DataBase.at(id()).Subgroups();
+        if(_Subgroups.nterms()) _hasSubgroups = true;
+        return _Subgroups;
+      }
+      
+      // Use LieGroup function
+      LieGroup G(*this);
+      _Subgroups = G.Subgroups();
+      
+      // Set the hasSubgroups flag to true
+      if(_Subgroups.nterms()) _hasSubgroups = true;
+      
+      // If there is an entry in the database delete it and dump this
+      database_emplace(id(), *this);
+      
+      return _Subgroups;
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the variable Subgroups */
+  List<SubGroup> SimpleGroup::SubgroupsConst() const {
+    return _Subgroups;
+  }
+  
+  /* Calculates the subgroups with rank greater that specified */
+  List<SubGroup> SimpleGroup::Subgroups(int rank) {
+    
+    try {
+
+      // If the group is abelian, return empty
+      if(abelian()) return List<SubGroup>();
+      
+      // Use LieGroup function
+      LieGroup G(*this);
+      return G.Subgroups(rank);
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Calculates the subgroups with ranks between rank1 and rank2 */
+  List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2) {
+    try {
+      
+      // If the group is abelian, return empty
+      if(abelian()) return List<SubGroup>();
+      
+      // Use LieGroup function
+      LieGroup G(*this);
+      return G.Subgroups(rank1, rank2);
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the breaking chain from a simple group to a simple group */
+  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup) {
+    try {
+      return BreakingChains(LieGroup(Subgroup));	
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the breaking chain from a simple group to a lie group */
+  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup) {
+    try {
+      LieGroup Group(*this);
+      return Group.BreakingChains(Subgroup);
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
+  List<Product<Irrep> > SimpleGroup::Invariants(const List<Irrep> &irreps, int dim) {
+    
+    try {
+      LieGroup Group(*this);
+      
+      List<Irrep> Irreps(irreps);
+      List<Rrep> Reps;
+      
+      for(List<Irrep>::iterator it_Irreps = Irreps.begin(); it_Irreps != Irreps.end(); it_Irreps++)
+        Reps.AddTerm(Rrep(*it_Irreps));
+      
+      List<Product<Rrep> > Invariants = Group.Invariants(Reps, dim);
+      List<Product<Irrep> > Invariants2;
+      
+      for(List<Product<Rrep> >::iterator it_Invariants = Invariants.begin(); it_Invariants != Invariants.end(); it_Invariants++) {
+        Product<Rrep> Invariant = *it_Invariants;
+        Product<Irrep> Invariant2;
+        for(Product<Rrep>::iterator it_Invariant = Invariant.begin(); it_Invariant != Invariant.end(); it_Invariant++)
+          Invariant2.AddTerm(Irrep(it_Invariant->GetObject(0)));
+        Invariants2.AddTerm(Invariant2);
+      }
+      
+      return Invariants2;
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns whether the simple group is a subgroup of a Lie Group */
+  bool SimpleGroup::isSubgroupOf(LieGroup Group) const {
+
+    try {
+      LieGroup G(*this);	
+      return G.isSubgroupOf(Group);
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Returns whether the Lie group is a subgroup of another simple Group */
+  bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const {
+
+    try {
+      LieGroup G(*this);
+      return G.isSubgroupOf(Group);
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Overloaded == operator */
+  bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
+
+    if(this->rank() == OtherSimpleGroup.rank() and this->type() == OtherSimpleGroup.type()) return true;
+
+    if(rank() == 2 and OtherSimpleGroup.rank() == 2 and (type() == 'B' or type() == 'C') and (OtherSimpleGroup.type() == 'B' or OtherSimpleGroup.type() == 'C')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /* Overloaded != operator */
+  bool SimpleGroup::operator!=(const SimpleGroup &OtherSimpleGroup) const {
+    return !((*this) == OtherSimpleGroup);
+
+  }
+
+  /* Overloaded > operator */
+  bool SimpleGroup::operator>(const SimpleGroup &OtherSimpleGroup) const {
+    if(this->rank() > OtherSimpleGroup.rank()) {
+      return true;
+    } else if(this->rank() == OtherSimpleGroup.rank()) {
+      if(this->dim() > OtherSimpleGroup.dim()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* Overloaded < operator */
+  bool SimpleGroup::operator<(const SimpleGroup &OtherSimpleGroup) const {
+    if(this->rank() < OtherSimpleGroup.rank()) {
+      return true;
+    } else if(this->rank() == OtherSimpleGroup.rank()) {
+      if(this->dim() < OtherSimpleGroup.dim()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /* Returns the json string */
+  JSONNode SimpleGroup::json(std::string name) const {
+    
+    if(name == "id") {
+      return JSONNode("", id());
+    }
+    
+    JSONNode json;
+    
+    json.push_back(JSONNode("id", id()));
+    json.push_back(JSONNode("rank", _rank));
+    json.push_back(JSONNode("type", std::string(1,_type)));
+    json.push_back(JSONNode("dim", _dim));
+    json.push_back(JSONNode("order", _order));
+    json.push_back(JSONNode("label", _label));
+    json.push_back(JSONNode("abelian", _abelian));
+    json.push_back(_Cartan.json("Cartan"));
+    json.push_back(_G.json("G"));
+    json.push_back(JSONNode("Casimir", _Casimir));
+    json.push_back(JSONNode("repsMaxDim", _repsMaxDim));
+    json.push_back(JSONNode("hasReps", _hasReps));
+    json.push_back(JSONNode("hasSubgroups", _hasSubgroups));
+    json.push_back(_Irreps.json("Irreps"));
+    json.push_back(_Subgroups.json("Subgroups"));
+    
+    return json;
+  }
+
+  /* Parses a json object into the attributes of the class */
+  void SimpleGroup::ParseJSON(const JSONNode & n, std::string what) {
+    
+    JSONNode::const_iterator i = n.begin();
+      
+    while (i != n.end()){
+    
+      // get the node name and value as a string
+      std::string node_name = i -> name();
+
+      // find out where to store the values
+      if(node_name == "rank") {
+        _rank = i->as_int();
+      } else if(node_name =="type") {
+        _type = (i->as_string())[0];
+      } else if(node_name == "dim") {
+        _dim = i->as_int();
+      } else if(node_name == "order") {
+        _order = i->as_int();
+      } else if(node_name == "label") {
+        _label = i->as_string();
+      } else if(node_name == "abelian") {
+        _abelian = i->as_bool();
+      } else if(node_name == "Cartan") {
+        _Cartan.ParseJSON(*i);
+      } else if(node_name == "G") {
+        _G.ParseJSON(*i);
+      } else if(node_name == "Casimir") {
+        _Casimir = i->as_float();
+      } else if(node_name == "repsMaxDim") {
+        _repsMaxDim = i->as_int();
+      } else if(node_name == "hasReps" and (what == "Reps")) {
+        _hasReps = i->as_bool();
+      } else if(node_name == "hasSubgroups" and what == "Subgroups") {
+        _hasSubgroups = i->as_bool();
+      } else if(node_name == "Irreps" and (what == "Reps")) {
+        _Irreps.ParseJSON(*i);
+        if(_Irreps.nterms())
+          _hasReps = true;
+        else
+          _hasReps = false;
+      } else if(node_name == "Subgroups" and (what == "Subgroups")) {
+        _Subgroups.ParseJSON(*i);
+        if(_Subgroups.nterms())
+          _hasSubgroups = true;
+        else
+          _hasSubgroups = false;
+      }
+        
+      //increment the iterator
+      ++i;
+    }
+  }
+
+  /* Checks whether the group exists or not */
+  bool SimpleGroup::GroupExists(int rank, char type) {
+    try {
+    
+      if(type < 'A' or type > 'G') return false;
+      
+      if(rank <= 0) return false;
+      
+      if(type == 'D' and rank == 2) return false;
+      
+      if(type == 'E' and (rank < 6 or rank > 8)) return false;
+      
+      if(type == 'F' and rank != 4) return false;
+      
+      if(type == 'G' and rank != 2) return false;
+      
+      return true;
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+  /* Overloaded << operator with simple groups on the right */
+  std::ostream &operator<<(std::ostream &stream, const SimpleGroup &g) {
+    stream << g.label();
+    return stream;
+  }
 }

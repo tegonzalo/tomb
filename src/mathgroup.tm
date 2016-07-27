@@ -15,7 +15,7 @@
 :ReturnType:	Manual
 :End:
 :Evaluate: GetGroup::usage = "GetGroup[rank, type] gets the information of the group defined by rank and type.
-								GetGroup[id] gets the information of the group defined by id"
+                GetGroup[id] gets the information of the group defined by id"
 
 :Begin:
 :Function:       getReps
@@ -51,7 +51,7 @@
 :ReturnType:	Manual
 :End:
 :Evaluate: GetRep::usage = "GetRep[id] gets the information of the rep defined by id.
-							GetRep[dimId, groupId] gets the information of the first rep of dimension dim of the group defined by groupId" 
+              GetRep[dimId, groupId] gets the information of the first rep of dimension dim of the group defined by groupId" 
 
 :Begin:
 :Function:	getSubgroup

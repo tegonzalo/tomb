@@ -16,7 +16,8 @@ namespace Tomb
 		
 		protected:
 			
-			std::string _Group;
+			//std::string _Group;
+                        LieGroup *_Group;
 			Chain _BreakingChain;
 			List<Field> _Fields;
 			double _norm = 1;
@@ -35,8 +36,9 @@ namespace Tomb
 			Theory &operator=(const Theory &);
 			Theory &operator=(Theory &&);
 			
-			LieGroup Group() const;
+			LieGroup &Group() const;
 			std::string GroupId() const;
+                        LieGroup *GroupPtr() const;
 			Chain BreakingChain() const;
 			List<Field> Fields() const;
 			

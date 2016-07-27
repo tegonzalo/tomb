@@ -514,18 +514,25 @@ namespace Tomb
       static int maxdepth = 0;
       if(depth > maxdepth) maxdepth = depth;
 
-      std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
+      //std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
       double time1 = omp_get_wtime();
       
       List<SubGroup> subgroups;
+      //std::cout << "Mark 1.0: " << omp_get_wtime() - time1 << std::endl;
+      double time2 = omp_get_wtime();
       #pragma omp critical
       {
         LieGroup group = theory.Group();
+        //std::cout << "Mark 1.1: " << omp_get_wtime() - time2 << std::endl;
+        time2 = omp_get_wtime();
         LieGroup subgroup = group;
+        //std::cout << "Mark 1.2: " << omp_get_wtime() - time2 << std::endl;
+        time2 = omp_get_wtime();
         subgroups = chain.extractSubgroups();
+        //std::cout << "Mark 1.3: " << omp_get_wtime() - time2 << std::endl;
       }
 
-      std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
+      //std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
       time1 = omp_get_wtime();
       
       // Check constraints
@@ -535,13 +542,13 @@ namespace Tomb
         return 0;
       }
 
-      std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
+      //std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
       time1 = omp_get_wtime();      
 
       // Calculate the anomaly contribution of the newly renormalised reps
       theory.calculateAnomaly();
   
-      std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
+      //std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
       time1 = omp_get_wtime();
 
       // Replace the last theory of the model with the current theory
@@ -551,7 +558,7 @@ namespace Tomb
         AddTerm(theory);
       }
  
-      std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
+      //std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
       time1 = omp_get_wtime();
 
       if(depth == 1)
@@ -644,7 +651,7 @@ namespace Tomb
               return 0;
           }
           
-          std::cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
+          //std::cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
           time1 = omp_get_wtime();           
               
           //Generate all possible combiations of reps
@@ -689,7 +696,7 @@ namespace Tomb
           }
           while(next_bit_mask);
 
-          std::cout << "Mark 7: " << omp_get_wtime() - time1 << std::endl;    
+          //std::cout << "Mark 7: " << omp_get_wtime() - time1 << std::endl;    
 
           // Parallel for loop
           #pragma omp parallel default(shared)
