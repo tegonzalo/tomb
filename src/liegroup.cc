@@ -1,20 +1,29 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* liegroup.cc
-* Created by T.Gonzalo on 15/02/2012.
-* Last modified on 10/11/2015
-*/
+ * \file
+ * liegroup.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 15/02/2012
+ */
 
-#include "headers.h"
+#include "liegroup.h"
+#include "subgroup.h"
 
-/**************************************************/
-/*************Class LieGroup methods***************/
-/**************************************************/
+/*****************************/
+/* Class LieGroup defintions */
+/*****************************/
 
 namespace Tomb
 {
   // Definition of static variables and helper functions
   
-  std::map<std::string, LieGroup> LieGroup::DataBase;
+/*  std::map<std::string, LieGroup> LieGroup::DataBase;
   std::map<std::string, JSONNode> LieGroup::JSONDataBase;
   
   bool LieGroup::database_check(std::string id, std::string what) {
@@ -50,7 +59,7 @@ namespace Tomb
       DataBase.erase(id);
     DataBase.emplace(id, G);
   }
-  
+  */
   // Member functions
 
   /* Constructor */
@@ -417,11 +426,15 @@ namespace Tomb
   void LieGroup::init() {
     
     try {
-      if(database_check(id()))
+      /*if(database_check(id()))
         *this = DataBase.at(id());
       else		
         database_emplace(id(), *this);
-      
+      */
+      if(Database<LieGroup>().check(id()))
+        *this = Database<LieGroup>().at(id());
+      else
+        Database<LieGroup>().set(id(), *this);
     } catch (...) {
       throw;
     }
@@ -724,18 +737,22 @@ namespace Tomb
   }
 
   /* Calculates all the subgroups of a Lie group */
-  List<SubGroup> &LieGroup::Subgroups() {
+  List<SubGroup> &LieGroup::Subgroups() 
+  {
     
-    try {
+    try 
+    {
       
       // If Subgroups are known, return them
-      if(_Subgroups.nterms()) {
+      if(_Subgroups.nterms())
         return _Subgroups;
-      }
-      
+            
       // If info is already on the database, pull it
-      if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
-        _Subgroups = DataBase.at(id()).Subgroups();
+      if(Database<LieGroup>().check(id()) and Database<LieGroup>().at(id()).hasSubgroups())
+      {
+      //if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
+        //_Subgroups = DataBase.at(id()).Subgroups();
+        _Subgroups = Database<LieGroup>().at(id()).Subgroups();
         if(_Subgroups.nterms()) _hasSubgroups = true;
         return _Subgroups;
       }
@@ -799,7 +816,8 @@ namespace Tomb
       if(_Subgroups.nterms()) _hasSubgroups = true;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id(), *this);
+      //database_emplace(id(), *this);
+      Database<LieGroup>().set(id(), *this, true);
       
       //std::cout << "Subgroups of " << *this << " calculated" << std::endl;
       
@@ -830,7 +848,7 @@ namespace Tomb
       }
       
       // If info is already on the database, pull it			
-      if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
+      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
         _Subgroups = DataBase.at(id()).Subgroups();
         _hasSubgroups = true;
         List<SubGroup> Subgroups;
@@ -838,7 +856,7 @@ namespace Tomb
           if(it_Subgroups->rank() == rank)
             Subgroups.AddTerm(*it_Subgroups);
         return Subgroups;
-      }
+      }*/
 
       // If not, calculate it
       //std::cout << "Calculating subgroups of " << *this << std::endl;
@@ -904,7 +922,7 @@ namespace Tomb
       }
       
       // If info is in the database pull it
-      if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
+      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
         _Subgroups = DataBase.at(id()).Subgroups();
         _hasSubgroups = true;
         List<SubGroup> Subgroups;
@@ -912,7 +930,7 @@ namespace Tomb
           if(it_Subgroups->rank() >= rank1 and it_Subgroups->rank() <= rank2)
             Subgroups.AddTerm(*it_Subgroups);
         return Subgroups;
-      }
+      }*/
 
       // If not, calculate it
       // Calculate the maximal subgroups
@@ -1453,12 +1471,12 @@ namespace Tomb
       List<Rrep> Reps;
       
       // If info is already on the db, pull it
-      if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
+      /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
         _Reps = DataBase.at(id()).Reps(maxdim);
         if(_Reps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Reps;
-      }
+      }*/
       
       
       // If it is a simple group, calculate irreps
@@ -1473,7 +1491,7 @@ namespace Tomb
         _repsMaxDim = maxdim;
       
         // If there is an entry in the database delete it and dump this
-        database_emplace(id(), *this);
+        //database_emplace(id(), *this);
         
         return _Reps;
       }
@@ -1528,7 +1546,7 @@ namespace Tomb
       _repsMaxDim = maxdim;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id(), *this);
+      //database_emplace(id(), *this);
     
       return _Reps;
       

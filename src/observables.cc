@@ -1,14 +1,22 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* observables.cc
-* Created by T. Gonzalo on 30/03/16
-* Last modified on 30/03/16
-*/
+ * \file
+ * observables.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 30/03/2016
+ */
 
-#include "headers.h"
+#include "observables.h"
 
-/**************************************************/
-/************Class Observables methods*************/
-/**************************************************/
+/*********************************/
+/* Class Observables definitions */
+/*********************************/
 
 namespace Tomb
 {
@@ -16,9 +24,11 @@ namespace Tomb
   {
 
     /* Proton decay */
-    bool ProtonDecay(List<Field> &Fields) {
+    bool ProtonDecay(List<Field> &Fields) 
+    {
 
-      try {
+      try 
+      {
         List<Field> PDScalars;
         PDScalars.AddTerm(Field(Rrep("(1,0,2,-0.258)A2xA1xU1"), Rrep("(0,0)A1xA1")));
         PDScalars.AddTerm(Field(Rrep("(1,0,0,-0.258)A2xA1xU1"), Rrep("(0,0)A1xA1")));

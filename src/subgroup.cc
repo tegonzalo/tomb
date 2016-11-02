@@ -1,41 +1,25 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* subgroup.cc
-* Created by T.Gonzalo on 15/02/2012.
-* Last modified on 30/11/2015
-*/
+ * \file
+ * subgroup.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 15/02/2012
+ */
 
-#include "headers.h"
+#include "subgroup.h"
 
-/**************************************************/
-/*************Class SubGroup methods***************/
-/**************************************************/
+/******************************/
+/* Class SubGroup definitions */
+/******************************/
 
 namespace Tomb
 {
-  // Definition of static variables and helper functions
-  
-  std::map<std::string, SubGroup> SubGroup::DataBase;
-  std::map<std::string, JSONNode> SubGroup::JSONDataBase;
-  
-  bool SubGroup::database_check(std::string id) {
-    if(DataBase.find(id) != DataBase.end())
-      return true;
-    if(JSONDataBase.find(id) != JSONDataBase.end()) {
-      SubGroup G(JSONDataBase.at(id));
-//			std::cout << G << std::endl;
-      DataBase.emplace(id, G);
-      return true;
-    }
-    return false;
-  }
-  
-  void SubGroup::database_emplace(std::string id, SubGroup G) {
-    if(database_check(id))
-      DataBase.erase(id);
-    DataBase.emplace(id, G);
-  }
-
-  
   // Member functions
 
   /* Constructor, empty */
@@ -239,7 +223,7 @@ namespace Tomb
       //std::cout << "Projection" << std::endl << Projection() << std::endl;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id, *this);
+      //database_emplace(id, *this);
     
     } catch (...) {
       throw;
@@ -311,7 +295,7 @@ namespace Tomb
       _regular = true;
       _special = false;
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
 
     } catch (...) {
       throw;
@@ -349,7 +333,7 @@ namespace Tomb
       _regular = true;
       _special = false;
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
       
     } catch (...) {
       throw;
@@ -383,7 +367,7 @@ namespace Tomb
       _regular = true;
       _special = false;
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
       
     } catch (...) {
       throw;
@@ -434,7 +418,7 @@ namespace Tomb
       _regular = Group.regular();
       _special = Group.special();
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
       
     } catch (...) {
       throw;
@@ -538,7 +522,7 @@ namespace Tomb
       }
       /////////////////////
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
         
     } catch (...) {
       throw;
@@ -649,21 +633,21 @@ namespace Tomb
       
       std::string id = ss.str();
           
-      if(database_check(id))
+      /*if(database_check(id))
       {
         *this = DataBase.at(id);
       } else
-      {
+      {*/
         LieGroup Supergroup(SGstr);
         Supergroup.Order();
         Supergroup.Subgroups();
         //if(FileExists(filepath.str())) {
         //	JSONNode json = libjson::parse(ReadFileString(filepath.str()));
         //	ParseJSON(json);
-        if(database_check(id)) {
+        /*if(database_check(id)) {
           *this = DataBase.at(id);
         } else {
-          
+          */
           std::stringstream ss2(Gstr);
           std::string str,label;
           
@@ -686,18 +670,18 @@ namespace Tomb
           //if(FileExists(filepath.str())) {
           //	JSONNode json = libjson::parse(ReadFileString(filepath.str()));
           //	ParseJSON(json);
-          if(database_check(id)) {
+          /*if(database_check(id)) {
             *this = DataBase.at(Subgroup.id());
           } else {
             throw "SubGroup::init::Not a subgroup";
-          }
-        }
-      }
+          }*/
+        //}
+      //}
       if(Strings::split_string(Id,'+').nterms() > 1)
       {
         std::string label = Strings::split_string(Strings::split_string(Id,'(').GetObject(-1),')').GetObject(0);
         
-        List<std::string> oldlabels = labels();
+        List<std::string> oldlabels = this->labels();
         oldlabels.DeleteTerm(-1);
         oldlabels.AddTerm(label);
         setLabels(oldlabels);
@@ -770,8 +754,8 @@ namespace Tomb
     try {
       // Delete the entry from te DB
       std::string oldid = id();
-      if(oldid != "" and database_check(oldid))
-        DataBase.erase(oldid);
+      /*if(oldid != "" and database_check(oldid))
+        DataBase.erase(oldid);*/
 
       LieGroup::AddTerm(Group);
 
@@ -811,7 +795,7 @@ namespace Tomb
       _labels.AddTerm(label);
       /////////////////////
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
       
     } catch (...) {
       throw;
@@ -824,8 +808,8 @@ namespace Tomb
     try {
       // Delete the entry from te DB
       std::string oldid = id();
-      if(oldid != "" and database_check(oldid))
-        DataBase.erase(oldid);
+      /*if(oldid != "" and database_check(oldid))
+        DataBase.erase(oldid);*/
       
       int superrank = this->SuperGroup().rank();
         
@@ -851,7 +835,7 @@ namespace Tomb
       }
       _Projection.Append(Matrix<double>(rank(), superrank));
       
-      database_emplace(id(),*this);
+      //database_emplace(id(),*this);
       
       /////////////////////
       // Temporary trial // Unnecessary for now
@@ -894,9 +878,9 @@ namespace Tomb
     try {
       // Delete the entry from te DB
       std::string oldid = id();
-      if(oldid != "" and DataBase.find(oldid) != DataBase.end())
+      /*if(oldid != "" and DataBase.find(oldid) != DataBase.end())
         DataBase.erase(oldid);
-      
+      */
       for(int i=0; i<Group.ngroups(); i++) {
         LieGroup::AddTerm(Group.GetObject(i));
       }
@@ -947,10 +931,10 @@ namespace Tomb
       }
       /////////////////////
       
-      if(DataBase.find(id()) != DataBase.end())
+      /*if(DataBase.find(id()) != DataBase.end())
         DataBase.erase(id());
       DataBase.emplace(id(),*this);
-      
+      */
     } catch (...) {
       throw;
     }
@@ -994,10 +978,10 @@ namespace Tomb
       
       LieGroup::DeleteTerm(i);
       
-      if(DataBase.find(id()) != DataBase.end())
+      /*if(DataBase.find(id()) != DataBase.end())
         DataBase.erase(id());
       DataBase.emplace(id(),*this);
-      
+      */
     } catch(...) {
       throw;
     }
@@ -1015,9 +999,9 @@ namespace Tomb
       
       // Delete the entry from te DB
       std::string oldid = id();
-      if(oldid != "" and DataBase.find(oldid) != DataBase.end())
+      /*if(oldid != "" and DataBase.find(oldid) != DataBase.end())
         DataBase.erase(oldid);
-    
+    */
       int row1 = 0;
       for(int i=0; i<nterms(); i++) {
         int rank1 = GetObject(i).rank();
@@ -1067,10 +1051,10 @@ namespace Tomb
       
       _label = this->Print();	
       
-      if(DataBase.find(id()) != DataBase.end())
+      /*if(DataBase.find(id()) != DataBase.end())
         DataBase.erase(id());
       DataBase.emplace(id(),*this);
-      
+      */
     } catch (...) {
       throw;
     }
@@ -1377,11 +1361,10 @@ namespace Tomb
         ++i;
       }
 
-      if(DataBase.find(id) != DataBase.end())
+      /*if(DataBase.find(id) != DataBase.end())
         DataBase.erase(id);
       DataBase.emplace(id, *this);
-      //std::cout << json().write_formatted() << std::endl;
-
+      //std::cout << json().write_formatted() << std::endl;*/
       
     } catch (...) {
       throw;

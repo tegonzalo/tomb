@@ -1,19 +1,34 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
+ * \file
  * database.h
- * Created by T.Gonzalo on 10/11/2015.
- * Last modified on 27/07/2016
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 10/11/2015
  */
 
 #ifndef __DATABASE_H
 #define __DATABASE_H
 
 #include <map>
-#include "headers.h"
+#include <typeinfo>
 #include "files.h"
 #include "libjson.h"
 
+#define DB_NOT_FOUND 0
+#define DB_FOUND 1
+#define DB_FOUND_JSON 2
+#define DB_FOUND_CONTENT 3
 
-// Class DataBase declarations
+/*******************************/
+/* Class DataBase declarations */
+/*******************************/
+
 namespace Tomb
 {
   template <class TYPE> class DataBase
@@ -21,97 +36,101 @@ namespace Tomb
 
     protected:
       std::stringstream  _outdir ;
-      static std::map<std::string, bool> _flags;
-      static std::map<std::string, std::string> _jsons;
-      static std::map<std::string, TYPE> _contents;
-      static std::vector<std::string> _files;
+      std::map<std::string, int> _flags;
+      std::map<std::string, std::string> _json;
+      std::map<std::string, TYPE> _content;
+      std::map<std::string, std::string> _files;
 
     public:
       DataBase();
       ~DataBase();
 
-      bool check(std::string);
+      int check(std::string);
       JSONNode json(std::string);
-      TYPE at(std::string);
-      void set(std::string, TYPE);
-
-      std::string import(key);
+      TYPE& at(std::string);
+      void set(std::string, TYPE&, bool = false);
+      std::string import(std::string);
       void fill();
       void flush();
   
   };
 }
 
-
-/*************************************************************/
-/***************Class DataBase methods ***********************/
-/*************************************************************/
+/******************************/
+/* Class DataBase definitions */
+/******************************/
 
 namespace Tomb
 {
 
   /* Constructor */
-  template <class TYPE> DataBase::DataBase(std::string name)
+  template <class TYPE> DataBase<TYPE>::DataBase()
   {
-    _outdir << "./out/" << name;
+    _outdir << "./out/" << typeid(TYPE).name() << "/";
     fill();
   }
 
   /* Destructor */
-  template <class TYPE> DataBase::~DataBase()
+  template <class TYPE> DataBase<TYPE>::~DataBase()
   {
     flush();
   }
 
   /* Check whether the key is in the database */
-  template <class TYPE> DataBase::check(std::string key)
+  template <class TYPE> int DataBase<TYPE>::check(std::string key)
   {
      if(_flags.find(key) != _flags.end())
-       return true;
-     return false;
+       return _flags.at(key);
+     return DB_NOT_FOUND;
   }
 
   /* Gets the json node corresponding to the key */
-  template <class TYPE> JSONNode DataBase::json(std::string key)
+  template <class TYPE> JSONNode DataBase<TYPE>::json(std::string key)
   {
-    if(check(key))
+    if(int flag = check(key))
     {
-      if(_jsons.find(key) != _jsons.end())
-        return JSONNode(_jsons.at(key));
-      if(_contents.find(key) != _contents.end())
-        return JSONNode(_contents.at(key));
+      if(flag == DB_FOUND_JSON)
+        return libjson::parse(_json.at(key));
+      if(flag == DB_FOUND_CONTENT)
+      {
+        JSONNode json(_content.at(key).json());
+        _json.emplace(key, json.write_formatted());
+        return json;
+      }
       std::string imp = import(key);
-      _jsons.emplace(key,imp)
-      return JSONNode(imp);
+      _json.emplace(key,imp);
+      _flags[key] = DB_FOUND_JSON;
+      return libjson::parse(imp);
     }
     else
       throw "DataBase::Could not find key on the database";
   }
 
   /* Gets the object corresponding to the key */
-  template <class TYPE> TYPE &DataBase::at(std::string key)
+  template <class TYPE> TYPE &DataBase<TYPE>::at(std::string key)
   {
-    if(check(key))
+    if(int flag = check(key))
     {
-      if(_contents.find(key) != _contents.end())
-        return _contents.at(key);
-      if(_json.find(key) != _json.end())
+      if(flag == DB_FOUND_CONTENT)
+        return _content.at(key);
+      if(flag == DB_FOUND_JSON)
       {
-        TYPE obj(_json.at(key));
-        _contents.emplace(key,obj);
-        return _contents.at(key);
+        _content.emplace(key,TYPE(libjson::parse(_json.at(key))));
+        _flags[key] = DB_FOUND_CONTENT;
+        return _content.at(key);
       }
       std::string imp = import(key);
-      _jsons.emplace(key,imp);
-      _contents.emplace(key,TYPE(JSNONode(imp)));
-      return _contents.at(key);
+      _json.emplace(key,imp);
+      _content.emplace(key,TYPE(libjson::parse(imp)));
+      _flags[key] = DB_FOUND_CONTENT;
+      return _content.at(key);
     }
     else
       throw "DataBase::Could not find key on the database";
   }
 
   /* Imports the file corresponding to the key */
-  template <class TYPE> std::string DataBase::import(std::string key)
+  template <class TYPE> std::string DataBase<TYPE>::import(std::string key)
   {
 
     if(check(key) and _files.find(key) != _files.end())
@@ -121,51 +140,87 @@ namespace Tomb
   }
 
   /* Stores the object in the database */
-  template <class TYPE> void DataBase::set(std::string key, TYPE Object)
+  template <class TYPE> void DataBase<TYPE>::set(std::string key, TYPE &Object, bool replace)
   {
-    if(!check(key))
-      _contents.emplace(key, Object);
-      _flags.emplace(key, true);
-    else
-      throw "DataBase::Key already in the database";
+    try
+    {
+      if(int flag = check(key))
+      {
+        if(flag == DB_FOUND_CONTENT and replace)
+          _content[key] = Object;
+        if(flag == DB_FOUND_JSON)
+        {
+          if(replace)
+            _content.emplace(key, Object);
+          else
+            _content.emplace(key, TYPE(libjson::parse(_json.at(key))));
+        }
+        if(flag == DB_FOUND)
+        {
+          if(replace)
+            _content.emplace(key, Object);
+          else
+            _content.emplace(key, TYPE(libjson::parse(import(key))));
+        }
+      }
+      else
+        _content.emplace(key, Object);
+      _flags[key] = DB_FOUND_CONTENT;
+    }
+    catch (...)
+    {
+      throw;
+    }
   }
 
   /* Fills the information about the databases */
-  template <class TYPE> void fill()
+  template <class TYPE> void DataBase<TYPE>::fill()
   {
-    std::vector<std::string> contents = Files::GetDirectoryContents(_outdir.str());
+    std::vector<std::string> content = Files::GetDirectoryContents(_outdir.str());
 
-    for(auto it = contents.begin(); it != contents.end(); it++)
+    for(auto it = content.begin(); it != content.end(); it++)
     {
       std::stringstream file;
       file << _outdir.str() << *it;
-      _files.push_back(file.str());
-      _flags.emplace(*it, true);
+      _files.emplace(*it,file.str());
+      _flags.emplace(*it, DB_FOUND);
     }
+  }
 
-   /* Flush the database to file */
-   template <class TYPE> void flush()
-   {
-     if(!Files::DirectoryExists(_outdir.str())
-       Files::CreateDirectory(_outdir.str());
+  /* Flush the database to file */
+  template <class TYPE> void DataBase<TYPE>::flush()
+  {
+    if(!Files::IsDirectory(_outdir.str()))
+      Files::CreateDirectory(_outdir.str());
 
-     for(auto it = _contents.begin(); it != _contents.end(); it++)
-     {
-       std::stringstream file;
-       file << _outdir.str() << "/" << it->first;
-     } 
-   }
+    for(auto it = _content.begin(); it != _content.end(); it++)
+    {
+      std::stringstream file;
+      file << _outdir.str() << "/" << it->first;
+      Files::WriteFileString(file.str(), it->second.json().write_formatted());
+    }
+  }
 }
 
 
-// Database helper functions
+/******************************************/
+/* Database helper functions declarations */
+/******************************************/
+
 namespace Tomb
 {
+
+  // Singleton Database
+  template <typename TYPE> DataBase<TYPE>& Database();
+
+  // Fills the database of type TYPE with info from files
+  template <typename TYPE> void database_fill();
+
+  // Fills the databases of variadic types with info from the files
+  template <typename TYPE, typename ...Args> void database_fill();
 	
-  // Fills the group database with info from the files
   void group_database_fill();
-	
-  // Flush the group database into json files
+
   void group_database_flush();
 
   // Fills the model database with info from the files
@@ -175,7 +230,49 @@ namespace Tomb
   void model_database_flush();
 
   // Filter the database with the observables
-  void model_database_filter(List<std::string> &);
+ // void model_database_filter(List<std::string> &);
+}
+
+/*****************************************/
+/* Database helper functions definitions */
+/*****************************************/
+
+namespace Tomb
+{
+
+  // Singleton DataBase
+  template <typename TYPE> DataBase<TYPE>& Database()
+  {
+    static DataBase<TYPE> database;
+    return database;
+  }
+
+  // Fills the database of type TYPE with info from files
+  template <typename TYPE> void database_fill()
+  {
+    try
+    {
+      Database<TYPE>().fill();
+    }
+    catch (...)
+    {
+      throw;
+    }
+  }
+
+  // Fills the databases of variadic types with info from the files
+  template <typename TYPE, typename ...Args> void database_fill()
+  {
+    try
+    {
+      database_fill<TYPE>();
+      database_fill<Args...>();
+    }
+    catch (...)
+    {
+      throw;
+    }
+  }
 }
 
 #endif /* __DATABASE_H */

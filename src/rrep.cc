@@ -1,56 +1,27 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* rrep.cc
-* Created by T.Gonzalo on 13/08/2013.
-* Last modified on 10/11/2015
-*/
+ * \file
+ * rrep.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/08/2013
+ */
 
-#include "headers.h"
+#include "rrep.h"
+#include "liegroup.h"
+#include "subgroup.h"
 
-/**************************************************/
-/***************Class Rrep methods *****************/
-/**************************************************/
+/**************************/
+/* Class Rrep definitions */
+/**************************/
 
 namespace Tomb
 {
-  // Definition of static variables and helper functions
-  
-  std::map<std::string, Rrep> Rrep::DataBase;
-  std::map<std::string, JSONNode> Rrep::JSONDataBase;
-  std::map<std::pair<std::string, std::string>, Sum<Rrep> > Rrep::DecomposeDataBase;
-  std::map<std::pair<std::string, std::string>, Sum<Rrep> > Rrep::ProductDataBase;
-  
-  bool Rrep::database_check(std::string id, std::string what) {
-    if(DataBase.empty())
-    {
-      DataBase.clear();
-      return false;
-    }
-    if(DataBase.find(id) != DataBase.end()) {
-      if (what == "")
-        return true;
-      if(what == "Weights" and DataBase.at(id).hasWeights())
-        return true;
-    }
-    if(JSONDataBase.find(id) != JSONDataBase.end()) {
-      Rrep R(JSONDataBase.at(id));
-      if(what == "Weights") {
-        //if(R.Group().rank() < 6) return false;
-        R.ParseJSON(JSONDataBase.at(id),"Weights");
-      }
-      if(DataBase.find(id) != DataBase.end())
-        DataBase.erase(id);
-      DataBase.emplace(id, R);
-      return true;
-    }
-    return false;
-  }
-  
-  void Rrep::database_emplace(std::string id, Rrep R) {
-    if(database_check(id))
-      DataBase.erase(id);
-    DataBase.emplace(id, R);
-  }
-  
   // Member functions
   
   /* Constructor 0 */
@@ -273,10 +244,10 @@ namespace Tomb
       if(_Group == "" or _HWeight == NULL)
         throw "Rrep::init::Not enough information to initialise the variables";
       
-      if(database_check(id())) {
+      /*if(database_check(id())) {
         //std::cout << "in the db " << DataBase.at(id()).nterms() << std::endl;
         *this = DataBase.at(id());
-      } else {
+      } else {*/
         LieGroup Group(_Group);
         _GroupRank = Group.rank();
         
@@ -312,9 +283,9 @@ namespace Tomb
         }
         
         // Store the info in the database
-        database_emplace(id(),*this);
+        //database_emplace(id(),*this);
 
-      }
+      //}
     
     } catch(...) {
       throw;
@@ -405,12 +376,12 @@ namespace Tomb
       if(_Weights.nterms()) 
         return _Weights;
       
-      if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights())
+      /*if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights())
       {
         _Weights = DataBase.at(id()).Weights();
         if(_Weights.nterms()) _hasWeights = true;
         return _Weights;
-      }
+      }*/
       
       //std::cout << "Calculating weights of " << *this << std::endl;
       List< List<Weight> > ListofWeights;
@@ -454,7 +425,7 @@ namespace Tomb
       if(_Weights.nterms()) _hasWeights = true;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id(), *this);
+      //database_emplace(id(), *this);
       
       return _Weights;
 
@@ -581,11 +552,11 @@ namespace Tomb
       //std::cout << "Projection matrix" << std::endl << Subgroup.Projection() << std::endl;
       Sum<Rrep> Reps;
       
-      if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+      /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
       {
         Reps = DecomposeDataBase.at(std::pair<std::string,std::string>(id(),Subgroup.id()));
         return Reps;
-      }
+      }*/
       
       if(Subgroup.isSubgroupOf(this->Group())) {
         List<Weight> ProjectedWeights = this->Project(Subgroup);
@@ -639,10 +610,10 @@ namespace Tomb
         throw "Rrep::Decompose::Not a subgroup";
       }
       
-      if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+      /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
         DecomposeDataBase.erase(std::pair<std::string,std::string>(id(),Subgroup.id()));
       DecomposeDataBase.emplace(std::pair<std::string,std::string>(id(),Subgroup.id()), Reps);
-      
+      */
       return Reps;
 
     } catch (...) {
@@ -661,11 +632,11 @@ namespace Tomb
       Sum<Rrep> ListofReps;
       Sum<Rrep> ListofReps2;
       
-      if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
+      /*if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
       {
         ListofReps = ProductDataBase.at(std::pair<std::string,std::string>(id(),Rep.id()));
         return ListofReps;
-      }
+      }*/
 
       for(int i=0; i<nirreps(); i++) {
         Sum<Irrep> Prod = GetObject(i)*Rep.GetObject(i);
@@ -686,10 +657,10 @@ namespace Tomb
         }
       }
       
-      if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
+      /*if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
         ProductDataBase.erase(std::pair<std::string,std::string>(id(),Rep.id()));
       ProductDataBase.emplace(std::pair<std::string,std::string>(id(),Rep.id()), ListofReps);
-      
+      */
       return ListofReps;
 
     } catch(...) {

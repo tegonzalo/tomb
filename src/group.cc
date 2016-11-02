@@ -1,15 +1,27 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* group.cc
-* Created by T.Gonzalo on 15/02/2012.
-* Last modified on 12/07/2012..
-*/
+ * \file
+ * group.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 15/02/2012
+ */
 
-#include "headers.h"
 #include "files.h"
 #include "database.h"
+#include "simplegroup.h"
+#include "liegroup.h"
+
+/****************************************/
+/* Main function for group calculations */
+/****************************************/
 
 using namespace Tomb;
-
 
 int main(int argc, char *argv[]) {
 
@@ -128,7 +140,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Calculating group info..." << std::endl;
       
     std::cout << "Casimir = " << G.Casimir() << std::endl;
-
+/*
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);
     std::cout << "Reps = " << Reps << std::endl;
@@ -148,7 +160,7 @@ int main(int argc, char *argv[]) {
         std::cout << Reps.GetObject(Reps.nterms()-1-j) << "(" << G << ") -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << std::endl;
       }
     }
-    
+    */
     // Breaking Chains
 /*		LieGroup SMGroup("A2xA1xU1");
 

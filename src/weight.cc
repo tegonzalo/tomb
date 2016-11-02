@@ -1,15 +1,23 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* weight.cc
-* Created by T.Gonzalo on 13/08/2013.
-* Last modified on 10/11/2015
-*/
+ * \file
+ * weight.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/08/2013
+ */
 
-#include "headers.h"
+#include "weight.h"
+#include "liegroup.h"
 
-
-/**************************************************/
-/**************Class Weight methods****************/
-/**************************************************/
+/****************************/
+/* Class Weight definitions */
+/****************************/
 
 namespace Tomb
 {

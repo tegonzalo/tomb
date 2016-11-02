@@ -1,23 +1,32 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* simplegroup.cc
-* Created by T.Gonzalo on 15/02/2012.
-* Last modified on 10/11/2015
-*/
+ * \file
+ * simplegroup.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 15/02/2012
+ */
 
-#include "headers.h"
+#include "simplegroup.h"
+#include "subgroup.h"
 
-/**************************************************/
-/************Class SimpleGroup methods*************/
-/**************************************************/
+/*********************************/
+/* Class SimpleGroup definitions */
+/*********************************/
 
 namespace Tomb
 {
   // Definition of static variables and helper functions
   
-  std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
-  std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
+  //std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
+  //std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
   
-  bool SimpleGroup::database_check(std::string id, std::string what) {
+  /*bool SimpleGroup::database_check(std::string id, std::string what) {
     if(DataBase.empty())
     {
       DataBase.clear();
@@ -43,13 +52,13 @@ namespace Tomb
       return true;
     }
     return false;
-  }
+  }*/
   
-  void SimpleGroup::database_emplace(std::string id, SimpleGroup G) {
+  /*void SimpleGroup::database_emplace(std::string id, SimpleGroup G) {
     if(database_check(id))
       DataBase.erase(id);
     DataBase.emplace(id, G);
-  }
+  }*/
   
   // Member functions
 
@@ -451,9 +460,9 @@ namespace Tomb
         throw "SimpleGroup::init::Not enough variables no initialise";
       }
             
-      if(database_check(id())) {
-        *this = DataBase.at(id());
-      } else {
+      //if(database_check(id())) {
+      //  *this = DataBase.at(id());
+      //} else {
         
         _abelian = false;
 
@@ -651,7 +660,7 @@ namespace Tomb
         }
         
         
-        database_emplace(id(),*this);
+        //database_emplace(id(),*this);
         
         // Output the info
         /*std::ostringstream OutputDirectory;
@@ -667,7 +676,7 @@ namespace Tomb
         OutputFile << json().write_formatted() << std::endl;
         OutputFile.close();*/
     
-      }
+      //}
     
     } catch (...) {
       throw;
@@ -1045,12 +1054,12 @@ namespace Tomb
         return _Irreps;
       }
       
-      if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
+      /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
         _Irreps = DataBase.at(id()).Irreps(maxdim);
         if(_Irreps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Irreps;
-      }
+      }*/
       
       if(maxdim == -1) maxdim = 50;
       
@@ -1120,7 +1129,7 @@ namespace Tomb
       _repsMaxDim = maxdim;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id(), *this);
+//      database_emplace(id(), *this);
 
       //for(List<Irrep>::iterator it_Irreps = _Irreps.begin(); it_Irreps != _Irreps.end(); it_Irreps++)
       //	std::cout << it_Irreps->json().write_formatted() << std::endl;
@@ -1648,11 +1657,11 @@ namespace Tomb
       
       if(_Subgroups.nterms()) return _Subgroups;
       
-      if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
+      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
         _Subgroups = DataBase.at(id()).Subgroups();
         if(_Subgroups.nterms()) _hasSubgroups = true;
         return _Subgroups;
-      }
+      }*/
       
       // Use LieGroup function
       LieGroup G(*this);
@@ -1662,7 +1671,7 @@ namespace Tomb
       if(_Subgroups.nterms()) _hasSubgroups = true;
       
       // If there is an entry in the database delete it and dump this
-      database_emplace(id(), *this);
+      //database_emplace(id(), *this);
       
       return _Subgroups;
       

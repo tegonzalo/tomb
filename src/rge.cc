@@ -1,14 +1,23 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* rge.cc
-* Created by T. Gonzalo on 22/01/16
-* Last modified on 22/01/16
-*/
+ * \file
+ * rge.h
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 22/01/2016
+ */
 
-#include "headers.h"
+#include "rge.h"
+#include "model.h"
 
-/**************************************************/
-/************Class RGE methods*************/
-/**************************************************/
+/*************************/
+/* Class RGE definitions */
+/*************************/
 
 namespace Tomb
 {

@@ -1,20 +1,25 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* model.cc
-* Created by T. Gonzalo on 12/01/16
-* Last modified on 12/01/16
-*/
+ * \file
+ * model.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 12/01/2016
+ */
 
-#include "headers.h"
+#include "model.h"
 
-/**************************************************/
-/************Class Model methods*************/
-/**************************************************/
+/***************************/
+/* Class Model definitions */
+/***************************/
 
 namespace Tomb
 {
-  // Definition of static variable
-  List<List<Model> > Model::DataBase;
-  
   // Member functions
 
   /* Constructor 0 */
@@ -315,13 +320,13 @@ namespace Tomb
                 RGE rges(model);
                 //std::cout << rges << std::endl;
                 int index = 0;
-                if((index = RGE::DataBase.Index(rges)) == -1)
+                /*if((index = RGE::DataBase.Index(rges)) == -1)
                 {
                   index = RGE::DataBase.nterms();
                   RGE::DataBase.AddTerm(rges);
-                }
+                }*/
                 //std::cout << RGE::DataBase << std::endl;
-                if(Model::DataBase.nterms() <= index)
+                /*if(Model::DataBase.nterms() <= index)
                   Model:DataBase.AddTerm(List<Model>());
                 if(Model::DataBase[index].Index(model) == -1)
                 {
@@ -329,7 +334,7 @@ namespace Tomb
                 
                   // Update the success counter
                   success++;
-                }
+                }*/
                 //}
                 
               }
@@ -575,13 +580,13 @@ namespace Tomb
             RGE rges(*this);
             //std::cout << rges << std::endl;
             int index = 0;
-            if((index = RGE::DataBase.Index(rges)) == -1)
+            /*if((index = RGE::DataBase.Index(rges)) == -1)
             {
               index = RGE::DataBase.nterms();
               RGE::DataBase.AddTerm(rges);
-            }
+            }*/
             //std::cout << RGE::DataBase << std::endl;
-            if(Model::DataBase.nterms() <= index)
+            /*if(Model::DataBase.nterms() <= index)
               Model:DataBase.AddTerm(List<Model>());
             if(Model::DataBase[index].Index(*this) == -1)
             {
@@ -590,9 +595,9 @@ namespace Tomb
               // Update the success counter
               Progress::success++;
             }
-            
-            if(RGE::DataBase.nterms() > 1000)
-              model_database_flush();
+            */
+            //if(RGE::DataBase.nterms() > 1000)
+              //model_database_flush();
           }
         }
         else

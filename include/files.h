@@ -1,14 +1,24 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
- * files.h
- * Created by T.Gonzalo on 13/09/2013.
- * Last modified on 03/12/2015.
+ * \file 
+ *  files.h 
+ *
+ * \author 
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no) 
+ *
+ * \date 
+ * 15/02/2016 
  */
 
-#ifndef __FILES_H
-#define __FILES_H
+#ifndef __FILES_H__
+#define __FILES_H__
 
-#include "headers.h"
-
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <sstream>
 #include <fstream>
 #include <unistd.h>
 #include <sys/types.h>
@@ -16,29 +26,29 @@
 #include <dirent.h>
 #include <errno.h>
 
+/****************************/
+/* File methods declarations */
+/****************************/
+
 namespace Tomb
 {
-	namespace Files
-	{
+  namespace Files
+  {
 
-		/*************************************************************************************/
-		/* File methods headers*/
-		/*************************************************************************************/
+    inline int Error(std::string);
+    int CreateDirectory(std::string);
+    int EmptyDirectory(std::string);
+    int DeleteDirectory(std::string);
+    bool IsDirectory(std::string);
+    bool FileExists(std::string);
+    int DeleteFile(std::string);
+    bool FileHasEnd(std::string);
+    std::string ReadFileString(std::string);
+    int WriteFileString(std::string, std::string);
+    int ReplaceFileString(std::string, std::string);
+    std::vector<std::string> GetDirectoryContents(std::string);
 
-		inline int Error(std::string);
-		int CreateDirectory(std::string);
-		int EmptyDirectory(std::string);
-		int DeleteDirectory(std::string);
-		bool IsDirectory(std::string);
-		bool FileExists(std::string);
-		int DeleteFile(std::string);
-		bool FileHasEnd(std::string);
-		std::string ReadFileString(std::string);
-		int WriteFileString(std::string, std::string);
-		int ReplaceFileString(std::string, std::string);
-		std::vector<std::string> GetDirectoryContents(std::string);
-
-	}
+  }
 }
 
-#endif /* __FILES_H */
+#endif /* __FILES_H__ */

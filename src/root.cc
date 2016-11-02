@@ -1,15 +1,23 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* root.cc
-* Created by T.Gonzalo on 13/08/2013.
-* Last modified on 10/11/2015
-*/
+ * \file
+ * root.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/08/2013
+ */
 
-#include "headers.h"
+#include "root.h"
+#include "simplegroup.h"
 
-
-/**************************************************/
-/***************Class Root methods*****************/
-/**************************************************/
+/**************************/
+/* Class Root definitions */
+/**************************/
 
 namespace Tomb
 {

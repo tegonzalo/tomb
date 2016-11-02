@@ -1,14 +1,22 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* field.cc
-* Created by T. Gonzalo on 13/01/16
-* Last modified on 13/01/16
-*/
+ * \file
+ * field.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/01/2016
+ */
 
-#include "headers.h"
+#include "field.h"
 
-/**************************************************/
-/************Class Field methods*************/
-/**************************************************/
+/***************************/
+/* Class Field definitions */
+/***************************/
 
 namespace Tomb
 {

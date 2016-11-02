@@ -1,11 +1,22 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* sm.cc
-* Created by T. Gonzalo on 13/01/16
-* Last modified on 13/01/16
-*/
+ * \file
+ * sm.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/01/2016
+ */
 
+#include "sm.h"
 
-#include "headers.h"
+/******************************/
+/* Standard Model definitions */
+/******************************/
 
 namespace Tomb
 {

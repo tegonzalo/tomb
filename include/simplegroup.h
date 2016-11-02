@@ -1,17 +1,40 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
+ * \file
  * simplegroup.h
- * Created by T.Gonzalo on 15/02/2012.
- * Last modified on 21/10/2015
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 15/02/2012
  */
-
 
 #ifndef __SIMPLEGROUP_H
 #define __SIMPLEGROUP_H
 
-#include "headers.h"
+#include "matrix.h"
+#include "linkedlists.h"
+#include "libjson.h"
+#include "root.h"
+#include "irrep.h"
+
+// Forward declarations
+namespace Tomb
+{
+  class LieGroup;
+  class SubGroup;
+}
+
+/**********************************/
+/* Class SimpleGroup declarations */
+/**********************************/
 
 namespace Tomb
 {
+
   class SimpleGroup {
 
     protected:
@@ -33,11 +56,11 @@ namespace Tomb
       List<SubGroup> _Subgroups;
 		
     public:
-      static std::map<std::string, SimpleGroup> DataBase;
-      static std::map<std::string, JSONNode> JSONDataBase;
+      //static std::map<std::string, SimpleGroup> DataBase;
+      //static std::map<std::string, JSONNode> JSONDataBase;
 			
-      bool database_check(std::string, std::string = "");
-      void database_emplace(std::string, SimpleGroup);
+      //bool database_check(std::string, std::string = "");
+      //void database_emplace(std::string, SimpleGroup);
 			
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
@@ -76,7 +99,7 @@ namespace Tomb
       List<SubGroup> &MaximalSubgroups();
       List<SubGroup> SpecialSubgroups();
       List<SubGroup> &Subgroups();
-      List<SubGroup> SubgroupsConst() const
+      List<SubGroup> SubgroupsConst() const;
       List<SubGroup> Subgroups(int);
       List<SubGroup> Subgroups(int, int);
       List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
@@ -97,7 +120,6 @@ namespace Tomb
 
     std::ostream &operator<<(std::ostream &, const SimpleGroup &);
 
-//	std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
 }
 
 #endif /* __SIMPLEGROUP_H */

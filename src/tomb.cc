@@ -1,12 +1,27 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* tomb.cc
-* Created by Tomas Gonzalo on 12/01/16
-* Last modified on 12/01/16
-*/
+ * \file
+ * tomb.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 12/01/2016
+ */
 
-#include "headers.h"
+#include <omp.h>
 #include "files.h"
 #include "database.h"
+#include "liegroup.h"
+#include "theory.h"
+#include "model.h"
+
+/**************************/
+/* Main function for Tomb */
+/**************************/
 
 using namespace Tomb;
 
@@ -113,7 +128,7 @@ int main(int argc, char *argv[])
         if(i != json.end())
                                 {
                                   List<std::string> observables(*i);
-          Tomb::model_database_filter(observables);
+          //Tomb::model_database_filter(observables);
                                 }
         
         std::cout << "END" << std::endl;
@@ -126,7 +141,7 @@ int main(int argc, char *argv[])
         while(i != json.end() and i->name() != "Observables") i++;
         
         List<std::string> observables(*i);
-        Tomb::model_database_filter(observables);
+        //Tomb::model_database_filter(observables);
         
       }
     } else {

@@ -1,15 +1,29 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* mathgroup.cc
-* Created by T.Gonzalo on 21/07/2014.
-* Last modified on 21/07/2014.
-*/
+ * \file
+ * mathgroup.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 21/07/2014
+ */
 
 #include <ctime>
-#include "headers.h"
 #include "mathlink.h"
 #include "files.h"
 #include "database.h"
+#include "simplegroup.h"
+#include "liegroup.h"
+#include "subgroup.h"
+#include "irrep.h"
 
+/*************************************************/
+/* Main function and getter methods for MathLink */
+/*************************************************/
 
 using namespace Tomb;
 

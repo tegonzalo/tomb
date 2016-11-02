@@ -1,16 +1,26 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* database.cc
-* Created by T.Gonzalo on 31/03/2016.
-* Last modified on 27/07/2016
-*/
+ * \file
+ * database.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 31/03/2016
+ */
 
-#include <map>
 #include "database.h"
 
+/*****************************************/
+/* Database helper functions definitions */
+/*****************************************/
 
 namespace Tomb
 {
-  
+
   // Fills the group database with info from the files
   void group_database_fill()
   {
@@ -18,11 +28,11 @@ namespace Tomb
     {	std::stringstream filepath;
       filepath << "./out/";
       
-      List<std::string> OutputContents = Files::GetDirectoryContents(filepath.str());
+      //List<std::string> OutputContents = Files::GetDirectoryContents(filepath.str());
       
       //if(OutputContents.nterms()) std::cout << "Loading database...." << std::endl;
 
-      for(auto it_Contents = OutputContents.begin(); it_Contents != OutputContents.end(); it_Contents++) {
+/*      for(auto it_Contents = OutputContents.begin(); it_Contents != OutputContents.end(); it_Contents++) {
         
         std::stringstream filename;
         filename << filepath.str() << *it_Contents << "/" << *it_Contents << ".out";
@@ -89,7 +99,7 @@ namespace Tomb
       //	std::cout << it->first << " --> " << it->second.write_formatted() << std::endl;
       //for(auto it = SubGroup::JSONDataBase.begin(); it != SubGroup::JSONDataBase.end(); it++)
       //	std::cout << it->first << " --> " << it->second.write_formatted() << std::endl;
-    }
+*/    }
     catch (...)
     {
       throw;
@@ -101,7 +111,7 @@ namespace Tomb
   {
     try
     {
-      std::stringstream filepath;
+/*      std::stringstream filepath;
       filepath << "./out/";
       
       // Flush the SimpleGroups to file
@@ -255,7 +265,7 @@ namespace Tomb
         if(!Files::FileExists(subname.str()))
           Files::WriteFileString(subname.str(), it_Subgroups->second.json().write_formatted());
       }
-    }
+*/    }
     catch (...)
     {
       throw;
@@ -352,7 +362,7 @@ namespace Tomb
   {
     try
     {
-      std::stringstream dirpath;
+     /* std::stringstream dirpath;
       dirpath << "./models/";
       
       // Create directory if it doenst exist
@@ -400,7 +410,7 @@ namespace Tomb
       }
       
       RGE::DataBase.Clear();
-      Model::DataBase.Clear();
+      Model::DataBase.Clear();*/
     }
     catch (...)
     {
@@ -409,7 +419,7 @@ namespace Tomb
   }
 
   // Filter the database with the observables
-  void model_database_filter(List<std::string> &observables)
+/*  void model_database_filter(List<std::string> &observables)
   {
     try
     {
@@ -454,5 +464,5 @@ namespace Tomb
     {
       throw;
     }
-  }
+  }*/
 }

@@ -1,10 +1,23 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* files.cc
-* Created by T.Gonzalo on 15/02/2016.
-* Last modified on 15/02/2016.
-*/
+ * \file 
+ *  files.cc 
+ *
+ * \author 
+ * T.Gonzalo (t.e.gonzalo@fys.uio.no) 
+ *
+ * \date 
+ * 15/02/2016 
+ */ 
 
 #include "files.h"
+
+/***************************/
+/* File method definitions */
+/***************************/
+
 
 namespace Tomb
 {
@@ -258,3 +271,6 @@ namespace Tomb
     }
   }
 }
+
+
+

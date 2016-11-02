@@ -1,14 +1,22 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* theory.cc
-* Created by T. Gonzalo on 12/01/16
-* Last modified on 12/01/16
-*/
+ * \file
+ * theory.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 12/01/2016
+ */
 
-#include "headers.h"
+#include "theory.h"
 
-/**************************************************/
-/************Class Theory methods*************/
-/**************************************************/
+/****************************/
+/* Class Theory definitions */
+/****************************/
 
 namespace Tomb
 {

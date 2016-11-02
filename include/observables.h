@@ -1,23 +1,35 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
+ * \file
  * observables.h
- * Created by T. Gonzalo on 30/03/16
- * Last modified on 30/03/16
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 30/03/2016
  */
-
 
 #ifndef __OBSERVABLES_H
 #define __OBSERVABLES_H
 
-#include "headers.h"
+#include "linkedlists.h"
+#include "field.h"
+
+/***************************/
+/* Observables declaration */
+/***************************/
 
 namespace Tomb
 {
-	namespace Observables
-	{
-		bool ProtonDecay(List<Field> &);
+  namespace Observables
+  {
+    bool ProtonDecay(List<Field> &);
 		
-		bool NNOscillations(List<Field> &);
-	}
+    bool NNOscillations(List<Field> &);
+  }
 }
 
 #endif /* __OBSERVABLES_H */

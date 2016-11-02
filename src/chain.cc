@@ -1,15 +1,22 @@
+/********************************/
+/* TOMB: Tool of Model Building */
+/********************************/
 /*
-* chain.cc
-* Created by T. Gonzalo on 12/01/16
-* Last modified on 12/01/16
-*/
+ * \file
+ * chain.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 12/01/2016
+ */
 
+#include "chain.h"
 
-#include "headers.h"
-
-/**************************************************/
-/************Class Chain methods*************/
-/**************************************************/
+/***************************/
+/* Class Chain definitions */
+/***************************/
 
 namespace Tomb
 {
