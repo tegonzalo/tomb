@@ -138,7 +138,7 @@ namespace Tomb
       W.insert(0,"[[");
       W.append("]]");
             
-      RVector<double>::ParseJSON(libjson::parse(W));
+//      RVector<double>::ParseJSON(libjson::parse(W));
 
       /*std::stringstream Ws(W);
       std::string s;
@@ -160,7 +160,7 @@ namespace Tomb
   }
 
   /* Constructor 6, with json nodes */
-  Weight::Weight(const JSONNode &n) {
+/*  Weight::Weight(const JSONNode &n) {
     
     if(n.as_string() != "") {
       Weight(n.as_string());
@@ -168,7 +168,7 @@ namespace Tomb
       ParseJSON(n);
     }
   }
-
+*/
   /* Constructor 7, with doubles */
   Weight::Weight(const SimpleGroup &G, const double value) : RVector<double>(1) {
     try {
@@ -514,7 +514,7 @@ namespace Tomb
   }
 
   /* Print to json format */
-  JSONNode Weight::json(std::string name) const {
+/*  JSONNode Weight::json(std::string name) const {
 
     try {
       if(name == "id") {
@@ -526,7 +526,7 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Overloaded * operator with scalars on the right */
   Weight operator*(Weight w, double n) {
     try {

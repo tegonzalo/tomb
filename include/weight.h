@@ -49,7 +49,7 @@ namespace Tomb
       Weight(const std::string &, int);
       Weight(const std::string &, const RVector<double> &);
       Weight(const std::string);
-      Weight(const JSONNode &);
+//      Weight(const JSONNode &);
       Weight(const SimpleGroup &, const double);
       Weight(const Weight &);
       Weight(Weight &&);
@@ -80,7 +80,7 @@ namespace Tomb
       bool operator>(const Weight) const;
       bool operator<(const Weight) const;
       Weight Append(Weight);
-      JSONNode json(std::string = "") const;
+//      JSONNode json(std::string = "") const;
   };
 
   Weight operator*(Weight, double);

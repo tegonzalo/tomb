@@ -16,6 +16,7 @@
 #define __ROOT_H
 
 #include "matrix.h"
+#include "database.h"
 
 // Forward declarations
 namespace Tomb
@@ -35,8 +36,8 @@ namespace Tomb
       SimpleGroup *_Group = NULL;
       double _length = 0;
     public:
-      Root(const SimpleGroup &, int);
-      Root(const SimpleGroup &, const RVector<double> &);
+      Root(SimpleGroup &, int);
+      Root(SimpleGroup &, const RVector<double> &);
       Root(const std::string);
       Root(const Root &);
       Root(Root &&);

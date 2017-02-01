@@ -18,7 +18,7 @@
 #include <map>
 #include <typeinfo>
 #include "files.h"
-#include "libjson.h"
+//#include "libjson.h"
 
 #define DB_NOT_FOUND 0
 #define DB_FOUND 1
@@ -38,7 +38,7 @@ namespace Tomb
       std::stringstream  _outdir ;
       std::map<std::string, int> _flags;
       std::map<std::string, std::string> _json;
-      std::map<std::string, TYPE> _content;
+      std::map<std::string, TYPE*> _content;
       std::map<std::string, std::string> _files;
 
     public:
@@ -46,9 +46,9 @@ namespace Tomb
       ~DataBase();
 
       int check(std::string);
-      JSONNode json(std::string);
-      TYPE& at(std::string);
-      void set(std::string, TYPE&, bool = false);
+   //   JSONNode json(std::string);
+      TYPE* at(std::string);
+      void set(std::string, TYPE*, bool = false);
       std::string import(std::string);
       void fill();
       void flush();
@@ -67,7 +67,7 @@ namespace Tomb
   template <class TYPE> DataBase<TYPE>::DataBase()
   {
     _outdir << "./out/" << typeid(TYPE).name() << "/";
-    fill();
+    //fill();
   }
 
   /* Destructor */
@@ -85,7 +85,7 @@ namespace Tomb
   }
 
   /* Gets the json node corresponding to the key */
-  template <class TYPE> JSONNode DataBase<TYPE>::json(std::string key)
+/*  template <class TYPE> JSONNode DataBase<TYPE>::json(std::string key)
   {
     if(int flag = check(key))
     {
@@ -105,15 +105,15 @@ namespace Tomb
     else
       throw "DataBase::Could not find key on the database";
   }
-
+*/
   /* Gets the object corresponding to the key */
-  template <class TYPE> TYPE &DataBase<TYPE>::at(std::string key)
+  template <class TYPE> TYPE *DataBase<TYPE>::at(std::string key)
   {
     if(int flag = check(key))
     {
       if(flag == DB_FOUND_CONTENT)
         return _content.at(key);
-      if(flag == DB_FOUND_JSON)
+  /*    if(flag == DB_FOUND_JSON)
       {
         _content.emplace(key,TYPE(libjson::parse(_json.at(key))));
         _flags[key] = DB_FOUND_CONTENT;
@@ -124,7 +124,7 @@ namespace Tomb
       _content.emplace(key,TYPE(libjson::parse(imp)));
       _flags[key] = DB_FOUND_CONTENT;
       return _content.at(key);
-    }
+ */   }
     else
       throw "DataBase::Could not find key on the database";
   }
@@ -140,7 +140,7 @@ namespace Tomb
   }
 
   /* Stores the object in the database */
-  template <class TYPE> void DataBase<TYPE>::set(std::string key, TYPE &Object, bool replace)
+  template <class TYPE> void DataBase<TYPE>::set(std::string key, TYPE *Object, bool replace)
   {
     try
     {
@@ -148,7 +148,7 @@ namespace Tomb
       {
         if(flag == DB_FOUND_CONTENT and replace)
           _content[key] = Object;
-        if(flag == DB_FOUND_JSON)
+/*        if(flag == DB_FOUND_JSON)
         {
           if(replace)
             _content.emplace(key, Object);
@@ -162,7 +162,7 @@ namespace Tomb
           else
             _content.emplace(key, TYPE(libjson::parse(import(key))));
         }
-      }
+*/      }
       else
         _content.emplace(key, Object);
       _flags[key] = DB_FOUND_CONTENT;
@@ -197,7 +197,7 @@ namespace Tomb
     {
       std::stringstream file;
       file << _outdir.str() << "/" << it->first;
-      Files::WriteFileString(file.str(), it->second.json().write_formatted());
+//      Files::WriteFileString(file.str(), it->second.json().write_formatted());
     }
   }
 }
@@ -211,7 +211,7 @@ namespace Tomb
 {
 
   // Singleton Database
-  template <typename TYPE> DataBase<TYPE>& Database();
+  template <typename TYPE> DataBase<TYPE>& DB_Singleton();
 
   // Fills the database of type TYPE with info from files
   template <typename TYPE> void database_fill();
@@ -241,7 +241,7 @@ namespace Tomb
 {
 
   // Singleton DataBase
-  template <typename TYPE> DataBase<TYPE>& Database()
+  template <typename TYPE> DataBase<TYPE>& DB()
   {
     static DataBase<TYPE> database;
     return database;
@@ -252,7 +252,7 @@ namespace Tomb
   {
     try
     {
-      Database<TYPE>().fill();
+      DB<TYPE>().fill();
     }
     catch (...)
     {

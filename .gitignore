@@ -1,11 +1,11 @@
 # Ignore the build and models dirs
-./build
-./models
+./build/*
+./models/*
 
 # Ignore any executables
-group
-mathgroup
-tomb
+./group
+./mathgroup
+./tomb
 
 # Ignore any temporary files
 *~

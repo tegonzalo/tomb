@@ -21,45 +21,6 @@
 
 namespace Tomb
 {
-  // Definition of static variables and helper functions
-  
-  //std::map<std::string, SimpleGroup> SimpleGroup::DataBase;
-  //std::map<std::string, JSONNode> SimpleGroup::JSONDataBase;
-  
-  /*bool SimpleGroup::database_check(std::string id, std::string what) {
-    if(DataBase.empty())
-    {
-      DataBase.clear();
-      return false;
-    }
-    if(DataBase.find(id) != DataBase.end()) {
-      if (what == "")
-        return true;
-      if(what == "Reps" and DataBase.at(id).hasReps())
-        return true;
-      if(what == "Subgroups" and DataBase.at(id).hasSubgroups())
-        return true;
-    }
-    if(JSONDataBase.find(id) != JSONDataBase.end()) {
-      SimpleGroup G(JSONDataBase.at(id));
-      if(what == "Reps" or (what == "Subgroups" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasReps()))
-        G.ParseJSON(JSONDataBase.at(id),"Reps");
-      if(what == "Subgroups" or (what == "Reps" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasSubgroups()))
-        G.ParseJSON(JSONDataBase.at(id),"Subgroups");
-      if(DataBase.find(id) != DataBase.end())
-        DataBase.erase(id);
-      DataBase.emplace(id, G);
-      return true;
-    }
-    return false;
-  }*/
-  
-  /*void SimpleGroup::database_emplace(std::string id, SimpleGroup G) {
-    if(database_check(id))
-      DataBase.erase(id);
-    DataBase.emplace(id, G);
-  }*/
-  
   // Member functions
 
   /* Constructor */
@@ -306,7 +267,7 @@ namespace Tomb
   }
 
   /* Constructor 4, with json nodes */
-  SimpleGroup::SimpleGroup(const JSONNode &n) {
+/*  SimpleGroup::SimpleGroup(const JSONNode &n) {
     
     if(n.as_string() != "") {
       SimpleGroup(n.as_string());
@@ -314,7 +275,7 @@ namespace Tomb
       ParseJSON(n);
     }
   }
-
+*/
   /* Copy constructor */
   SimpleGroup::SimpleGroup(const SimpleGroup &G) {
     
@@ -331,8 +292,8 @@ namespace Tomb
       _repsMaxDim = G.repsMaxDim();
       _hasReps = G.hasReps();
       _hasSubgroups = G.hasSubgroups();
-      if(_hasReps) _Irreps = G.IrrepsConst();
-      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+//      if(_hasReps) _Irreps = G.IrrepsConst();
+//      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
     } catch (...) {
       throw;
     }
@@ -351,9 +312,9 @@ namespace Tomb
     _Casimir(std::move(G._Casimir)),
     _repsMaxDim(std::move(G._repsMaxDim)),
     _hasReps(std::move(G._hasReps)),
-    _hasSubgroups(std::move(G._hasSubgroups)),
-    _Irreps(std::move(G._Irreps)),
-    _Subgroups(std::move(G._Subgroups))
+    _hasSubgroups(std::move(G._hasSubgroups))//,
+ //   _Irreps(std::move(G._Irreps)),
+ //   _Subgroups(std::move(G._Subgroups))
   {
     
     try {
@@ -369,8 +330,8 @@ namespace Tomb
       G._repsMaxDim = 0;
       G._hasReps = false;
       G._hasSubgroups = false;
-      G._Irreps.Clear();
-      G._Subgroups.Clear();
+//      G._Irreps.Clear();
+//      G._Subgroups.Clear();
       
     } catch (...) {
       throw;
@@ -400,8 +361,8 @@ namespace Tomb
       _repsMaxDim = G.repsMaxDim();
       _hasReps = G.hasReps();
       _hasSubgroups = G.hasSubgroups();
-      if(_hasReps) _Irreps = G.IrrepsConst();
-      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+//      if(_hasReps) _Irreps = G.IrrepsConst();
+//      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
       
       return *this;
     } catch (...) {
@@ -427,8 +388,8 @@ namespace Tomb
       _repsMaxDim = std::move(G._repsMaxDim);
       _hasReps = std::move(G._hasReps);
       _hasSubgroups = std::move(G._hasSubgroups);
-      _Irreps = std::move(G._Irreps);
-      _Subgroups = std::move(G._Subgroups);
+//      _Irreps = std::move(G._Irreps);
+//      _Subgroups = std::move(G._Subgroups);
       
       G._rank = 0;
       G._type = '\0';
@@ -442,8 +403,8 @@ namespace Tomb
       G._repsMaxDim = 0;
       G._hasReps = false;
       G._hasSubgroups = false;
-      G._Irreps.Clear();
-      G._Subgroups.Clear();
+//      G._Irreps.Clear();
+//      G._Subgroups.Clear();
       
       return *this;
     } catch (...) {
@@ -460,223 +421,229 @@ namespace Tomb
         throw "SimpleGroup::init::Not enough variables no initialise";
       }
             
-      //if(database_check(id())) {
-      //  *this = DataBase.at(id());
-      //} else {
-        
-        _abelian = false;
+/*      if(DB<SimpleGroup>().check(id()))
+      {
+        *this = *DB<SimpleGroup>().at(id());
+        return ;
+      }
+*/       
+      _abelian = false;
 
-        char label[10];
-        _Cartan = Matrix<double>(rank());
+      char label[10];
+      _Cartan = Matrix<double>(rank());
         
-        switch(type()) {
-          case 'A':
-            _Cartan[0][0] = 2;
-            for(int i=1; i<rank(); i++) {
-              _Cartan[i][i] = 2;
-              _Cartan[i-1][i] = -1;
-              _Cartan[i][i-1] = -1;
-            }
-            sprintf(label,"SU(%d)", rank()+1);
-            _label = label;
-            _dim = rank()*(rank() + 2);
-            _order = rank() + 1;
-            break;
+      switch(type()) {
+        case 'A':
+          _Cartan[0][0] = 2;
+          for(int i=1; i<rank(); i++) {
+            _Cartan[i][i] = 2;
+            _Cartan[i-1][i] = -1;
+            _Cartan[i][i-1] = -1;
+          }
+          sprintf(label,"SU(%d)", rank()+1);
+          _label = label;
+          _dim = rank()*(rank() + 2);
+          _order = rank() + 1;
+          break;
         
-          case 'B':
-            _Cartan[0][0] = 2;
-            for(int i=1; i<rank(); i++) {
-              _Cartan[i][i] = 2;
-              _Cartan[i-1][i] = -1;
-              _Cartan[i][i-1] = -1;
-            }
-            if(rank()>1) {
-              _Cartan[rank()-2][rank()-1] = -2;
-            }
-            sprintf(label,"SO(%d)", 2*rank()+1);
-            _label = label;
-            if(rank() == 1) {
-              _type = 'A';
-              _label = "SU(2)";	
-            //} else if(rank() == 2) {
-            //	_type = 'C';
-            //	_Cartan = _Cartan.Transpose();
-            }
-            _dim = rank()*(2*rank() + 1);
-            _order = 2*rank() + 1;
-            break;
+        case 'B':
+          _Cartan[0][0] = 2;
+          for(int i=1; i<rank(); i++) {
+            _Cartan[i][i] = 2;
+            _Cartan[i-1][i] = -1;
+            _Cartan[i][i-1] = -1;
+          }
+          if(rank()>1) {
+            _Cartan[rank()-2][rank()-1] = -2;
+          }
+          sprintf(label,"SO(%d)", 2*rank()+1);
+          _label = label;
+          if(rank() == 1) {
+            _type = 'A';
+            _label = "SU(2)";	
+          //} else if(rank() == 2) {
+          //	_type = 'C';
+          //	_Cartan = _Cartan.Transpose();
+          }
+          _dim = rank()*(2*rank() + 1);
+          _order = 2*rank() + 1;
+          break;
       
-          case 'C':
-            _Cartan[0][0] = 2;
-            for(int i=1; i<rank(); i++) {
-              _Cartan[i][i] = 2;
-              _Cartan[i-1][i] = -1;
-              _Cartan[i][i-1] = -1;
-            }
-            if(rank()>1) {
-              _Cartan[rank()-1][rank()-2] = -2;
-            }
-            sprintf(label,"Sp(%d)", 2*rank());
-            _label = label;
-            if(rank() == 1) {
-              _type = 'A';
-              _label = "SU(2)";
-            }
-            _dim = rank()*(2*rank() + 1);
-            _order = 2*rank() + 1;
-            break;
+        case 'C':
+          _Cartan[0][0] = 2;
+          for(int i=1; i<rank(); i++) {
+            _Cartan[i][i] = 2;
+            _Cartan[i-1][i] = -1;
+            _Cartan[i][i-1] = -1;
+          }
+          if(rank()>1) {
+            _Cartan[rank()-1][rank()-2] = -2;
+          }
+          sprintf(label,"Sp(%d)", 2*rank());
+          _label = label;
+          if(rank() == 1) {
+            _type = 'A';
+            _label = "SU(2)";
+          }
+          _dim = rank()*(2*rank() + 1);
+          _order = 2*rank() + 1;
+          break;
       
-          case 'D':
-            _Cartan[0][0] = 2;
-            for(int i=1; i<rank()-1; i++) {
-              _Cartan[i][i] = 2;
-              _Cartan[i-1][i] = -1;
-              _Cartan[i][i-1] = -1;
-            }
-            if(rank()>2) {
-              _Cartan[rank()-3][rank()-1] = -1;
-              _Cartan[rank()-1][rank()-3] = -1;
-            } 
-            if(rank()>1) {
-              _Cartan[rank()-1][rank()-1] = 2;
-            }
-            sprintf(label,"SO(%d)", 2*rank());
-            _label = label;
-            if(rank() == 1) {
-              _Cartan[0][0] = 1;
-              _abelian = true;
-              _type = 'U';
-              _label = "U(1)";
-            } else if(rank() == 3) {
-              _type = 'A';
-              _Cartan.ChangeBasis(0,1);
-              _label = "SU(4)";
-            }
-            _dim = rank()*(2*rank() - 1);
-            _order = 2*rank();
-            break;
+        case 'D':
+          _Cartan[0][0] = 2;
+          for(int i=1; i<rank()-1; i++) {
+            _Cartan[i][i] = 2;
+            _Cartan[i-1][i] = -1;
+            _Cartan[i][i-1] = -1;
+          }
+          if(rank()>2) {
+            _Cartan[rank()-3][rank()-1] = -1;
+            _Cartan[rank()-1][rank()-3] = -1;
+          } 
+          if(rank()>1) {
+            _Cartan[rank()-1][rank()-1] = 2;
+          }
+          sprintf(label,"SO(%d)", 2*rank());
+          _label = label;
+          if(rank() == 1) {
+            _Cartan[0][0] = 1;
+            _abelian = true;
+            _type = 'U';
+            _label = "U(1)";
+          } else if(rank() == 3) {
+            _type = 'A';
+            _Cartan.ChangeBasis(0,1);
+            _label = "SU(4)";
+          }
+          _dim = rank()*(2*rank() - 1);
+          _order = 2*rank();
+          break;
           
-          case 'E':
-            if(rank()>=6 && rank()<=8) {
-              for(int i=0;i<rank()-2;i++) {
-                _Cartan[i][i] = 2;
-                _Cartan[i][i+1] = -1;
-                _Cartan[i+1][i] = -1;
-              }	
-              _Cartan[rank()-2][rank()-2] = 2;
-              _Cartan[rank()-1][rank()-1] = 2;
-              _Cartan[2][rank()-1] = -1;
-              _Cartan[rank()-1][2] = -1;
-              sprintf(label,"E%d", rank());
-              _label = label;
-            } else {
-              throw "SimpleGroup::init::Group does not exist";
-            }
-            if(rank()==6) {
-              _dim = 78;
-              _order = 27;
-            } else if(rank()==7) {
-              _dim = 133;
-              _order = 55;
-            } else {	
-              _order = 3875;
-              _dim = 248;
-            }
-            break;
-      
-          case 'F':
-            if(rank() == 4) {
-              for(int i=0;i<rank()-1;i++) {
-                _Cartan[i][i] = 2;
-                _Cartan[i][i+1] = -1;
-                _Cartan[i+1][i] = -1;
-              }
-              _Cartan[rank()-1][rank()-1] = 2;
-              _Cartan[1][2] = -2;
-              _label = "F4";
-            } else {
-              throw "SimpleGroup::init::Group does not exist";
-            }
-            _dim = 52;
-            _order = 52;
-            break;
-            
-          case 'G':
-            if(rank() == 2) {
-              _Cartan[0][0] = 2;
-              _Cartan[0][1] = -3;
-              _Cartan[1][0] = -1;
-              _Cartan[1][1] = 2;
-              _label = "G2";
-            } else {
-              throw "SimpleGroup::init::Group does not exist";
-            }
-            _dim = 14;
-            _order = 14;
-            break;
-            
-          case 'U':
-            if(rank() == 1) {
-              _abelian = true;
-              _Cartan[0][0] = 1;
-              _label = "U(1)";
-            } else {
-              throw "SimpleGroup::init::Group does not exist";
-            }
-            _dim = 1;
-            _order = 1;
-            break;
-    
-          default:
-            throw "SimpleGroup::init::Group does not exist";
-        }		
-    
-        _G = Matrix<double>(rank());
-        _G = _Cartan.Inverse();
-        
-        if(rank() != 1 and _Cartan != _Cartan.Transpose()) {
-          for(int i=0; i<rank(); i++) {
-            for(int j=0; j<rank(); j++) {
-              Root alpha = this->SRoot(j);
-              _G[i][j] *= 0.5*alpha.length();
+        case 'E':
+          if(rank()>=6 && rank()<=8) {
+            for(int i=0;i<rank()-2;i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i][i+1] = -1;
+              _Cartan[i+1][i] = -1;
             }	
+            _Cartan[rank()-2][rank()-2] = 2;
+            _Cartan[rank()-1][rank()-1] = 2;
+            _Cartan[2][rank()-1] = -1;
+            _Cartan[rank()-1][2] = -1;
+            sprintf(label,"E%d", rank());
+            _label = label;
+          } else {
+            throw "SimpleGroup::init::Group does not exist";
           }
-        }
-
-        _PRoots = this->PRoots();
-        
-        if(abelian()) {
-          _Casimir = 0;
-        } else {
-          Weight w(*this, PRoots().GetObject(0));
-          _Casimir = 0;
-          for(int i=0; i<_rank; i++) {
-            for(int j=0; j<_rank; j++) {
-              _Casimir += 0.5*w[i]*_G[i][j]*(w[j]+2);
+          if(rank()==6) {
+            _dim = 78;
+            _order = 27;
+          } else if(rank()==7) {
+            _dim = 133;
+            _order = 55;
+          } else {	
+            _order = 3875;
+            _dim = 248;
+          }
+          break;
+      
+        case 'F':
+          if(rank() == 4) {
+            for(int i=0;i<rank()-1;i++) {
+              _Cartan[i][i] = 2;
+              _Cartan[i][i+1] = -1;
+              _Cartan[i+1][i] = -1;
             }
+            _Cartan[rank()-1][rank()-1] = 2;
+            _Cartan[1][2] = -2;
+            _label = "F4";
+          } else {
+            throw "SimpleGroup::init::Group does not exist";
           }
-          //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
-          //_Casimir = Adjoint.DynkinIndex();
-        }
-        
-        
-        //database_emplace(id(),*this);
-        
-        // Output the info
-        /*std::ostringstream OutputDirectory;
-        OutputDirectory << "./out/" << id();
-
-        mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-        std::ostringstream OutputFileName;
-        OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
-
-        std::ofstream OutputFile;
-        OutputFile.open(OutputFileName.str().c_str());
-        OutputFile << json().write_formatted() << std::endl;
-        OutputFile.close();*/
+          _dim = 52;
+          _order = 52;
+          break;
+           
+        case 'G':
+          if(rank() == 2) {
+            _Cartan[0][0] = 2;
+            _Cartan[0][1] = -3;
+            _Cartan[1][0] = -1;
+            _Cartan[1][1] = 2;
+            _label = "G2";
+          } else {
+            throw "SimpleGroup::init::Group does not exist";
+          }
+          _dim = 14;
+          _order = 14;
+          break;
+            
+        case 'U':
+          if(rank() == 1) {
+            _abelian = true;
+            _Cartan[0][0] = 1;
+            _label = "U(1)";
+          } else {
+            throw "SimpleGroup::init::Group does not exist";
+          }
+          _dim = 1;
+          _order = 1;
+          break;
     
-      //}
+        default:
+          throw "SimpleGroup::init::Group does not exist";
+      }		
+    
+      _G = Matrix<double>(rank());
+      _G = _Cartan.Inverse();
+
+      if(rank() != 1 and _Cartan != _Cartan.Transpose()) 
+        {
+        for(int i=0; i<rank(); i++) 
+        {
+          for(int j=0; j<rank(); j++) 
+          {
+            Root alpha = this->SRoot(j);
+            _G[i][j] *= 0.5*alpha.length();
+          }	
+        }
+      }
+
+      _PRoots = this->PRoots();
+/*        
+      if(abelian()) 
+      {
+        _Casimir = 0;
+      }
+      else 
+      {
+        Weight w(*this, PRoots().GetObject(0));
+        _Casimir = 0;
+        for(int i=0; i<_rank; i++) 
+          for(int j=0; j<_rank; j++) 
+            _Casimir += 0.5*w[i]*_G[i][j]*(w[j]+2);
+        //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
+        //_Casimir = Adjoint.DynkinIndex();
+      }
+*/        
+
+      DB<SimpleGroup>().set(id(), this);
+        
+      //database_emplace(id(),*this);
+        
+      // Output the info
+      /*std::ostringstream OutputDirectory;
+      OutputDirectory << "./out/" << id();
+
+      mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+      std::ostringstream OutputFileName;
+      OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
+
+      std::ofstream OutputFile;
+      OutputFile.open(OutputFileName.str().c_str());
+      OutputFile << json().write_formatted() << std::endl;
+      OutputFile.close();*/
     
     } catch (...) {
       throw;
@@ -848,15 +815,15 @@ namespace Tomb
   }
 
   /* Calculates all roots */
-  List<Root> SimpleGroup::Roots() {
+/*  List<Root> SimpleGroup::Roots() {
     
     try {
-      /*if(json.find_nocase("Roots")) {
+*/      /*if(json.find_nocase("Roots")) {
         
       }*/
       //std::cout << "Calculating the roots..." << std::endl;
     
-      List<Root> Roots = this->PRoots();
+/*      List<Root> Roots = this->PRoots();
       int nproots = Roots.nterms();
       for(int i=0; i<this->rank(); i++) {
         RVector<double> V(this->rank());
@@ -875,9 +842,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the simple representations of a group */
-  List<Irrep> SimpleGroup::SimpleReps() {
+/*  List<Irrep> SimpleGroup::SimpleReps() {
     
     try {
       Weight HWeight(*this, this->rank());
@@ -957,9 +924,9 @@ namespace Tomb
     }
 
   }
-
+*/
   /* Returns the generating rep of the group */
-  Irrep SimpleGroup::GeneratingRep() {
+/*  Irrep SimpleGroup::GeneratingRep() {
 
     try {
       //clock_t  time1 = clock();
@@ -1008,9 +975,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the adjoint rep of te group */
-  Irrep SimpleGroup::AdjointRep()
+/*  Irrep SimpleGroup::AdjointRep()
   {
     try
     {
@@ -1025,9 +992,9 @@ namespace Tomb
       throw;
     }	
   }
-  
+*/  
   /* Returns a singlet rep */
-  Irrep SimpleGroup::SingletRep()
+/*  Irrep SimpleGroup::SingletRep()
   {
     try
     {
@@ -1038,9 +1005,9 @@ namespace Tomb
       throw;
     }	
   }
-  
+*/  
   /* Returns all the representations of the group up to dimension maxdim */
-  List<Irrep> &SimpleGroup::Irreps(int maxdim) {
+/*  List<Irrep> &SimpleGroup::Irreps(int maxdim) {
 
     try {
       // If the reps are calculated already
@@ -1053,14 +1020,14 @@ namespace Tomb
         _repsMaxDim = maxdim;
         return _Irreps;
       }
-      
+*/      
       /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
         _Irreps = DataBase.at(id()).Irreps(maxdim);
         if(_Irreps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Irreps;
       }*/
-      
+/*      
       if(maxdim == -1) maxdim = 50;
       
       // If the group is abelian just return {0.0}
@@ -1142,14 +1109,14 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the variable Irreps */
-  List<Irrep> SimpleGroup::IrrepsConst() const {
+/*  List<Irrep> SimpleGroup::IrrepsConst() const {
     return _Irreps;
   }
-  
+*/  
   /* Returns the extended Cartan matrix */
-  Matrix<double> SimpleGroup::ExtendedCartan(){
+/*  Matrix<double> SimpleGroup::ExtendedCartan(){
 
     try {
       Matrix<double> ExtCartan(this->rank()+1);
@@ -1236,9 +1203,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates the maximal subgroups of simple group */
-  List<SubGroup> &SimpleGroup::MaximalSubgroups() {
+/*  List<SubGroup> &SimpleGroup::MaximalSubgroups() {
 
     try {
       // If the maximal subgroups have been calculated already return them
@@ -1520,7 +1487,7 @@ namespace Tomb
       //_MaxSubgroups.AppendList(SpecialSubgroups);
       
       // Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
-      if(_MaxSubgroups.nterms() and LieGroup(_MaxSubgroups.GetObject(0)) == LieGroup(*this)) _MaxSubgroups.DeleteTerm(0);
+/*      if(_MaxSubgroups.nterms() and LieGroup(_MaxSubgroups.GetObject(0)) == LieGroup(*this)) _MaxSubgroups.DeleteTerm(0);
       if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
         _MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
       }
@@ -1534,7 +1501,7 @@ namespace Tomb
         }*/
       //}
       
-      _MaxSubgroups.EliminateRepeated();	
+ /*     _MaxSubgroups.EliminateRepeated();	
       //std::cout << "total time = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
       
       //for(int i=0; i<_MaxSubgroups.nterms(); i++) {
@@ -1546,9 +1513,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates the special subroups of a simple group */
-  List<SubGroup> SimpleGroup::SpecialSubgroups() {
+/*  List<SubGroup> SimpleGroup::SpecialSubgroups() {
 
     try {
       
@@ -1646,9 +1613,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates all the subgroups of a simple group */
-  List<SubGroup> &SimpleGroup::Subgroups() {
+/*  List<SubGroup> &SimpleGroup::Subgroups() {
     
     try {
 
@@ -1656,7 +1623,7 @@ namespace Tomb
       if(abelian()) return _Subgroups;
       
       if(_Subgroups.nterms()) return _Subgroups;
-      
+*/      
       /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
         _Subgroups = DataBase.at(id()).Subgroups();
         if(_Subgroups.nterms()) _hasSubgroups = true;
@@ -1664,7 +1631,7 @@ namespace Tomb
       }*/
       
       // Use LieGroup function
-      LieGroup G(*this);
+/*      LieGroup G(*this);
       _Subgroups = G.Subgroups();
       
       // Set the hasSubgroups flag to true
@@ -1679,14 +1646,14 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the variable Subgroups */
-  List<SubGroup> SimpleGroup::SubgroupsConst() const {
+/*  List<SubGroup> SimpleGroup::SubgroupsConst() const {
     return _Subgroups;
   }
-  
+*/  
   /* Calculates the subgroups with rank greater that specified */
-  List<SubGroup> SimpleGroup::Subgroups(int rank) {
+/*  List<SubGroup> SimpleGroup::Subgroups(int rank) {
     
     try {
 
@@ -1701,9 +1668,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates the subgroups with ranks between rank1 and rank2 */
-  List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2) {
+/*  List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2) {
     try {
       
       // If the group is abelian, return empty
@@ -1717,18 +1684,18 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the breaking chain from a simple group to a simple group */
-  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup) {
+/*  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup) {
     try {
       return BreakingChains(LieGroup(Subgroup));	
     } catch (...) {
       throw;
     }
   }
-
+*/
   /* Returns the breaking chain from a simple group to a lie group */
-  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup) {
+/*  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup) {
     try {
       LieGroup Group(*this);
       return Group.BreakingChains(Subgroup);
@@ -1736,9 +1703,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
-  List<Product<Irrep> > SimpleGroup::Invariants(const List<Irrep> &irreps, int dim) {
+/*  List<Product<Irrep> > SimpleGroup::Invariants(const List<Irrep> &irreps, int dim) {
     
     try {
       LieGroup Group(*this);
@@ -1766,9 +1733,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns whether the simple group is a subgroup of a Lie Group */
-  bool SimpleGroup::isSubgroupOf(LieGroup Group) const {
+/*  bool SimpleGroup::isSubgroupOf(LieGroup Group) const {
 
     try {
       LieGroup G(*this);	
@@ -1778,9 +1745,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns whether the Lie group is a subgroup of another simple Group */
-  bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const {
+/*  bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const {
 
     try {
       LieGroup G(*this);
@@ -1789,9 +1756,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Overloaded == operator */
-  bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
+/*  bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
 
     if(this->rank() == OtherSimpleGroup.rank() and this->type() == OtherSimpleGroup.type()) return true;
 
@@ -1801,15 +1768,15 @@ namespace Tomb
     
     return false;
   }
-
+*/
   /* Overloaded != operator */
-  bool SimpleGroup::operator!=(const SimpleGroup &OtherSimpleGroup) const {
+/*  bool SimpleGroup::operator!=(const SimpleGroup &OtherSimpleGroup) const {
     return !((*this) == OtherSimpleGroup);
 
   }
-
+*/
   /* Overloaded > operator */
-  bool SimpleGroup::operator>(const SimpleGroup &OtherSimpleGroup) const {
+/*  bool SimpleGroup::operator>(const SimpleGroup &OtherSimpleGroup) const {
     if(this->rank() > OtherSimpleGroup.rank()) {
       return true;
     } else if(this->rank() == OtherSimpleGroup.rank()) {
@@ -1819,9 +1786,9 @@ namespace Tomb
     }
     return false;
   }
-
+*/
   /* Overloaded < operator */
-  bool SimpleGroup::operator<(const SimpleGroup &OtherSimpleGroup) const {
+/*  bool SimpleGroup::operator<(const SimpleGroup &OtherSimpleGroup) const {
     if(this->rank() < OtherSimpleGroup.rank()) {
       return true;
     } else if(this->rank() == OtherSimpleGroup.rank()) {
@@ -1831,9 +1798,9 @@ namespace Tomb
     }
     return false;
   }
-
+*/
   /* Returns the json string */
-  JSONNode SimpleGroup::json(std::string name) const {
+/*  JSONNode SimpleGroup::json(std::string name) const {
     
     if(name == "id") {
       return JSONNode("", id());
@@ -1859,9 +1826,9 @@ namespace Tomb
     
     return json;
   }
-
+*/
   /* Parses a json object into the attributes of the class */
-  void SimpleGroup::ParseJSON(const JSONNode & n, std::string what) {
+/*  void SimpleGroup::ParseJSON(const JSONNode & n, std::string what) {
     
     JSONNode::const_iterator i = n.begin();
       
@@ -1913,7 +1880,7 @@ namespace Tomb
       ++i;
     }
   }
-
+*/
   /* Checks whether the group exists or not */
   bool SimpleGroup::GroupExists(int rank, char type) {
     try {
@@ -1937,9 +1904,19 @@ namespace Tomb
     }
   }
 
+  SimpleGroup* SimpleGroup::find(const std::string id)
+  {
+    if(DB<SimpleGroup>().check(id))
+      return DB<SimpleGroup>().at(id);
+    else
+      return NULL;
+  }
+
   /* Overloaded << operator with simple groups on the right */
   std::ostream &operator<<(std::ostream &stream, const SimpleGroup &g) {
     stream << g.label();
     return stream;
   }
+
+  
 }

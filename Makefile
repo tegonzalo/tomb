@@ -55,29 +55,33 @@ MCC = mcc
 MLOBJ = $(ODIR)/$(MATHMAIN)tm.o
 
 # TARGETS
-all: $(MAINS) 
+#all: $(MAINS) 
 
-$(TOMBMAIN): $(ODIR)/$(TOMBMAIN).o $(OBJS) $(JSOBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
+#$(TOMBMAIN): $(ODIR)/$(TOMBMAIN).o $(OBJS) $(JSOBJ)
+#	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 	
-$(GROUPMAIN):  $(ODIR)/$(GROUPMAIN).o $(OBJS) $(JSOBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
+#$(GROUPMAIN):  $(ODIR)/$(GROUPMAIN).o $(OBJS) $(JSOBJ)
+#	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 	
-$(MATHMAIN): $(ODIR)/$(MATHMAIN).o $(OBJS) $(JSOBJ) $(MLOBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(MATHINCS) $(MATHLIBS)
+#$(MATHMAIN): $(ODIR)/$(MATHMAIN).o $(OBJS) $(JSOBJ) $(MLOBJ)
+#	$(CC) -o $@ $^ $(CFLAGS) $(MATHINCS) $(MATHLIBS)
 
 $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
 	$(CC) -c -o $@ $< $(CFLAGS) $(INCS)
 
-$(JSONDIR)/%.o: $(JSONDIR)/%.cpp
-	$(CC) -c -o $@ $< $(CFLAGS)
+#$(JSONDIR)/%.o: $(JSONDIR)/%.cpp
+#	$(CC) -c -o $@ $< $(CFLAGS)
 
-$(MLOBJ): $(SDIR)/$(MATHMAIN).tm
-	$(MPREP) $? -o $(ODIR)/$(MATHMAIN)tm.cc
-	$(CC) -c -o $@ $(ODIR)/$(MATHMAIN)tm.cc $(CFLAGS) $(MATHINCS)
+#$(MLOBJ): $(SDIR)/$(MATHMAIN).tm
+#	$(MPREP) $? -o $(ODIR)/$(MATHMAIN)tm.cc
+#	$(CC) -c -o $@ $(ODIR)/$(MATHMAIN)tm.cc $(CFLAGS) $(MATHINCS)
 
-$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
-	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
+#$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
+#	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
+
+group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o 
+	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
+
 
 .PHONY: clean
 

@@ -23,21 +23,21 @@ namespace Tomb
 {
 
   /* Constructor 1 */
-  Root::Root(const SimpleGroup &G, int dim) : RVector<double>(dim) {
+  Root::Root(SimpleGroup &G, int dim) : RVector<double>(dim) {
     try {
-      this->_Group = new SimpleGroup(G);
-      this->_length = calculateLength();
+      _Group = &G;
+      _length = calculateLength();
     } catch (...) {
       throw;
     }
   }
 
   /* Constructor 2 */
-  Root::Root(const SimpleGroup &G, const RVector<double> &alpha) : RVector<double>(alpha){
+  Root::Root(SimpleGroup &G, const RVector<double> &alpha) : RVector<double>(alpha){
 
     try {
-      this->_Group = new SimpleGroup(G);
-      this->_length = calculateLength();
+      _Group = &G;
+      _length = calculateLength();
     } catch (...) {
       throw;
     }
@@ -54,7 +54,7 @@ namespace Tomb
       std::string G;
       getline(ss, G, '\0');
       
-      _Group = new SimpleGroup(G);
+      _Group = SimpleGroup::find(G);
 
       *this = Root(Group(),Group().rank());
       
@@ -78,6 +78,7 @@ namespace Tomb
   Root::Root(const Root &alpha) : RVector<double>(alpha) {
     
     try {
+      _Group = DB<SimpleGroup>().at(alpha.Group().id());
       _Group = new SimpleGroup(alpha.Group());
       _length = alpha.length();
     } catch (...) {
@@ -102,16 +103,16 @@ namespace Tomb
   /* Destructor */
   Root::~Root() {
     //std::cout << "deleting root" << std::endl;
-    if(_Group != nullptr) delete _Group;
+    //if(_Group != nullptr) delete _Group;
   }
 
   /* Overloaded = operator */
   Root Root::operator=(const Root &alpha) {
     try {
       if(this == &alpha) return *this;
-      if(_Group != nullptr) delete _Group;
+      //if(_Group != nullptr) delete _Group;
       RVector<double>::operator=(alpha);
-      _Group = new SimpleGroup(alpha.Group());
+      _Group = DB<SimpleGroup>().at(alpha.Group().id());
       _length = alpha.length();
       return *this;
     } catch (...) {
@@ -123,7 +124,7 @@ namespace Tomb
   Root Root::operator=(Root &&alpha) {
     try {
       if(this == &alpha) return *this;
-      if(_Group != nullptr) delete _Group;
+      //if(_Group != nullptr) delete _Group;
       RVector<double>::operator=(std::move(alpha));
       _Group = std::move(alpha._Group);
       _length = std::move(alpha._length);

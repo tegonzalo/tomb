@@ -51,21 +51,15 @@ namespace Tomb
       bool _hasReps = false;
       bool _hasSubgroups = false;
       List<Root> _PRoots;
-      List<Irrep> _Irreps;
+/*      List<Irrep> _Irreps;
       List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;
-		
+*/		
     public:
-      //static std::map<std::string, SimpleGroup> DataBase;
-      //static std::map<std::string, JSONNode> JSONDataBase;
-			
-      //bool database_check(std::string, std::string = "");
-      //void database_emplace(std::string, SimpleGroup);
-			
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
       SimpleGroup(const std::string);
-      SimpleGroup(const JSONNode &);
+//      SimpleGroup(const JSONNode &);
       SimpleGroup(const SimpleGroup &);
       SimpleGroup(SimpleGroup &&);
       ~SimpleGroup();
@@ -88,7 +82,7 @@ namespace Tomb
       bool hasSubgroups() const;
       Root SRoot(int);
       List<Root> PRoots(std::string = "Dynkin");
-      List<Root> Roots();
+/*      List<Root> Roots();
       List<Irrep> SimpleReps();
       Irrep GeneratingRep();
       Irrep AdjointRep();
@@ -115,11 +109,25 @@ namespace Tomb
       std::string Table() const;
       JSONNode json(std::string = "") const;
       void ParseJSON(const JSONNode &n, std::string = "");
+*/
       static bool GroupExists(int, char);
+      static SimpleGroup* find(const std::string);
+
     };	
 
     std::ostream &operator<<(std::ostream &, const SimpleGroup &);
+}
+
+/**************************************/
+/* SimpleGroup singleton declarations */
+/**************************************/
+
+namespace Tomb
+{
+
+  
 
 }
+
 
 #endif /* __SIMPLEGROUP_H */

@@ -12,6 +12,7 @@
  * 15/02/2012
  */
 
+#include <iostream>
 #include "files.h"
 #include "database.h"
 #include "simplegroup.h"
@@ -22,23 +23,20 @@
 /****************************************/
 
 using namespace Tomb;
+using namespace std;
 
-int main(int argc, char *argv[]) {
-
-  try {
-        
-    int rank, maxdim = 50;
-    char type;
-    std::string id;
-    
+int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, int &maxdim)
+{
+  try
+  {
     switch(argc) {
       case 2:
         if(!strcmp(argv[1],"clean")) {
           Files::EmptyDirectory("./out");
-          return 0;
+          return 1;
         } else {
-          std::string s(argv[1]);
-          if(s.find('x') != std::string::npos) {
+          string s(argv[1]);
+          if(s.find('x') != string::npos) {
             id = s;
           } else {
             type = argv[1][0];
@@ -50,39 +48,51 @@ int main(int argc, char *argv[]) {
         break;
         
       case 3:
-        if(!strcmp(argv[1],"clean")) {
-          std::string dir = "./out/";
+        if(!strcmp(argv[1],"clean")) 
+        {
+          string dir = "./out/";
           dir.append(argv[2]);
           if(Files::IsDirectory(dir)) {
             Files::DeleteDirectory(dir);
-            return 0;
+            return 1;
           } else {
             throw "Directory does not exits";
           }
-        } else {
-          std::string s(argv[1]);
-          if(s.find('x') != std::string::npos) {
+        } 
+        else
+        {
+          string s(argv[1]);
+          if(s.find('x') != string::npos) 
+          {
             id = s;
-          } else {
+            maxdim = atoi(argv[2]);
+          } 
+          else if(s.length() > 1)
+          {
             type = argv[1][0];
             char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
             rank = atoi(auxstring);
             free(auxstring);
+            maxdim = atoi(argv[2]);
           }
-          maxdim = atoi(argv[2]);
+          else
+          {
+            type = argv[1][0];
+            rank = atoi(argv[2]);
+          }
         }
         break;
         
       case 4:
         if(!strcmp(argv[1],"clean")) {
-          std::string dir = "./out/";
+          string dir = "./out/";
           dir.append(argv[2]);
           dir.append("/Reps/");
           dir.append(argv[3]);
           dir.append(".out");
           if(Files::FileExists(dir)) {
             Files::DeleteFile(dir);
-            return 0;
+            return 1;
           } else {
             throw "File does not exits";
           }
@@ -107,15 +117,15 @@ int main(int argc, char *argv[]) {
       
         if(rank == 2 and type == 'D') {
         throw "main::D2 is not a simple group";
-        return 1;
+        return 0;
         }
 
       if(rank >= 10) {
-        std::cout << "Rank is too high, are you sure you want to continue?(Y/N)" << std::endl;
+        cout << "Rank is too high, are you sure you want to continue?(Y/N)" << endl;
         char yesno;
-        std::cin >> yesno;
+        cin >> yesno;
         if(toupper(yesno) == 'N') {
-          return 1;
+          return 0;
         }
       }
     }
@@ -123,9 +133,30 @@ int main(int argc, char *argv[]) {
     if(maxdim <=0) {
       throw "main::Dim must be a positive number";
     }
+
+
+  }
+  catch (...)
+  {
+    throw;
+  }
+}
+ 
+int main(int argc, char *argv[]) {
+
+  try {
+        
+    int rank, maxdim = 50;
+    char type;
+    string id;
     
+    if(!parse_arguments(argc, argv, id, rank, type, maxdim))
+      return 0;
+    
+   
     // Pull all the available info from the database first of all
-    Tomb::group_database_fill();
+//    Tomb::group_database_fill();
+// TODO: delete this function from database.h and database.cc
     
     if(id.empty()) {
       SimpleGroup G1(rank, type);
@@ -135,11 +166,13 @@ int main(int argc, char *argv[]) {
     }
     
     std::cout << "Group : " << id << std::endl;
-    LieGroup G(id);
+
+    cout << *DB<SimpleGroup>().at("A2") << endl;
+/*    LieGroup G(id);
 
     std::cout << "Calculating group info..." << std::endl;
       
-    std::cout << "Casimir = " << G.Casimir() << std::endl;
+    std::cout << "Casimir = " << G.Casimir() << std::endl;*/
 /*
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);
@@ -191,7 +224,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Invariants = " << Invariants << std::endl;
 */
     // Flush all the databases to files
-    Tomb::group_database_flush();
+//    Tomb::group_database_flush();
 
     return 1;
     
