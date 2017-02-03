@@ -147,7 +147,7 @@ namespace Tomb
       if(int flag = check(key))
       {
         if(flag == DB_FOUND_CONTENT and replace)
-          _content[key] = Object;
+          _content[key] = new TYPE(*Object);
 /*        if(flag == DB_FOUND_JSON)
         {
           if(replace)
@@ -164,7 +164,7 @@ namespace Tomb
         }
 */      }
       else
-        _content.emplace(key, Object);
+        _content.emplace(key, new TYPE(*Object));
       _flags[key] = DB_FOUND_CONTENT;
     }
     catch (...)

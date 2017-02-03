@@ -23,43 +23,6 @@ namespace Tomb
 {
   // Definition of static variables and helper functions
   
-/*  std::map<std::string, LieGroup> LieGroup::DataBase;
-  std::map<std::string, JSONNode> LieGroup::JSONDataBase;
-  
-  bool LieGroup::database_check(std::string id, std::string what) {
-    if(DataBase.empty())
-    {
-      DataBase.clear();
-      return false;
-    }
-    if(DataBase.find(id) != DataBase.end()) {
-      if (what == "")
-        return true;
-      if(what == "Reps" and DataBase.at(id).hasReps())
-        return true;
-      if(what == "Subgroups" and DataBase.at(id).hasSubgroups())
-        return true;
-    }
-    if(JSONDataBase.find(id) != JSONDataBase.end()) {
-      LieGroup G(JSONDataBase.at(id));
-      if(what == "Reps" or (what == "Subgroups" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasReps()))
-        G.ParseJSON(JSONDataBase.at(id),"Reps");
-      if(what == "Subgroups" or (what == "Reps" and DataBase.find(id) != DataBase.end() and DataBase.at(id).hasSubgroups()))
-        G.ParseJSON(JSONDataBase.at(id),"Subgroups");
-      if(DataBase.find(id) != DataBase.end())
-        DataBase.erase(id);
-      DataBase.emplace(id, G);
-      return true;
-    }
-    return false;
-  }
-  
-  void LieGroup::database_emplace(std::string id, LieGroup G) {
-    if(database_check(id))
-      DataBase.erase(id);
-    DataBase.emplace(id, G);
-  }
-  */
   // Member functions
 
   /* Constructor */
@@ -76,7 +39,7 @@ namespace Tomb
   }
 
   /* Constructor 2, with strings */
-  LieGroup::LieGroup(const std::string id) : Product<SimpleGroup>() {
+  LieGroup::LieGroup(const string id) : Product<SimpleGroup>() {
     
     try {
       this->_ngroups = 0;
@@ -87,13 +50,13 @@ namespace Tomb
       this->_semisimple = false;
       
 
-      std::string liegroupid(Strings::split_string(id, '[')[0]);
-      List<std::string> simplegroupids = Strings::split_string(liegroupid,'x');
+      string liegroupid(Strings::split_string(id, '[')[0]);
+      List<string> simplegroupids = Strings::split_string(liegroupid,'x');
       
-      SimpleGroup sg(simplegroupids[0]);
-
       for(int i=0; i<simplegroupids.nterms(); i++)
-        AddTerm(SimpleGroup(simplegroupids[i]));
+      {
+        AddTerm(*SimpleGroup::get(simplegroupids[i]));
+      }
       
       this->Order();
       
@@ -105,7 +68,7 @@ namespace Tomb
   }
 
   /* Constructor 3, with json nodes */
-  LieGroup::LieGroup(const JSONNode &n) {
+/*  LieGroup::LieGroup(const JSONNode &n) {
     
     if(n.as_string() != "") {
       LieGroup(n.as_string());
@@ -113,12 +76,13 @@ namespace Tomb
       ParseJSON(n);
     }
   }
-  
+*/  
   /* Copy constructor 1 */
-  LieGroup::LieGroup(const LieGroup &Group) : Product<SimpleGroup>(Group) {
-    
-    try {
-      
+  LieGroup::LieGroup(const LieGroup &Group) : Product<SimpleGroup>(Group)
+  {  
+    try
+    {
+      cout << "lg::cpct1" << endl; 
       this->_rank = Group.rank();
       this->_dim = Group.dim();
       this->_simple = Group.simple();
@@ -130,19 +94,21 @@ namespace Tomb
       this->_repsMaxDim = Group.repsMaxDim();
       this->_hasReps = Group.hasReps();
       this->_hasSubgroups = Group.hasSubgroups();
-      //std::cout << "hasReps = " << _hasReps << std::endl;
-      if(_hasReps) _Reps = Group.RepsConst();
-      
-      //std::cout << "hasSubgroups = " << _hasSubgroups << std::endl;
-      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
-    } catch (...) {
+//      if(_hasReps) _Reps = Group.RepsConst();
+//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+    }
+    catch (...)
+    {
       throw;
     }
   }
 
   /* Copy constructor 2 */
-  LieGroup::LieGroup(const SimpleGroup &Group) : Product<SimpleGroup>(Group) {
-    try {
+  LieGroup::LieGroup(const SimpleGroup &Group) : Product<SimpleGroup>(Group)
+  {
+    try
+    {
+      cout << "lg::cpct2" << endl;
       this->_ngroups = 1;
       this->_rank = Group.rank();
       this->_dim = Group.dim();
@@ -154,17 +120,22 @@ namespace Tomb
       this->_repsMaxDim = Group.repsMaxDim();
       this->_hasReps = Group.hasReps();
       this->_hasSubgroups = Group.hasSubgroups();
-      if(_hasReps) _Reps = Irreps2Reps(Group.IrrepsConst());
-      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      if(_hasReps) _Reps = Irreps2Reps(Group.IrrepsConst());
+//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
 
-    } catch (...) {
+    }
+    catch (...)
+    {
       throw;
     }
   }
 
   /* Copy constructor 3 */
-  LieGroup::LieGroup(const List<SimpleGroup> &Group) : Product<SimpleGroup>() {
-    try {
+  LieGroup::LieGroup(const List<SimpleGroup> &Group) : Product<SimpleGroup>()
+  {
+    try
+    {
+      cout << "lg::cpct3" << endl;
       _ngroups = 0;
       _rank = 0;
       _dim = 0;
@@ -173,7 +144,8 @@ namespace Tomb
       _semisimple = false;
       _label = this->Print();
       
-      for(int i=0; i<Group.nterms(); i++) {
+      for(int i=0; i<Group.nterms(); i++)
+      {
         AddTerm(Group.GetObject(i));
       }
       
@@ -181,14 +153,19 @@ namespace Tomb
       _hasReps = false;
       _hasSubgroups = false;
       
-    } catch(...) {
+    }
+    catch(...)
+    {
       throw;
     }
   }
 
   /* Copy constructor 4 */
-  LieGroup::LieGroup(const Product<SimpleGroup> &Group) : Product<SimpleGroup>() {
-    try {
+  LieGroup::LieGroup(const Product<SimpleGroup> &Group) : Product<SimpleGroup>()
+  {
+    try
+    {
+      cout << "lg::cpct4" << endl;
       _ngroups = 0;
       _rank = 0;
       _dim = 0;
@@ -197,37 +174,40 @@ namespace Tomb
       _semisimple = false;
       _label = this->Print();
       
-      for(int i=0; i<Group.nterms(); i++) {
+      for(int i=0; i<Group.nterms(); i++)
         AddTerm(Group.GetObject(i));
         
       _label = this->Print();
       _hasReps = false;
       _hasSubgroups = false;
       
-      }
-    } catch(...) {
+    }
+    catch(...)
+    {
       throw;
     }
   }
 
   /* Move constructor */
   LieGroup::LieGroup(LieGroup &&Group) : 
-    Product<SimpleGroup>(std::move(Group)),
-    _rank(std::move(Group._rank)),
-    _dim(std::move(Group._dim)),
-    _simple(std::move(Group._simple)),
-    _semisimple(std::move(Group._semisimple)),
-    _ngroups(std::move(Group._ngroups)),
-    _nabelians(std::move(Group._nabelians)),
-    _label(std::move(Group._label)),
-    _Casimir(std::move(Group._Casimir)),
-    _repsMaxDim(std::move(Group._repsMaxDim)),
-    _hasReps(std::move(Group._hasReps)),
-    _hasSubgroups(std::move(Group._hasSubgroups)),
-    _Reps(std::move(Group._Reps)),
-    _Subgroups(std::move(Group._Subgroups))
+    Product<SimpleGroup>(move(Group)),
+    _rank(move(Group._rank)),
+    _dim(move(Group._dim)),
+    _simple(move(Group._simple)),
+    _semisimple(move(Group._semisimple)),
+    _ngroups(move(Group._ngroups)),
+    _nabelians(move(Group._nabelians)),
+    _label(move(Group._label)),
+    _Casimir(move(Group._Casimir)),
+    _repsMaxDim(move(Group._repsMaxDim)),
+    _hasReps(move(Group._hasReps)),
+    _hasSubgroups(move(Group._hasSubgroups))//,
+//    _Reps(move(Group._Reps)),
+//    _Subgroups(move(Group._Subgroups))
   {
-    try {
+    try
+    {
+      cout << "lg::mvct" << endl;
       Group._rank = 0;
       Group._dim = 0;
       Group._nabelians = 0;
@@ -238,16 +218,19 @@ namespace Tomb
       Group._repsMaxDim = 0;
       Group._hasReps = false;
       Group._hasSubgroups = false;
-      Group._Reps.Clear();
-      Group._Subgroups.Clear();
+//      Group._Reps.Clear();
+//      Group._Subgroups.Clear();
       
-    } catch (...) {
+    }
+    catch (...)
+    {
       throw;
     }
   }	
 
   /* Destructor */
-  LieGroup::~LieGroup() {
+  LieGroup::~LieGroup()
+  {
     this->_ngroups = 0;
     this->_rank = 0;
     this->_dim = 0;
@@ -255,13 +238,16 @@ namespace Tomb
     this->_simple = false;
     this->_semisimple = false;
     this->_label = "";
-    this->_Reps.Clear();
-    this->_Subgroups.Clear();
+//    this->_Reps.Clear();
+//    this->_Subgroups.Clear();
   }
 
   /* Assignment operator 1 */
-  LieGroup &LieGroup::operator=(const LieGroup &Group) {
-    try {
+  LieGroup &LieGroup::operator=(const LieGroup &Group)
+  {
+    try
+    {
+      cout << "lg::asop1" << endl;
 
       if(this == &Group) return *this;
 
@@ -278,53 +264,63 @@ namespace Tomb
       _repsMaxDim = Group.repsMaxDim();
       _hasReps = Group.hasReps();
       _hasSubgroups = Group.hasSubgroups();
-      _Reps.Clear();
-      _Subgroups.Clear();
-      if(_hasReps) _Reps = Group.RepsConst();
-      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
+//      if(_hasReps) _Reps = Group.RepsConst();
+//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
 
       return *this;
       
-    } catch (...) {
+    }
+    catch (...)
+    {
       throw;
     }
   }
 
   /* Assignment operator 2 */
-  LieGroup &LieGroup::operator=(const SimpleGroup &Group) {
-    try {			
+  LieGroup &LieGroup::operator=(const SimpleGroup &Group)
+  {
+    try
+    {
+      cout << "lg::asop2" << endl;			
       Product<SimpleGroup>::operator=(Group);
       
-      this->_ngroups =1;
-      this->_rank = Group.rank();
-      this->_dim = Group.dim();
-      this->_nabelians = (Group.abelian() ? 1 : 0);
-      this->_simple = true;
-      this->_semisimple = true;
-      this->_label = this->Print();
-      this->_Casimir.AddTerm(Group.Casimir());
+      _ngroups =1;
+      _rank = Group.rank();
+      _dim = Group.dim();
+      _nabelians = (Group.abelian() ? 1 : 0);
+      _simple = true;
+      _semisimple = true;
+      _label = this->Print();
+      _Casimir.AddTerm(Group.Casimir());
       _repsMaxDim = Group.repsMaxDim();
       _hasReps = Group.hasReps();
       _hasSubgroups = Group.hasSubgroups();
-      _Reps.Clear();
-      _Subgroups.Clear();
-      if(_hasReps) _Reps = Irreps2Reps(Group.IrrepsConst());
-      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
+//      if(_hasReps) _Reps = Irreps2Reps(Group.IrrepsConst());
+//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
       
       return *this;
-    } catch (...) {
+    }
+    catch (...)
+    {
       throw;
     }
   }
 
   /* Assignment operator 3 */
-  LieGroup &LieGroup::operator=(const List<SimpleGroup> &Group) {
-    try {
+  LieGroup &LieGroup::operator=(const List<SimpleGroup> &Group)
+  {
+    try
+    {
+      cout << "lg::asop3" << endl;
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-      _Reps.Clear();
-      _Subgroups.Clear();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
       
       _ngroups = 0;
       _rank = 0;
@@ -333,30 +329,34 @@ namespace Tomb
       _simple = false;
       _semisimple = false;
       
-      for(int i=0; i<Group.nterms(); i++) {
+      for(int i=0; i<Group.nterms(); i++)
         AddTerm(Group.GetObject(i));
-      }
       
       _label = this->Print();
       _hasReps = false;
       _hasSubgroups = false;
-      _Reps.Clear();
-      _Subgroups.Clear();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
       
       return *this;
-    } catch(...) {
+    }
+    catch(...)
+    {
       throw;
     }
   }
 
   /* Assignment operator 4 */
-  LieGroup &LieGroup::operator=(const Product<SimpleGroup> &Group) {
-    try {
+  LieGroup &LieGroup::operator=(const Product<SimpleGroup> &Group)
+  {
+    try
+    {
+      cout << "lg::asop4" << endl;
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-      _Reps.Clear();
-      _Subgroups.Clear();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
       
       _ngroups = 0;
       _rank = 0;
@@ -365,42 +365,43 @@ namespace Tomb
       _simple = false;
       _semisimple = false;
       
-      for(int i=0; i<Group.nterms(); i++) {
+      for(int i=0; i<Group.nterms(); i++)
         AddTerm(Group.GetObject(i));
-      }
       
       _label = this->Print();
       _hasReps = false;
       _hasSubgroups = false;
-      _Reps.Clear();
-      _Subgroups.Clear();
+//      _Reps.Clear();
+//      _Subgroups.Clear();
       
       return *this;
-    } catch(...) {
-      throw;
     }
+    catch(...) { throw; }
   }
 
   /* Move = operator */
-  LieGroup &LieGroup::operator=(LieGroup &&Group) {
-    try {
+  LieGroup &LieGroup::operator=(LieGroup &&Group)
+  {
+    try
+    {
+      cout << "lg::mvasop" << endl;
       if(this == &Group) return *this;
       
-      Product<SimpleGroup>::operator=(std::move(Group));
+      Product<SimpleGroup>::operator=(move(Group));
       
-      _rank = std::move(Group._rank);
-      _dim = std::move(Group._dim);
-      _simple = std::move(Group._simple);
-      _semisimple = std::move(Group._semisimple);
-      _ngroups = std::move(Group._ngroups);
-      _nabelians = std::move(Group._nabelians);
-      _label = std::move(Group._label);
-      _Casimir = std::move(Group._Casimir);
-      _repsMaxDim = std::move(Group._repsMaxDim);
-      _hasReps = std::move(Group._hasReps);
-      _hasSubgroups = std::move(Group._hasSubgroups);
-      _Reps = std::move(Group._Reps);
-      _Subgroups = std::move(Group._Subgroups);
+      _rank = move(Group._rank);
+      _dim = move(Group._dim);
+      _simple = move(Group._simple);
+      _semisimple = move(Group._semisimple);
+      _ngroups = move(Group._ngroups);
+      _nabelians = move(Group._nabelians);
+      _label = move(Group._label);
+      _Casimir = move(Group._Casimir);
+      _repsMaxDim = move(Group._repsMaxDim);
+      _hasReps = move(Group._hasReps);
+      _hasSubgroups = move(Group._hasSubgroups);
+//      _Reps = move(Group._Reps);
+//      _Subgroups = move(Group._Subgroups);
       
       Group._rank = 0;
       Group._dim = 0;
@@ -412,37 +413,28 @@ namespace Tomb
       Group._repsMaxDim = 0;
       Group._hasReps = false;
       Group._hasSubgroups = false;
-      Group._Reps.Clear();
-      Group._Subgroups.Clear();
+//      Group._Reps.Clear();
+//      Group._Subgroups.Clear();
 
       return *this;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Initialises some variables */
-  void LieGroup::init() {
-    
-    try {
-      /*if(database_check(id()))
-        *this = DataBase.at(id());
-      else		
-        database_emplace(id(), *this);
-      */
-      if(Database<LieGroup>().check(id()))
-        *this = Database<LieGroup>().at(id());
-      else
-        Database<LieGroup>().set(id(), *this);
-    } catch (...) {
-      throw;
+  void LieGroup::init()
+  {
+    try
+    {
+      DB<LieGroup>().set(id(), this);
     }
+    catch (...) { throw; }
   }
 
   /* Identifier of the Lie Group */
-  std::string LieGroup::id() const {
-    std::stringstream s;
+  string LieGroup::id() const {
+    stringstream s;
     if(nterms()) {
       for(int i=0; i<nterms()-1; i++) {
         s << GetObject(i).id() << 'x';
@@ -524,7 +516,7 @@ namespace Tomb
   }
 
   /* Returns the label of the LieGroup */
-  std::string LieGroup::label() const {
+  string LieGroup::label() const {
     return _label;
   }
 
@@ -607,7 +599,7 @@ namespace Tomb
   }
 
   /* Calculates the maximal subgroups of a Lie Group */
-  List<SubGroup> &LieGroup::MaximalSubgroups() {
+/*  List<SubGroup> &LieGroup::MaximalSubgroups() {
     
     try {
       
@@ -640,38 +632,38 @@ namespace Tomb
         nterms *= ListofSubgroups.GetObject(i).nterms();
       }
 
-      //std::cout << ListofSubgroups << std::endl;
+      //cout << ListofSubgroups << endl;
 
       //time1 = clock();
       for(int i=0; i<nterms; i++) {
-        ///std::cout << "i = " << i << std::endl;
+        ///cout << "i = " << i << endl;
         SubGroup Subgroup(*this);
         
         int terms = 1;
         for(int j=0; j<ngroups(); j++) {
-          //std::cout << "j = " << j << std::endl;
+          //cout << "j = " << j << endl;
           int thisterms = ListofSubgroups.GetObject(j).nterms();
           terms *= thisterms;
           int index = (i*terms/nterms)%thisterms;
           Subgroup.AddTerm(ListofSubgroups.GetObject(j).GetObject(index),j);
         }
-        //std::cout << Subgroup.json().write_formatted() << std::endl;
+        //cout << Subgroup.json().write_formatted() << endl;
         //getchar();
         Subgroup.Order();
-        //std::cout << "------" << std::endl << Subgroup.json().write_formatted() << std::endl << "--------" << std::endl;
+        //cout << "------" << endl << Subgroup.json().write_formatted() << endl << "--------" << endl;
         //getchar();
         _MaxSubgroups.AddTerm(Subgroup);
       }
-      //std::cout << _MaxSubgroups << std::endl;
+      //cout << _MaxSubgroups << endl;
       _MaxSubgroups.DeleteTerm(0);
       _MaxSubgroups.Order();
       _MaxSubgroups.EliminateRepeated();
-      //std::cout << _MaxSubgroups << std::endl;
-      //std::cout << "max2 = " << double(clock()-time1)/CLOCKS_PER_SEC << std::endl;
+      //cout << _MaxSubgroups << endl;
+      //cout << "max2 = " << double(clock()-time1)/CLOCKS_PER_SEC << endl;
 
 
       //for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-      //	std::cout << _MaxSubgroups.GetObject(i).json().write_formatted() << std::endl;
+      //	cout << _MaxSubgroups.GetObject(i).json().write_formatted() << endl;
       //}
       
       return _MaxSubgroups;
@@ -680,9 +672,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates the special subgroups of a Lie Group */
-  List<SubGroup> LieGroup::SpecialSubgroups() {
+/*  List<SubGroup> LieGroup::SpecialSubgroups() {
     
     try {
       
@@ -735,9 +727,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates all the subgroups of a Lie group */
-  List<SubGroup> &LieGroup::Subgroups() 
+/*  List<SubGroup> &LieGroup::Subgroups() 
   {
     
     try 
@@ -758,59 +750,59 @@ namespace Tomb
       }
 
       // If not, calculate it
-      std::cout << "Calculating subgroups of " << *this << std::endl;
+      cout << "Calculating subgroups of " << *this << endl;
     
       // Then calculate the maximal subgroups
       List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
       _Subgroups.AppendList(MaximalSubgroups);
-      //std::cout << "maximal sugroups " << _Subgroups << std::endl;
+      //cout << "maximal sugroups " << _Subgroups << endl;
 
       //time1 = clock();
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = _Subgroups.nterms();
       int group = 0;
       //time1 = clock();
-      //std::cout << nsubgroups << std::endl;
+      //cout << nsubgroups << endl;
       for(List<SubGroup>::iterator it_Subgroups = MaximalSubgroups.begin(); it_Subgroups != MaximalSubgroups.end() and group < nsubgroups; it_Subgroups++) {
-        //std::cout << group << std::endl;
+        //cout << group << endl;
         SubGroup subgroup = *it_Subgroups;
-        //std::cout << subgroup << std::endl;
-        //std::cout << "suuuubgroups of " << subgroup << " = {  " << subgroup.Subgroups() << "  }" << std::endl;
+        //cout << subgroup << endl;
+        //cout << "suuuubgroups of " << subgroup << " = {  " << subgroup.Subgroups() << "  }" << endl;
         List<SubGroup> AuxSubgroups = subgroup.Subgroups();
-        //std::cout << "Subgroups of " << subgroup << " are " << AuxSubgroups << std::endl;
+        //cout << "Subgroups of " << subgroup << " are " << AuxSubgroups << endl;
 
         for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++) {
-          //std::cout << it_AuxSubgroups->json().write_formatted() << std::endl;
+          //cout << it_AuxSubgroups->json().write_formatted() << endl;
           SubGroup Subgroup(*it_AuxSubgroups, subgroup);
-          //if(Subgroup.ngroups()==Subgroup.nabelians()) std::cout << Subgroup.json().write_formatted() << std::endl;
+          //if(Subgroup.ngroups()==Subgroup.nabelians()) cout << Subgroup.json().write_formatted() << endl;
           Subgroup.SetProjection(it_AuxSubgroups->Projection()*it_Subgroups->Projection());
-          //std::cout << Subgroup.Projection() << std::endl;
+          //cout << Subgroup.Projection() << endl;
           Subgroup.Order();
-          //std::cout << Subgroup.json().write_formatted() << std::endl;
+          //cout << Subgroup.json().write_formatted() << endl;
           //for(int j=0; j<Subgroup.SuperGroups().nterms(); j++) {
-          //	std::cout << Subgroup.SuperGroups().GetObject(j).nleaves() << std::endl;
+          //	cout << Subgroup.SuperGroups().GetObject(j).nleaves() << endl;
           //	}
-          //std::cout << Subgroup.id() << std::endl;
+          //cout << Subgroup.id() << endl;
           if(_Subgroups.Index(Subgroup) == -1) {
             _Subgroups.AddTerm(Subgroup);
           }
         }
-        //std::cout << _Subgroups << std::endl;
+        //cout << _Subgroups << endl;
         
         group++;
       }	
 
-      //std::cout << ngroups() << std::endl;
+      //cout << ngroups() << endl;
       // Calculate subgroups by truncating the group
       if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
       
-      //std::cout << _Subgroups << std::endl;
+      //cout << _Subgroups << endl;
 
       // Last operations on the groups
       _Subgroups.Order();
       _Subgroups.EliminateRepeated();
       
-      //std::cout << Subgroups << std::endl;
+      //cout << Subgroups << endl;
       
       // Set the hasSubgroups flag to true
       if(_Subgroups.nterms()) _hasSubgroups = true;
@@ -819,7 +811,7 @@ namespace Tomb
       //database_emplace(id(), *this);
       Database<LieGroup>().set(id(), *this, true);
       
-      //std::cout << "Subgroups of " << *this << " calculated" << std::endl;
+      //cout << "Subgroups of " << *this << " calculated" << endl;
       
       return _Subgroups;
     
@@ -827,14 +819,14 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the variable Subgroups */
-  List<SubGroup> LieGroup::SubgroupsConst() const {
+/*  List<SubGroup> LieGroup::SubgroupsConst() const {
     return _Subgroups;
   }
-  
+*/  
   /* Calculates the subgroups with a given rank of a Lie group */
-  List<SubGroup> LieGroup::Subgroups(int rank) {
+/*  List<SubGroup> LieGroup::Subgroups(int rank) {
     
     try {
       
@@ -859,9 +851,9 @@ namespace Tomb
       }*/
 
       // If not, calculate it
-      //std::cout << "Calculating subgroups of " << *this << std::endl;
+      //cout << "Calculating subgroups of " << *this << endl;
       // Calculate the maximal subgroups
-      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
+/*      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
       List<SubGroup> Subgroups;
       Subgroups.AppendList(MaximalSubgroups);
 
@@ -882,7 +874,7 @@ namespace Tomb
           }
         }
 
-        //std::cout << Subgroups << std::endl;
+        //cout << Subgroups << endl;
         group++;
       }
       
@@ -902,9 +894,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Calculates the subgroups with ranks between rank1 and rank2 */
-  List<SubGroup> LieGroup::Subgroups(int r1, int r2) {
+/*  List<SubGroup> LieGroup::Subgroups(int r1, int r2) {
     try {
       int rank1 = r1, rank2 = r2;
       if(r1 > r2) {
@@ -934,7 +926,7 @@ namespace Tomb
 
       // If not, calculate it
       // Calculate the maximal subgroups
-      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
+/*      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
       List<SubGroup> Subgroups;
       Subgroups.AppendList(MaximalSubgroups);
 
@@ -954,7 +946,7 @@ namespace Tomb
           }
         }
 
-        //std::cout << Subgroups << std::endl;
+        //cout << Subgroups << endl;
         group++;
       }
 
@@ -970,9 +962,9 @@ namespace Tomb
     }
       
   }
-
+*/
   /* Splits the group into subgroups */
-  List<SubGroup> LieGroup::SplitToSubGroups(int rank) {
+/*  List<SubGroup> LieGroup::SplitToSubGroups(int rank) {
     try {
       
       List<SubGroup> Subgroups;
@@ -980,11 +972,11 @@ namespace Tomb
       if(!nabelians()) return Subgroups;
             
       for(int j=0; j<nabelians(); j++) {
-        //std::cout << "j = " << j << std::endl;
+        //cout << "j = " << j << endl;
         SubGroup Subgroup(SubGroup(*this,*this));
-        //std::cout << Subgroup << std::endl;
+        //cout << Subgroup << endl;
         Subgroup.DeleteTerm(ngroups()-j-1);
-        //std::cout << Subgroup << std::endl;
+        //cout << Subgroup << endl;
         if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1) {
           Subgroups.AddTerm(Subgroup);
           List<SubGroup> AuxSubgroups = Subgroup.SplitToSubGroups();
@@ -998,16 +990,16 @@ namespace Tomb
           }
         }
       }
-      //std::cout << Subgroups << std::endl;
+      //cout << Subgroups << endl;
       return Subgroups;
       
     } catch (...) {
       throw;
     }
   }
-
+*/
   /* Splits the group into subgroups between two ranks */
-  List<SubGroup> LieGroup::SplitToSubGroups(int r1, int r2) {
+/*  List<SubGroup> LieGroup::SplitToSubGroups(int r1, int r2) {
     try {
       
       List<SubGroup> Subgroups;
@@ -1041,21 +1033,21 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the breaking chain from a liegroup to a simple group */
-  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const SimpleGroup &Subgroup) {
+/*  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const SimpleGroup &Subgroup) {
     try {
       return BreakingChains(LieGroup(Subgroup));	
     } catch (...) {
       throw;
     }
   }
-
+*/
   /* Returns the breaking chain from a liegroup to a subgroup */
-  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const LieGroup &Subgroup) {
+/*  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const LieGroup &Subgroup) {
     try {
       
-      //std::cout << "Chains of " << *this << " to " << Subgroup << std::endl;
+      //cout << "Chains of " << *this << " to " << Subgroup << endl;
       List<List<Tree<SimpleGroup> > > BrChains;
       
       if(!Subgroup.isSubgroupOf(*this)) {
@@ -1064,12 +1056,12 @@ namespace Tomb
       
       List<SubGroup> Subgroups = this->Subgroups(Subgroup.rank(), rank());		
       
-      //std::cout << Subgroups.json().write_formatted() << std::endl;
+      //cout << Subgroups.json().write_formatted() << endl;
     
       for(List<SubGroup>::iterator it_Subgroups = Subgroups.begin(); it_Subgroups != Subgroups.end(); it_Subgroups++) {
-      //	std::cout << *it_Subgroups << std::endl;
+      //	cout << *it_Subgroups << endl;
         if(LieGroup(*it_Subgroups) == Subgroup) {
-          //std::cout << "-----" << std::endl;
+          //cout << "-----" << endl;
           List<Tree<SimpleGroup> > Chain;
           for(int i=0; i<nterms(); i++) {
             Tree<SimpleGroup> tree(GetObject(i));
@@ -1081,40 +1073,40 @@ namespace Tomb
                 tree.AddBranch(branch);
               }
             }
-            //std::cout << tree << std::endl;
-            tree.setLabel(std::string(1,label));
+            //cout << tree << endl;
+            tree.setLabel(string(1,label));
             Chain.AddTerm(tree);	
           }
-          //std::cout << Chain << std::endl;
+          //cout << Chain << endl;
           BrChains.AddTerm(Chain);
         } else if(Subgroup.isSubgroupOf(*it_Subgroups)) {
           List<List<Tree<SimpleGroup> > > BrChains2 = it_Subgroups->BreakingChains(Subgroup);
-        //	std::cout << "BrChains" << std::endl;
-        //	std::cout << BrChains2 << std::endl;
+        //	cout << "BrChains" << endl;
+        //	cout << BrChains2 << endl;
           for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains2 = BrChains2.begin(); it_BrChains2 != BrChains2.end(); it_BrChains2++) {
             List<Tree<SimpleGroup> > Chain;
             for(int i=0; i<nterms(); i++) {
               Tree<SimpleGroup> tree(GetObject(i));
               char label = 'A' + i;
-              //std::cout << label << std::endl;
+              //cout << label << endl;
               for(int j=0; j<it_BrChains2->nterms(); j++) {
-                //std::cout << j << std::endl;
+                //cout << j << endl;
                 if(nterms() == 1 or (nterms() > 1 and it_Subgroups->labels().GetObject(j)[0] == label)) {
                   Tree<SimpleGroup> branch(it_BrChains2->GetObject(j));
                   //branch.setLabel(it_BrChains2->GetObject(j).label());
                   branch.setLabel(it_Subgroups->labels().GetObject(j));
-                  //std::cout << "------------" << std::endl;
-                  //std::cout << branch << std::endl;
-                  //std::cout << "------------" << std::endl;
+                  //cout << "------------" << endl;
+                  //cout << branch << endl;
+                  //cout << "------------" << endl;
                   tree.AddBranch(branch);
                 }
               }
-              //std::cout << "=====================" << std::endl;
-              //std::cout << tree << std::endl;
-              tree.setLabel(std::string(1,label));
-              //std::cout << "=====================" << std::endl;
-              //std::cout << tree << std::endl;
-              //std::cout << "=====================" << std::endl;
+              //cout << "=====================" << endl;
+              //cout << tree << endl;
+              tree.setLabel(string(1,label));
+              //cout << "=====================" << endl;
+              //cout << tree << endl;
+              //cout << "=====================" << endl;
               Chain.AddTerm(tree);	
             }
             
@@ -1122,17 +1114,17 @@ namespace Tomb
             }
             
         }
-        //std::cout << BrChains << std::endl;
+        //cout << BrChains << endl;
       }
       
       /// U(1) breaking
       // Iterate over the chains to obtain the label
-      List<std::string> Labels;
+      List<string> Labels;
       List<List<Tree<SimpleGroup> > > SemisimpleParts;
       
       for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains = BrChains.begin(); it_BrChains != BrChains.end(); it_BrChains++) {
         List<Tree<SimpleGroup> > Chain = *it_BrChains;
-      //	std::cout << Chain << std::endl;
+      //	cout << Chain << endl;
           
         LieGroup Supergroup = Chain.GetObject(0).Level(0);
         LieGroup Group = Chain.GetObject(0).Level(1);
@@ -1143,13 +1135,13 @@ namespace Tomb
           }
         }
             
-        //std::cout << Supergroup << std::endl;
-        //std::cout << Group << std::endl;
+        //cout << Supergroup << endl;
+        //cout << Group << endl;
         
         // Check whether there is rank reduction and, if so get the labels of the abelians
         if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0) {
           
-          std::string label;
+          string label;
           
           for(int i=0; i<Chain.nterms(); i++) {
             Tree<SimpleGroup> SubChain = Chain.GetObject(i);
@@ -1178,7 +1170,7 @@ namespace Tomb
             SemisimpleParts.AddTerm(Chain);
             Labels.AddTerm(label);
           } else {
-            if(Labels.GetObject(n).find(label) == std::string::npos) {
+            if(Labels.GetObject(n).find(label) == string::npos) {
               label.append(Labels.GetObject(n));
               Labels.DeleteTerm(n);
               Labels.InsertTerm(n, label);
@@ -1188,14 +1180,14 @@ namespace Tomb
       }
       
       
-    //	std::cout << SemisimpleParts << std::endl;
-    //	std::cout << Labels << std::endl;
+    //	cout << SemisimpleParts << endl;
+    //	cout << Labels << endl;
       
       
       // Iterate again over the chains, now to change the label of the abelians
       int count = 0;
       for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains = BrChains.begin(); it_BrChains != BrChains.end(); it_BrChains++) {
-        //std::cout << "count = " << count << std::endl;
+        //cout << "count = " << count << endl;
         List<Tree<SimpleGroup> > Chain = *it_BrChains;
           
         LieGroup Supergroup = Chain.GetObject(0).Level(0);
@@ -1207,8 +1199,8 @@ namespace Tomb
           }
         }
             
-        //std::cout << Supergroup << std::endl;
-        //std::cout << Group << std::endl;
+        //cout << Supergroup << endl;
+        //cout << Group << endl;
         
         // Check whether there is rank reduction and, if so, mix the abelians
         bool change = false;
@@ -1227,7 +1219,7 @@ namespace Tomb
             SemisimpleChain.InsertTerm(i,SubChain);
           }
           
-          std::string label = Labels.GetObject(SemisimpleParts.Index(SemisimpleChain));
+          string label = Labels.GetObject(SemisimpleParts.Index(SemisimpleChain));
           label.pop_back();
           
           for(int i=0; i<Chain.nterms(); i++) {
@@ -1255,7 +1247,7 @@ namespace Tomb
           change = true;
         }
         
-        //std::cout << Chain << std::endl;
+        //cout << Chain << endl;
               
         // If there was any change, replace the chain
         if(change) {
@@ -1267,7 +1259,7 @@ namespace Tomb
       }
       BrChains.EliminateRepeated();
       
-      //std::cout << BrChains << std::endl;
+      //cout << BrChains << endl;
       
       return BrChains;
       
@@ -1275,9 +1267,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
-  List<Product<Rrep> > LieGroup::Invariants(const List<Rrep> &reps, const int dim) {
+/*  List<Product<Rrep> > LieGroup::Invariants(const List<Rrep> &reps, const int dim) {
     try {
       if(dim < 1) throw "LieGroup::Invariants::Wrong dimension";
       
@@ -1293,14 +1285,14 @@ namespace Tomb
       // Reserve enough space for the Products
       Products.reserve(factorial);
       
-      //std::cout << Products << std::endl;
+      //cout << Products << endl;
 
       for(List<Product<Rrep> >::iterator it_Products = Products.begin(); it_Products != Products.end() and it_Products->nterms() < dim; it_Products++) {
-        //std::cout << it_Products->GetObject(-1) << std::endl;
+        //cout << it_Products->GetObject(-1) << endl;
         for(List<Rrep>::iterator it_Reps = Reps.begin(); it_Reps != Reps.end() and it_Reps->dim() >= it_Products->GetObject(-1).dim(); it_Reps++) {
           Product<Rrep> Prod(*it_Products);
           Prod.AddTerm(*it_Reps);
-          //std::cout << Prod << std::endl;
+          //cout << Prod << endl;
           if(Products.Index(Prod) == -1) {
             Products.AddTerm(Prod);
           }
@@ -1308,15 +1300,15 @@ namespace Tomb
       }
       
       //Products.Reverse();
-      //std::cout << Products << std::endl;
+      //cout << Products << endl;
 
       List<Product<Rrep> > Invariants;
       
       for(List<Product<Rrep> >::iterator it_Products = Products.begin(); it_Products != Products.end(); it_Products++) {
-        //std::cout << *it_Products << std::endl;
+        //cout << *it_Products << endl;
         Sum<Rrep> Prod(Rrep::Product(*it_Products));
         Prod.Order("ASC");
-        //std::cout << Prod << std::endl;
+        //cout << Prod << endl;
         if(Prod.GetObject(0).isSinglet()) {
           Invariants.AddTerm(*it_Products);
         }
@@ -1328,9 +1320,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns whether the Lie group is a subgroup of another Lie Group */
-  bool LieGroup::isSubgroupOf(LieGroup Group) const {
+/*  bool LieGroup::isSubgroupOf(LieGroup Group) const {
 
     try {
       if(this->rank() > Group.rank() or this->dim() > Group.dim()) {
@@ -1354,9 +1346,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns whether the Lie group is a subgroup of another Simple Group */
-  bool LieGroup::isSubgroupOf(SimpleGroup Group) const {
+/*  bool LieGroup::isSubgroupOf(SimpleGroup Group) const {
 
     try {
       return isSubgroupOf(LieGroup(Group));
@@ -1364,9 +1356,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the simple representations of the Lie group */
-  List<Rrep> LieGroup::SimpleReps() {
+/*  List<Rrep> LieGroup::SimpleReps() {
 
     try {
       List<Rrep> Reps;
@@ -1404,9 +1396,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns the generating rep of the Lie group */
-  Rrep LieGroup::GeneratingRep() {
+/**  Rrep LieGroup::GeneratingRep() {
     try {
       Rrep Rep(Irrep(this->GetObject(0).GeneratingRep()));
       for(int i=1; i<this->ngroups(); i++) {
@@ -1417,9 +1409,9 @@ namespace Tomb
       throw;
     }
   }
-  
+*/  
   /* Returns the adjoint reps for the Lie group */
-  List<Rrep> LieGroup::AdjointReps() 
+/*  List<Rrep> LieGroup::AdjointReps() 
   {
     try
     {
@@ -1440,9 +1432,9 @@ namespace Tomb
       throw;
     }
   }
-  
+*/  
   /* Returns the singlet rep for the Lie group */
-  Rrep LieGroup::SingletRep() 
+/*  Rrep LieGroup::SingletRep() 
   {
     try
     {
@@ -1453,9 +1445,9 @@ namespace Tomb
       throw;
     }
   }
-
+*/
   /* Returns all the representations of the group up to dimension maxdim */
-  List<Rrep> &LieGroup::Reps(int maxdim) {
+/*  List<Rrep> &LieGroup::Reps(int maxdim) {
     
     try {
       // If the reps are calculated already
@@ -1480,7 +1472,7 @@ namespace Tomb
       
       
       // If it is a simple group, calculate irreps
-      if(ngroups() == 1) {
+/*      if(ngroups() == 1) {
         List<Irrep> Irreps = GetObject(0).Irreps(maxdim);
         for(List<Irrep>::iterator it_Irreps = Irreps.begin(); it_Irreps != Irreps.end(); it_Irreps++)
           Reps.AddTerm(Rrep(*it_Irreps)); 
@@ -1496,7 +1488,7 @@ namespace Tomb
         return _Reps;
       }
 
-      //std::cout << "Calculating Reps of " << *this << std::endl;
+      //cout << "Calculating Reps of " << *this << endl;
       // If not, calculate it
 
 
@@ -1511,16 +1503,16 @@ namespace Tomb
         
       int nirreps = ListofReps.GetObject(0).nterms()*ListofReps.GetObject(1).nterms();
     
-      //std::cout << ListofReps << std::endl;
+      //cout << ListofReps << endl;
 
       for(int i=0; i<nirreps; i++) {
-        //std::cout << "i = " << i << std::endl;
+        //cout << "i = " << i << endl;
         Weight w;
         int reps = 1;
         int dim = 1;
         //for(int j=0; j<this->ngroups(); j++) {
         for(int j=0; j<2; j++) {
-          //std::cout << "j = " << j << std::endl;
+          //cout << "j = " << j << endl;
           int thisreps = ListofReps.GetObject(j).nterms();
           reps *= thisreps;
           int index = (i*reps/nirreps)%thisreps;
@@ -1534,12 +1526,12 @@ namespace Tomb
         
         if(dim <= maxdim) {
           Rrep Rep(*this,w);
-          //std::cout << Rep << std::endl;
+          //cout << Rep << endl;
           Reps.AddTerm(Rep);
         }
       }
       _Reps = Reps;
-      //std::cout << "Reps = " << Reps << std::endl;
+      //cout << "Reps = " << Reps << endl;
       
       // Set th hasReps flag to true and repsMaxDim to the current maxdim
       if(_Reps.nterms()) _hasReps = true;
@@ -1555,14 +1547,14 @@ namespace Tomb
     }
     
   }
-
+*/
   /* Returns the variable Reps */
-  List<Rrep> LieGroup::RepsConst() const {
+/*  List<Rrep> LieGroup::RepsConst() const {
     return _Reps;
   }
-  
+*/  
   /* Transform a list of irreps into a list of reps (if the LieGroup is simple) */
-  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps) {
+/*  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps) {
     try 
     {
       if(ngroups() != 1) throw "LieGroup::Irreps2Reps::Operation only permitted on simple groups";
@@ -1577,7 +1569,7 @@ namespace Tomb
       throw;
     }
   }
-    
+*/    
   /* Overloaded > operator with LieGroups */
   bool LieGroup::operator>(const LieGroup &Group) {
     if(this->rank() > Group.rank()) {
@@ -1709,7 +1701,7 @@ namespace Tomb
       for(LieGroup::iterator it = this->begin(); it != this->end(); it++) {
         _Casimir.AddTerm(it->Casimir());
         _label.append(it->label());
-        if(std::next(it) != this->end())
+        if(next(it) != this->end())
           _label.append("x");
       }
     } catch (...) {
@@ -1718,7 +1710,7 @@ namespace Tomb
   }
 
   /* Returns the json string */
-  JSONNode LieGroup::json(std::string name) const {
+/*  JSONNode LieGroup::json(string name) const {
     
     if(name == "id") {
       return JSONNode("", id());
@@ -1762,33 +1754,33 @@ namespace Tomb
     
     return json;
   }
-
+*/
   /* Parses a json object into the attributes of the class */
-  void LieGroup::ParseJSON(const JSONNode & n, std::string what) {
+/*  void LieGroup::ParseJSON(const JSONNode & n, string what) {
     JSONNode::const_iterator i = n.begin();
 
     while (i != n.end()){
       // get the node name and value as a string
-      std::string node_name = i -> name();
+      string node_name = i -> name();
       
       // find out where to store the values
       if (node_name == "id") {
-        std::string id = i->as_string();
-        std::stringstream ss(id);
-        //std::cout << "id = " << id << std::endl;
+        string id = i->as_string();
+        stringstream ss(id);
+        //cout << "id = " << id << endl;
         if(!this->nterms()) {
           while(getline(ss, id, 'x')) {
             AddTerm(SimpleGroup(id));
           }
           if(nterms() == 1) {
-            //std::cout << "problem?" << std::endl;
+            //cout << "problem?" << endl;
             SimpleGroup G(id);
-            //std::cout << "problem here?" << std::endl;
+            //cout << "problem here?" << endl;
             G.ParseJSON(n,what);
-            //std::cout << "or here?" << std::endl;
+            //cout << "or here?" << endl;
             //this->~LieGroup();
             DeleteTerm(0);
-            //std::cout << "probably here" << std::endl;
+            //cout << "probably here" << endl;
             AddTerm(G);
 
             //return ;
@@ -1838,6 +1830,30 @@ namespace Tomb
 
     return ;
 
+  }
+*/
+
+  /* Static function to find a liegroup in the Database */
+  LieGroup* LieGroup::find(const string id)
+  {
+    if(DB<LieGroup>().check(id))
+      return DB<LieGroup>().at(id);
+    else
+      return NULL;
+  }
+
+  /* Static function to get a liegroup from the Database or create it otherwise */
+  LieGroup* LieGroup::get(const string id)
+  {
+    LieGroup *sg = LieGroup::find(id);
+    if(sg != NULL)
+      return sg;
+    else
+    {
+      sg = new LieGroup(id);
+      DB<LieGroup>().set(id, sg);
+      return sg;
+    }
   }
 
 }

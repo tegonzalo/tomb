@@ -79,7 +79,7 @@ $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
 #$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
 #	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
 
-group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o 
+group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o $(ODIR)/liegroup.o $(ODIR)/helper_functions.o $(ODIR)/weight.o 
 	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 
 

@@ -27,6 +27,8 @@ namespace Tomb
   class LieGroup;
 }
 
+using namespace std;
+
 /*****************************/
 /* Class Weight declarations */
 /*****************************/
@@ -35,20 +37,19 @@ namespace Tomb
 {
   class Weight : public RVector<double> {
     private:
-      //LieGroup *_Group = nullptr;
-      std::string _Group = "";
+      LieGroup *_Group = NULL;
       bool _positive = false;
       int _multiplicity = 0;
       int _level = 0;
     public:
       Weight();
-      Weight(const LieGroup &, int);
-      Weight(const LieGroup &, const RVector<double> &);
+      Weight(LieGroup &, int);
+      Weight(LieGroup &, const RVector<double> &);
       Weight(const SimpleGroup &, int);
       Weight(const SimpleGroup &, const RVector<double> &);
-      Weight(const std::string &, int);
-      Weight(const std::string &, const RVector<double> &);
-      Weight(const std::string);
+      Weight(const string &, int);
+      Weight(const string &, const RVector<double> &);
+      Weight(const string);
 //      Weight(const JSONNode &);
       Weight(const SimpleGroup &, const double);
       Weight(const Weight &);
@@ -57,10 +58,8 @@ namespace Tomb
       Weight &operator=(const Weight &);
       Weight &operator=(Weight &&);
       
-      std::string id() const;
-      //LieGroup &Group() const;
-      LieGroup Group() const;
-      std::string GroupId() const;
+      string id() const;
+      LieGroup &Group() const;
       bool positive() const;
       int multiplicity() const;
       int level() const;
@@ -80,7 +79,7 @@ namespace Tomb
       bool operator>(const Weight) const;
       bool operator<(const Weight) const;
       Weight Append(Weight);
-//      JSONNode json(std::string = "") const;
+//      JSONNode json(string = "") const;
   };
 
   Weight operator*(Weight, double);

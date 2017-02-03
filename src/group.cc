@@ -158,21 +158,17 @@ int main(int argc, char *argv[]) {
 //    Tomb::group_database_fill();
 // TODO: delete this function from database.h and database.cc
     
-    if(id.empty()) {
+    if(id.empty()) 
+    {
       SimpleGroup G1(rank, type);
-      
-      id = G1.id();
-      
-    }
+      id = G1.id();  
+   }
     
-    std::cout << "Group : " << id << std::endl;
+    LieGroup G(id);
 
-    cout << *DB<SimpleGroup>().at("A2") << endl;
-/*    LieGroup G(id);
-
-    std::cout << "Calculating group info..." << std::endl;
+    std::cout << "Calculating group " << G << " info..." << std::endl;
       
-    std::cout << "Casimir = " << G.Casimir() << std::endl;*/
+//    std::cout << "Casimir = " << G.Casimir() << std::endl;
 /*
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);

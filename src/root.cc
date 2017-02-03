@@ -54,7 +54,7 @@ namespace Tomb
       std::string G;
       getline(ss, G, '\0');
       
-      _Group = SimpleGroup::find(G);
+      _Group = SimpleGroup::get(G);
 
       *this = Root(Group(),Group().rank());
       
@@ -78,8 +78,7 @@ namespace Tomb
   Root::Root(const Root &alpha) : RVector<double>(alpha) {
     
     try {
-      _Group = DB<SimpleGroup>().at(alpha.Group().id());
-      _Group = new SimpleGroup(alpha.Group());
+      _Group = &alpha.Group();
       _length = alpha.length();
     } catch (...) {
       throw;

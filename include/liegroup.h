@@ -29,6 +29,8 @@ namespace Tomb
   class SubGroup;
 }
 
+using namespace std;
+
 /*******************************/
 /* Class LieGroup declarations */
 /*******************************/
@@ -44,25 +46,19 @@ namespace Tomb
       bool _semisimple = false;
       int _ngroups = 0;
       int _nabelians = 0;
-      std::string _label = "";
+      string _label = "";
       List<double> _Casimir;
       int _repsMaxDim = 50;
       bool _hasReps = false;
       bool _hasSubgroups = false;
-      List<Rrep> _Reps;
+/*      List<Rrep> _Reps;
       List<SubGroup> _MaxSubgroups;
-      List<SubGroup> _Subgroups;
+      List<SubGroup> _Subgroups;*/
     public:
       
-      //static std::map<std::string, LieGroup> DataBase;
-      //static std::map<std::string, JSONNode> JSONDataBase;
-      
-      //bool database_check(std::string, std::string = "");
-      //void database_emplace(std::string, LieGroup);
-      
       LieGroup();
-      LieGroup(const std::string);
-      LieGroup(const JSONNode &);
+      LieGroup(const string);
+//      LieGroup(const JSONNode &);
       LieGroup(const LieGroup &);
       LieGroup(const SimpleGroup &);
       LieGroup(const List<SimpleGroup> &);
@@ -76,7 +72,7 @@ namespace Tomb
       LieGroup &operator=(LieGroup &&);
     
       void init();
-      std::string id() const;
+      string id() const;
       int rank() const;
       int dim() const;
       bool simple() const;
@@ -84,17 +80,17 @@ namespace Tomb
       int ngroups() const;
       int nabelians() const;
       bool abelian() const;
-      std::string label() const;
+      string label() const;
       List<double> Casimir() const;
       int repsMaxDim() const;
       bool hasReps() const;
       bool hasSubgroups() const;
-      bool isSubgroupOf(LieGroup) const;
-      bool isSubgroupOf(SimpleGroup) const;
+//      bool isSubgroupOf(LieGroup) const;
+//      bool isSubgroupOf(SimpleGroup) const;
       void DeleteTerm(int);
       void AddTerm(const SimpleGroup &);
       void AddTerm(const LieGroup &);
-      List<SubGroup> &MaximalSubgroups();
+/*      List<SubGroup> &MaximalSubgroups();
       List<SubGroup> SpecialSubgroups();
       List<SubGroup> &Subgroups();
       List<SubGroup> SubgroupsConst() const;
@@ -112,7 +108,7 @@ namespace Tomb
       List<Rrep> &Reps(int=50);
       List<Rrep> RepsConst() const;
       List<Rrep> Irreps2Reps(List<Irrep>);
-      bool operator>(const LieGroup &);
+*/      bool operator>(const LieGroup &);
       bool operator<(const LieGroup &);
       bool operator>(const SimpleGroup &);
       bool operator<(const SimpleGroup &);
@@ -121,8 +117,10 @@ namespace Tomb
       bool operator==(const SimpleGroup &);
       bool operator!=(const LieGroup &);
       bool operator!=(const SimpleGroup &);
-      JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &n, std::string = "");
+//      JSONNode json(string = "") const;
+//      void ParseJSON(const JSONNode &n, string = "");
+      static LieGroup* find(const string);
+      static LieGroup* get(const string);
 
   };
 }

@@ -28,6 +28,8 @@ namespace Tomb
   class SubGroup;
 }
 
+using namespace std;
+
 /**********************************/
 /* Class SimpleGroup declarations */
 /**********************************/
@@ -42,7 +44,7 @@ namespace Tomb
       char _type = '\0';
       int _dim = 0;
       int _order = 0;
-      std::string _label = "";
+      string _label = "";
       bool _abelian = false;
       Matrix<double> _Cartan;
       Matrix<double> _G;
@@ -58,7 +60,7 @@ namespace Tomb
     public:
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
-      SimpleGroup(const std::string);
+      SimpleGroup(const string);
 //      SimpleGroup(const JSONNode &);
       SimpleGroup(const SimpleGroup &);
       SimpleGroup(SimpleGroup &&);
@@ -67,12 +69,12 @@ namespace Tomb
       SimpleGroup &operator=(SimpleGroup &&);
 			
       void init();
-      std::string id() const;
+      string id() const;
       int rank() const;
       char type() const;
       int dim() const;
       int order() const;
-      std::string label() const;
+      string label() const;
       bool abelian() const;
       Matrix<double> Cartan() const;
       Matrix<double> G() const;
@@ -81,7 +83,7 @@ namespace Tomb
       bool hasReps() const;
       bool hasSubgroups() const;
       Root SRoot(int);
-      List<Root> PRoots(std::string = "Dynkin");
+      List<Root> PRoots(string = "Dynkin");
 /*      List<Root> Roots();
       List<Irrep> SimpleReps();
       Irrep GeneratingRep();
@@ -100,22 +102,22 @@ namespace Tomb
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
       List<Product<Irrep> > Invariants(const List<Irrep> &, const int = 4);
       bool isSubgroupOf(LieGroup) const;
-      bool isSubgroupOf(SimpleGroup) const;
+      bool isSubgroupOf(SimpleGroup) const*/;
       bool operator==(const SimpleGroup &) const;
       bool operator!=(const SimpleGroup &) const;
       bool operator>(const SimpleGroup &) const;
       bool operator<(const SimpleGroup &) const;
-      std::string Print() const;
-      std::string Table() const;
-      JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &n, std::string = "");
-*/
+      string Print() const;
+      string Table() const;
+//      JSONNode json(string = "") const;
+//      void ParseJSON(const JSONNode &n, string = "");
       static bool GroupExists(int, char);
-      static SimpleGroup* find(const std::string);
+      static SimpleGroup* find(const string);
+      static SimpleGroup* get (const string);
 
     };	
 
-    std::ostream &operator<<(std::ostream &, const SimpleGroup &);
+    ostream &operator<<(ostream &, const SimpleGroup &);
 }
 
 /**************************************/
