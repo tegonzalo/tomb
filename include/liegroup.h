@@ -51,8 +51,8 @@ namespace Tomb
       int _repsMaxDim = 50;
       bool _hasReps = false;
       bool _hasSubgroups = false;
-/*      List<Rrep> _Reps;
-      List<SubGroup> _MaxSubgroups;
+      List<Rrep> _Reps;
+/*      List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;*/
     public:
       
@@ -85,6 +85,7 @@ namespace Tomb
       int repsMaxDim() const;
       bool hasReps() const;
       bool hasSubgroups() const;
+      List<Rrep> Reps() const;
 //      bool isSubgroupOf(LieGroup) const;
 //      bool isSubgroupOf(SimpleGroup) const;
       void DeleteTerm(int);
@@ -107,8 +108,8 @@ namespace Tomb
       Rrep SingletRep();
       List<Rrep> &Reps(int=50);
       List<Rrep> RepsConst() const;
-      List<Rrep> Irreps2Reps(List<Irrep>);
-*/      bool operator>(const LieGroup &);
+*/      List<Rrep> Irreps2Reps(List<Irrep>);
+      bool operator>(const LieGroup &);
       bool operator<(const LieGroup &);
       bool operator>(const SimpleGroup &);
       bool operator<(const SimpleGroup &);

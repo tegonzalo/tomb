@@ -53,8 +53,8 @@ namespace Tomb
       bool _hasReps = false;
       bool _hasSubgroups = false;
       List<Root> _PRoots;
-/*      List<Irrep> _Irreps;
-      List<SubGroup> _MaxSubgroups;
+      List<Irrep> _Irreps;
+/*      List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;
 */		
     public:
@@ -82,15 +82,16 @@ namespace Tomb
       int repsMaxDim() const;
       bool hasReps() const;
       bool hasSubgroups() const;
+      List<Irrep> Irreps() const;
       Root SRoot(int);
       List<Root> PRoots(string = "Dynkin");
 /*      List<Root> Roots();
       List<Irrep> SimpleReps();
       Irrep GeneratingRep();
       Irrep AdjointRep();
-      Irrep SingletRep();
-      List<Irrep> &Irreps(int=50);
-      List<Irrep> IrrepsConst() const;
+*/      Irrep SingletRep();
+      List<Irrep> &CalculateIrreps(int=50);
+/*      List<Irrep> IrrepsConst() const;
       Matrix<double> ExtendedCartan();
       List<SubGroup> &MaximalSubgroups();
       List<SubGroup> SpecialSubgroups();

@@ -294,7 +294,7 @@ namespace Tomb
       _repsMaxDim = G.repsMaxDim();
       _hasReps = G.hasReps();
       _hasSubgroups = G.hasSubgroups();
-//      if(_hasReps) _Irreps = G.IrrepsConst();
+      if(_hasReps) _Irreps = G.Irreps();
 //      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
     }
     catch (...) 
@@ -316,8 +316,8 @@ namespace Tomb
     _Casimir(move(G._Casimir)),
     _repsMaxDim(move(G._repsMaxDim)),
     _hasReps(move(G._hasReps)),
-    _hasSubgroups(move(G._hasSubgroups))//,
- //   _Irreps(move(G._Irreps)),
+    _hasSubgroups(move(G._hasSubgroups)),
+    _Irreps(move(G._Irreps))//,
  //   _Subgroups(move(G._Subgroups))
   {
     cout << "sg::mvct" << endl;  
@@ -335,7 +335,7 @@ namespace Tomb
       G._repsMaxDim = 0;
       G._hasReps = false;
       G._hasSubgroups = false;
-//      G._Irreps.Clear();
+      G._Irreps.Clear();
 //      G._Subgroups.Clear();
       
     } catch (...) {
@@ -368,7 +368,7 @@ namespace Tomb
       _repsMaxDim = G.repsMaxDim();
       _hasReps = G.hasReps();
       _hasSubgroups = G.hasSubgroups();
-//      if(_hasReps) _Irreps = G.IrrepsConst();
+      if(_hasReps) _Irreps = G.Irreps();
 //      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
       
       return *this;
@@ -397,7 +397,7 @@ namespace Tomb
       _repsMaxDim = move(G._repsMaxDim);
       _hasReps = move(G._hasReps);
       _hasSubgroups = move(G._hasSubgroups);
-//      _Irreps = move(G._Irreps);
+      _Irreps = move(G._Irreps);
 //      _Subgroups = move(G._Subgroups);
       
       G._rank = 0;
@@ -412,7 +412,7 @@ namespace Tomb
       G._repsMaxDim = 0;
       G._hasReps = false;
       G._hasSubgroups = false;
-//      G._Irreps.Clear();
+      G._Irreps.Clear();
 //      G._Subgroups.Clear();
       
       return *this;
@@ -634,7 +634,8 @@ namespace Tomb
         //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
         //_Casimir = Adjoint.DynkinIndex();
       }
-      
+
+      _Irreps = this->CalculateIrreps(_repsMaxDim);      
 
       DB<SimpleGroup>().set(id(), this);
        
@@ -658,70 +659,88 @@ namespace Tomb
   }
 
   /* Identifier of the group */
-  string SimpleGroup::id() const {
+  string SimpleGroup::id() const
+  {
     stringstream s;
     s << _type << _rank;
     return s.str();
   }
 
   /* Returns rank */
-  int SimpleGroup::rank() const {
+  int SimpleGroup::rank() const
+  {
     return _rank;
   }
 
   /* Returns type */
-  char SimpleGroup::type() const {
-  return _type;
+  char SimpleGroup::type() const
+  {
+    return _type;
   }
 
   /* Returns dimension */
-  int SimpleGroup::dim() const {
+  int SimpleGroup::dim() const
+  {
     return _dim;
   }
 
   /* Returns order */
-  int SimpleGroup::order() const {
+  int SimpleGroup::order() const
+  {
     return _order;
   }
 
   /* Returns the label */
-  string SimpleGroup::label() const {
+  string SimpleGroup::label() const
+  {
     return _label;
   }
 
   /* Returns whether the group is abelian */
-  bool SimpleGroup::abelian() const {
+  bool SimpleGroup::abelian() const
+  {
     return _abelian;
   }
 
   /* Returns Cartan matrix */
-  Matrix<double> SimpleGroup::Cartan() const {
-  return _Cartan;
+  Matrix<double> SimpleGroup::Cartan() const
+  {
+    return _Cartan;
   }
 
   /* Returns the matrix G, inverse of the Cartan matrix */
-  Matrix<double> SimpleGroup::G() const {
+  Matrix<double> SimpleGroup::G() const
+  {
     return _G;
   }
 
   /* Returns the Casimir of the group */
-  double SimpleGroup::Casimir() const {
+  double SimpleGroup::Casimir() const
+  {
     return _Casimir;
   }
 
   /* Returns the maximum dimension of the calculated reps */
-  int SimpleGroup::repsMaxDim() const {
+  int SimpleGroup::repsMaxDim() const
+  {
     return _repsMaxDim;
   }
 
   /* Returns whether the SimpleGroup has calculated its reps */
-  bool SimpleGroup::hasReps() const {
+  bool SimpleGroup::hasReps() const
+  {
     return _hasReps;
   }
   
   /* Returns whether the SimpleGroup has calculated its subgroups */
-  bool SimpleGroup::hasSubgroups() const {
+  bool SimpleGroup::hasSubgroups() const
+  {
     return _hasSubgroups;
+  }
+
+  List<Irrep> SimpleGroup::Irreps() const
+  {
+    return _Irreps;
   }
   
   /* Returns Simple Root i */
@@ -1013,10 +1032,11 @@ namespace Tomb
     }	
   }
 */  
-  /* Returns all the representations of the group up to dimension maxdim */
-/*  List<Irrep> &SimpleGroup::Irreps(int maxdim) {
+  /* Calculates all the representations of the group up to dimension maxdim */
+  List<Irrep> &SimpleGroup::CalculateIrreps(int maxdim) {
 
-    try {
+    try 
+    {
       // If the reps are calculated already
       if(_Irreps.nterms() and _repsMaxDim >= maxdim) {
         int i = _Irreps.nterms()-1;
@@ -1027,15 +1047,13 @@ namespace Tomb
         _repsMaxDim = maxdim;
         return _Irreps;
       }
-*/      
+      
       /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
         _Irreps = DataBase.at(id()).Irreps(maxdim);
         if(_Irreps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Irreps;
       }*/
-/*      
-      if(maxdim == -1) maxdim = 50;
       
       // If the group is abelian just return {0.0}
       if(abelian()) {
@@ -1047,12 +1065,11 @@ namespace Tomb
       
       
       // If not, calculate it
-      List<Irrep> Reps;
       Weight HW(*this, this->rank());
       List<Weight> HWs(HW);
       Irrep Rep(*this, HW);
       //cout << Rep << endl;
-      Reps.AddTerm(Rep);
+      _Irreps.AddTerm(Rep);
       int dim = 1;
 
       // List of labels so avoid repetition
@@ -1072,7 +1089,7 @@ namespace Tomb
               do {
                 int index = labels.Index(label);
                 if(index >= 0) {
-                  if(Rep.isConjugateOf(Reps.GetObject(index))) {
+                  if(Rep.isConjugateOf(_Irreps.GetObject(index))) {
                     label.append("*");
                   } else {
                     label.append("'");
@@ -1080,7 +1097,7 @@ namespace Tomb
                 }
               } while(labels.Index(label) >= 0);
               Rep.setLabel(label);
-              Reps.AddTerm(Rep);
+              _Irreps.AddTerm(Rep);
               HWs.AddTerm(HW);
               labels.AddTerm(label);
             }	
@@ -1089,12 +1106,10 @@ namespace Tomb
           }
           HW[k] --;
         }
-        //cout << "i = " << i << endl;
       }
       //cout << Reps << endl;
 
-      Reps.Order("ASC");
-      _Irreps = Reps;
+      _Irreps.Order("ASC");
       
       //cout << _Irreps << endl;
       
@@ -1112,11 +1127,10 @@ namespace Tomb
       
       return _Irreps;
       
-    } catch (...) {
-      throw;
-    }
+    } 
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the variable Irreps */
 /*  List<Irrep> SimpleGroup::IrrepsConst() const {
     return _Irreps;

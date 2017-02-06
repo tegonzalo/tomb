@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Calculating group " << G << " info..." << std::endl;
       
-//    std::cout << "Casimir = " << G.Casimir() << std::endl;
+    std::cout << "Casimir = " << G.Casimir() << std::endl;
 /*
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);
