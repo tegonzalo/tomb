@@ -80,6 +80,8 @@ namespace Tomb
       bool operator<(const Weight) const;
       Weight Append(Weight);
 //      JSONNode json(string = "") const;
+      static Weight* find(const string);
+      static Weight* get(const string);
   };
 
   Weight operator*(Weight, double);

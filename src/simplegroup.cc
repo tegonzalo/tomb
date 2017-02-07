@@ -430,12 +430,6 @@ namespace Tomb
         throw "SimpleGroup::init::Not enough variables no initialise";
       }
             
-/*      if(DB<SimpleGroup>().check(id()))
-      {
-        *this = *DB<SimpleGroup>().at(id());
-        return ;
-      }
-*/       
       _abelian = false;
 
       char label[10];
@@ -636,6 +630,8 @@ namespace Tomb
       }
 
       _Irreps = this->CalculateIrreps(_repsMaxDim);      
+
+      cout << _Irreps << endl;
 
       DB<SimpleGroup>().set(id(), this);
        
@@ -1033,14 +1029,16 @@ namespace Tomb
   }
 */  
   /* Calculates all the representations of the group up to dimension maxdim */
-  List<Irrep> &SimpleGroup::CalculateIrreps(int maxdim) {
-
+  List<Irrep> &SimpleGroup::CalculateIrreps(int maxdim)
+  {
     try 
     {
       // If the reps are calculated already
-      if(_Irreps.nterms() and _repsMaxDim >= maxdim) {
+      if(_Irreps.nterms() and _repsMaxDim >= maxdim)
+      {
         int i = _Irreps.nterms()-1;
-        while(_Irreps.GetObject(i).dim() > maxdim) {
+        while(_Irreps.GetObject(i).dim() > maxdim)
+        {
           _Irreps.DeleteTerm(i);
           i--;
         }
@@ -1048,27 +1046,21 @@ namespace Tomb
         return _Irreps;
       }
       
-      /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
-        _Irreps = DataBase.at(id()).Irreps(maxdim);
-        if(_Irreps.nterms()) _hasReps = true;
-        _repsMaxDim = maxdim;
-        return _Irreps;
-      }*/
       
       // If the group is abelian just return {0.0}
-      if(abelian()) {
-        _Irreps =  List<Irrep>(Irrep(*this,Weight(*this,1)));
+      if(abelian())
+      {
+        Weight w(*this, 1);
+        _Irreps =  List<Irrep>(Irrep(*this, w));
         if(_Irreps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Irreps;
       }
       
-      
       // If not, calculate it
       Weight HW(*this, this->rank());
       List<Weight> HWs(HW);
       Irrep Rep(*this, HW);
-      //cout << Rep << endl;
       _Irreps.AddTerm(Rep);
       int dim = 1;
 
@@ -1101,13 +1093,10 @@ namespace Tomb
               HWs.AddTerm(HW);
               labels.AddTerm(label);
             }	
-            //cout << Reps << endl;
-            //cout << HWs << endl;
           }
           HW[k] --;
         }
       }
-      //cout << Reps << endl;
 
       _Irreps.Order("ASC");
       
@@ -1116,14 +1105,6 @@ namespace Tomb
       // Set th hasReps flag to true and repsMaxDim to the current maxdim
       if(_Irreps.nterms()) _hasReps = true;
       _repsMaxDim = maxdim;
-      
-      // If there is an entry in the database delete it and dump this
-//      database_emplace(id(), *this);
-
-      //for(List<Irrep>::iterator it_Irreps = _Irreps.begin(); it_Irreps != _Irreps.end(); it_Irreps++)
-      //	cout << it_Irreps->json().write_formatted() << endl;
-      
-      //cout << "Irreps = " << _Irreps << endl;
       
       return _Irreps;
       
@@ -1938,14 +1919,12 @@ namespace Tomb
   SimpleGroup* SimpleGroup::get(const string id)
   {
     SimpleGroup *sg = SimpleGroup::find(id);
-    if(sg != NULL)
-      return sg;
-    else
+    if(sg == NULL)
     {
       sg = new SimpleGroup(id);
       DB<SimpleGroup>().set(id, sg);
-      return sg;
     }
+    return sg;
   }
 
   /* Overloaded << operator with simple groups on the right */

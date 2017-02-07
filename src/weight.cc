@@ -64,7 +64,7 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G.id());
+      _Group = LieGroup::get(G);
       _positive = true;
       _multiplicity = 1;
       _level = 0;
@@ -77,7 +77,7 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G.id());
+      _Group = LieGroup::get(G); 
       _positive = true;
       for(int i=0; i<V.cols(); i++) 
       {
@@ -503,6 +503,28 @@ namespace Tomb
     catch (...) { throw; }
   }
 */
+
+  /* static function to find a weight in the Database */
+  Weight* Weight::find(const string id)
+  {
+    if(DB<Weight>().check(id))
+      return DB<Weight>().at(id);
+    else
+      return NULL;
+  }
+
+  /* static function to get a weight from the Database or create it otherwise */
+  Weight* Weight::get(const string id)
+  {
+    Weight* w = Weight::find(id);
+    if(w == NULL)
+    {
+      w = new Weight(id);
+      DB<Weight>().set(id, w);
+    }
+    return w;
+  }
+    
   /* Overloaded * operator with scalars on the right */
   Weight operator*(Weight w, double n)
   {

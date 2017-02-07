@@ -3,9 +3,10 @@
 ./models/*
 
 # Ignore any executables
-./group
-./mathgroup
-./tomb
+group
+mathgroup
+tomb
 
 # Ignore any temporary files
 *~
+*.swp

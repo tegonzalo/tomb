@@ -121,16 +121,5 @@ namespace Tomb
     ostream &operator<<(ostream &, const SimpleGroup &);
 }
 
-/**************************************/
-/* SimpleGroup singleton declarations */
-/**************************************/
-
-namespace Tomb
-{
-
-  
-
-}
-
 
 #endif /* __SIMPLEGROUP_H */

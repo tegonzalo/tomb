@@ -94,7 +94,7 @@ namespace Tomb
       this->_repsMaxDim = Group.repsMaxDim();
       this->_hasReps = Group.hasReps();
       this->_hasSubgroups = Group.hasSubgroups();
-      if(_hasReps) _Reps = Group.Reps();
+//      if(_hasReps) _Reps = Group.Reps();
 //      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
     }
     catch (...)
@@ -120,7 +120,7 @@ namespace Tomb
       this->_repsMaxDim = Group.repsMaxDim();
       this->_hasReps = Group.hasReps();
       this->_hasSubgroups = Group.hasSubgroups();
-      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
+//      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
 //      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
 
     }
@@ -204,8 +204,8 @@ namespace Tomb
     _Casimir(move(Group._Casimir)),
     _repsMaxDim(move(Group._repsMaxDim)),
     _hasReps(move(Group._hasReps)),
-    _hasSubgroups(move(Group._hasSubgroups)),
-    _Reps(move(Group._Reps))//,
+    _hasSubgroups(move(Group._hasSubgroups))//,
+//    _Reps(move(Group._Reps))//,
 //    _Subgroups(move(Group._Subgroups))
   {
     try
@@ -221,7 +221,7 @@ namespace Tomb
       Group._repsMaxDim = 0;
       Group._hasReps = false;
       Group._hasSubgroups = false;
-      Group._Reps.Clear();
+//      Group._Reps.Clear();
 //      Group._Subgroups.Clear();
       
     }
@@ -241,7 +241,7 @@ namespace Tomb
     this->_simple = false;
     this->_semisimple = false;
     this->_label = "";
-    this->_Reps.Clear();
+//    this->_Reps.Clear();
 //    this->_Subgroups.Clear();
   }
 
@@ -267,9 +267,9 @@ namespace Tomb
       _repsMaxDim = Group.repsMaxDim();
       _hasReps = Group.hasReps();
       _hasSubgroups = Group.hasSubgroups();
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
-      if(_hasReps) _Reps = Group.Reps();
+//      if(_hasReps) _Reps = Group.Reps();
 //      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
 
       return *this;
@@ -300,9 +300,9 @@ namespace Tomb
       _repsMaxDim = Group.repsMaxDim();
       _hasReps = Group.hasReps();
       _hasSubgroups = Group.hasSubgroups();
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
-      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
+//      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
 //      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
       
       return *this;
@@ -322,7 +322,7 @@ namespace Tomb
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
       
       _ngroups = 0;
@@ -338,7 +338,7 @@ namespace Tomb
       _label = this->Print();
       _hasReps = false;
       _hasSubgroups = false;
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
       
       return *this;
@@ -358,7 +358,7 @@ namespace Tomb
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
       
       _ngroups = 0;
@@ -374,7 +374,7 @@ namespace Tomb
       _label = this->Print();
       _hasReps = false;
       _hasSubgroups = false;
-      _Reps.Clear();
+//      _Reps.Clear();
 //      _Subgroups.Clear();
       
       return *this;
@@ -403,7 +403,7 @@ namespace Tomb
       _repsMaxDim = move(Group._repsMaxDim);
       _hasReps = move(Group._hasReps);
       _hasSubgroups = move(Group._hasSubgroups);
-      _Reps = move(Group._Reps);
+//      _Reps = move(Group._Reps);
 //      _Subgroups = move(Group._Subgroups);
       
       Group._rank = 0;
@@ -416,7 +416,7 @@ namespace Tomb
       Group._repsMaxDim = 0;
       Group._hasReps = false;
       Group._hasSubgroups = false;
-      Group._Reps.Clear();
+//      Group._Reps.Clear();
 //      Group._Subgroups.Clear();
 
       return *this;
@@ -549,11 +549,11 @@ namespace Tomb
   }
 
   /* Returns the Reps of the group */
-  List<Rrep> LieGroup::Reps() const
+/*  List<Rrep> LieGroup::Reps() const
   {
     return _Reps;
   }
-
+*/
   /* Delete a subgroup of the LieGroup */
   void LieGroup::DeleteTerm(int i) {
     
@@ -1571,7 +1571,8 @@ namespace Tomb
   }
 */  
   /* Transform a list of irreps into a list of reps (if the LieGroup is simple) */
-/*  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps) {
+/*  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps)
+  {
     try 
     {
       if(ngroups() != 1) throw "LieGroup::Irreps2Reps::Operation only permitted on simple groups";
@@ -1581,10 +1582,7 @@ namespace Tomb
       
       return Reps;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 */    
   /* Overloaded > operator with LieGroups */
@@ -1855,22 +1853,31 @@ namespace Tomb
   {
     if(DB<LieGroup>().check(id))
       return DB<LieGroup>().at(id);
-    else
-      return NULL;
+    return NULL;
   }
 
   /* Static function to get a liegroup from the Database or create it otherwise */
   LieGroup* LieGroup::get(const string id)
   {
     LieGroup *sg = LieGroup::find(id);
-    if(sg != NULL)
-      return sg;
-    else
+    if(sg == NULL)
     {
       sg = new LieGroup(id);
       DB<LieGroup>().set(id, sg);
-      return sg;
     }
+    return sg;
+  }
+
+  /* Static function to get a liegroup from the Database or create it otherwise */
+  LieGroup* LieGroup::get(const SimpleGroup& Group)
+  {
+    LieGroup *sg = LieGroup::find(Group.id());
+    if(sg == NULL)
+    {
+      sg = new LieGroup(Group);
+      DB<LieGroup>().set(Group.id(),sg);
+    }
+    return sg;
   }
 
 }

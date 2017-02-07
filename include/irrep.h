@@ -29,6 +29,8 @@ namespace Tomb
   class Rrep;
 }
 
+using namespace std;
+
 /****************************/
 /* Class Irrep declarations */
 /****************************/
@@ -38,25 +40,24 @@ namespace Tomb
   class Irrep {
 
     private:
-      std::string _Group = "";
-      int _GroupRank = 0;
+      SimpleGroup* _Group = NULL;
       int _nirreps = 1;
       int _dim = 0;
       bool _real = true;
       int _conjugate = 0;
       RVector<int> _congruency;
       Weight *_HWeight = NULL;
-      std::string _label = "";
+      string _label = "";
       double _Casimir;
       double _DynkinIndex;
-      bool _hasWeights = false;
+
+    public:
       List<Weight> _Weights;
       List<Weight> _DualWeights;
 
-    public:
-      Irrep(const SimpleGroup &, const Weight &);
-      Irrep(const std::string);
-      Irrep(const JSONNode &);
+      Irrep(SimpleGroup&, Weight&);
+      Irrep(const string);
+//      Irrep(const JSONNode &);
       Irrep(const Irrep &);
       Irrep(Irrep &&);
       ~Irrep();
@@ -64,24 +65,21 @@ namespace Tomb
       Irrep &operator=(Irrep &&);
     
       void init();
-      std::string id() const;
-      //SimpleGroup &Group() const;
-      SimpleGroup Group() const;
-      std::string GroupId() const;
-      int GroupRank() const;
+      string id() const;
+      SimpleGroup &Group() const;
       int dim() const;
       bool real() const;
       int conjugate() const;
       RVector<int> congruency() const;
-      std::string label() const;
-      void setLabel(std::string);
-      Weight HWeight() const;
+      string label() const;
+      void setLabel(string);
+      Weight &HWeight() const;
       double Casimir() const;
       double DynkinIndex() const;
-      bool hasWeights() const;
+      List<Weight> Weights() const;
+      List<Weight> DualWeights() const;
       void setWeights(const List<Weight> &);
-      List<Weight> &Weights(std::string = "Dynkin");
-      List<Weight> WeightsConst(std::string = "Dynkin") const;
+      List<Weight> &CalculateWeights();
       bool isConjugateOf(Irrep);
       bool isSinglet() const;
       List<Weight> Project(SubGroup);
@@ -92,15 +90,16 @@ namespace Tomb
       bool operator!=(const Irrep) const;
       bool operator>(const Irrep) const;
       bool operator<(const Irrep) const;
-      std::string Print() const;
-      std::string Table() const;
-      JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &n, std::string = "");
-
+      string Print() const;
+      string Table() const;
+//      JSONNode json(string = "") const;
+//      void ParseJSON(const JSONNode &n, string = "");
+      static Irrep* find(string);
+      static Irrep* get(string);
   
   };
   
-  std::ostream &operator<<(std::ostream &, const Irrep &);
+  ostream &operator<<(ostream &, const Irrep &);
 }
 
 
