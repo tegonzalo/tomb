@@ -49,8 +49,6 @@ namespace Tomb
       string _label = "";
       List<double> _Casimir;
       int _repsMaxDim = 50;
-      bool _hasReps = false;
-      bool _hasSubgroups = false;
 //      List<Rrep> _Reps;
 /*      List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;*/
@@ -83,8 +81,6 @@ namespace Tomb
       string label() const;
       List<double> Casimir() const;
       int repsMaxDim() const;
-      bool hasReps() const;
-      bool hasSubgroups() const;
 //      List<Rrep> Reps() const;
 //      bool isSubgroupOf(LieGroup) const;
 //      bool isSubgroupOf(SimpleGroup) const;

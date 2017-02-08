@@ -77,7 +77,6 @@ Si*/
   {  
     try
     {
-      cout << "ir::cpct" << endl;
       _Group = &Rep.Group();
       _dim = Rep.dim();
       _real = Rep.real();
@@ -381,7 +380,9 @@ Si*/
         _DynkinIndex = _Casimir*_dim/_Group->dim();
       }
         
-      _Weights = CalculateWeights();
+      // Perhaps do not calculate weights for very large reps
+      if(_dim < 1000)
+        _Weights = CalculateWeights();
         
       // Store the info in the database
       DB<Irrep>().set(id(),this);  
@@ -434,33 +435,6 @@ Si*/
     return _label;
   }
 
-  /* Sets the label */
-  void Irrep::setLabel(string label)
-  {
-    try
-    {
-      _label = label;
-      
-      //database_emplace(id(), *this);
-      
-      // Output the info
-      /*ostringstream OutputDirectory;
-      OutputDirectory << "./out/" << _Group->id() << "/reps";
-
-      mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-      ostringstream OutputFileName;
-      OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
-
-      ofstream OutputFile;
-      OutputFile.open(OutputFileName.str().c_str());
-      OutputFile << json().write_formatted() << endl;
-      OutputFile.close();*/
-
-    }
-    catch (...) { throw; }
-  }
-
   /* Returns HWeight */
   Weight &Irrep::HWeight() const
   {
@@ -483,7 +457,22 @@ Si*/
   {
     _Weights = Weights;
   }
-  
+
+   /* Sets the label */
+  void Irrep::setLabel(string label)
+  {
+    try
+    {
+      _label = label;
+
+      // Replace the DB irrep if label is different
+      if(Irrep::find(id()) != NULL and Irrep::get(id())->label() != label)
+        DB<Irrep>().set(id(),this,true);      
+
+    }
+    catch (...) { throw; }
+  }
+
   /* Calculates the weights diagram */
   List<Weight> &Irrep::CalculateWeights()
   {
@@ -492,21 +481,9 @@ Si*/
 
       int rank = _Group->rank();
 
-      // Look for the weights in the database			
-      /*if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights()) {
-        _Weights = DataBase.at(id()).Weights();
-        if(_Weights.nterms()) _hasWeights = true;
-        if(basis == "DUAL") {
-          for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights ++)
-            _DualWeights.AddTerm(it_Weights->Dual());
-          return _DualWeights;
-        }
-        return _Weights;
-      }*/
-    
-      //cout << "Calculating weights of " << *this << :endl;
+      //cout << "Calculating weights of " << *this << endl;
       // Reserve enough space for all the weights
-/*      _Weights.reserve(dim());
+      _Weights.reserve(dim());
       _Weights.AddTerm(*_HWeight);
       
       if(_Group->abelian()) {
@@ -523,24 +500,27 @@ Si*/
               Weight w = *it_Weights - _Group->SRoot(j)*(double)l;
               w.setLevel(it_Weights->level()+l);
               if(_Weights.Index(w) < 0) {
-                _Weights.AddTerm(w);
+                _Weights.AddTermOrdered(w, "ASC");
               }
             }
           }
         }
       }
       
-      _Weights.Order("ASC");
-      //cout << _Weights << endl;
+      // Already ordered
+      //_Weights.Order("ASC");
 
       // If there are less terms than the dimension of the rep calculate multiplicities
-      if(_Weights.nterms() < _dim) {
+      if(_Weights.nterms() < _dim)
+      {
         List<Root> PRoots = _Group->PRoots();
         int i = 0;
-        for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end() and _Weights.nterms() < _dim; it_Weights++) {
+        for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end() and _Weights.nterms() < _dim; it_Weights++)
+        {
           Weight w = *it_Weights;
           double multiplicity = 0;
-          for(List<Root>::iterator it_PRoots = PRoots.begin(); it_PRoots != PRoots.end(); it_PRoots++) {
+          for(List<Root>::iterator it_PRoots = PRoots.begin(); it_PRoots != PRoots.end(); it_PRoots++)
+          {
             Root alpha = *it_PRoots;
             int k = 1;
             int index = 0;
@@ -558,51 +538,30 @@ Si*/
           }
           double norm = ((*_HWeight)++)*((*_HWeight)++) - (w++)*(w++);
           //cout << "norm = " << norm << endl;
-          if(norm > 0) {
+          if(norm > 0)
             multiplicity /= norm;
-          } else {
+          else
             multiplicity = 1;
-          }
+         
           //cout << "final multiplicity = " << multiplicity << endl;
           _Weights.DeleteTerm(i);
           w.setMultiplicity((int)round(multiplicity));
-          for(int j=0; j<w.multiplicity(); j++) {
+          for(int j=0; j<w.multiplicity(); j++)
+          {
             _Weights.InsertTerm(i,w);
             //cout << _Weights.GetObject(i) << endl;
             i++;
           }
           it_Weights += w.multiplicity()-1;
-          //cout << "multilpicity of " << _Weights.GetObject(i-w.multiplicity()+1) << " is " << _Weights.GetObject(i-w.multiplicity()+1).multiplicity() << endl;
         }
       }
 
-      if(_Weights.nterms() < _dim) {
+      if(_Weights.nterms() < _dim)
         throw "Irrep::Weights::Error in the weight calculation";
-      }
       
       // Calculate also the dual weights
-      for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights++)
+      for(auto it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights++)
         _DualWeights.AddTerm(it_Weights->Dual());
-      
-      // Set the hasWeights flag to true
-      if(_Weights.nterms()) _hasWeights = true;
-      
-      // If there is an entry in the database delete it and dump this
-      //database_emplace(id(), *this);
-      
-      // Output the info
-      /*ostringstream OutputDirectory;
-      OutputDirectory << "./out/" << _Group->type() << _Group->rank() << "/reps";
-
-      mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-      ostringstream OutputFileName;
-      OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
-
-      ofstream OutputFile;
-      OutputFile.open(OutputFileName.str().c_str());
-      OutputFile << json().write_formatted() << endl;
-      OutputFile.close();
-      */
       
       return _Weights;
 
@@ -977,8 +936,8 @@ Si*/
   }
 
   /* Returns the json string */
-/*  JSONNode Irrep::json(string name) const {
-    
+  JSONNode Irrep::json(string name) const
+  {
     if(name == "id") {
       return JSONNode("", id());
     }
@@ -986,9 +945,7 @@ Si*/
     JSONNode json;
       
     json.push_back(JSONNode("id", id()));
-    //json.push_back(JSONNode("Group", _Group->id()));
-    json.push_back(JSONNode("Group", _Group));
-    json.push_back(JSONNode("Group->rank()", _Group->rank()));
+    json.push_back(JSONNode("Group", _Group->id()));
     json.push_back(_HWeight->json("HWeight"));
     json.push_back(JSONNode("nirreps", _nirreps));
     json.push_back(JSONNode("dim", dim()));
@@ -998,12 +955,11 @@ Si*/
     json.push_back(JSONNode("DynkinIndex",DynkinIndex()));
     json.push_back(JSONNode("conjugate", conjugate()));
     json.push_back(_congruency.json("congruency"));
-    json.push_back(JSONNode("hasWeights", hasWeights()));
     json.push_back(_Weights.json("Weights"));
     
     return json;
   }
-*/
+
   /* Parses a json object into the attributes of the class */
 /*  void Irrep::ParseJSON(const JSONNode &n, string what) {
     JSONNode::const_iterator i = n.begin();
@@ -1050,6 +1006,27 @@ Si*/
     }
   }
 */
+  /* Static function to find an irrep in the DataBase */
+  Irrep* Irrep::find(const string id)
+  {
+    if(DB<Irrep>().check(id))
+      return DB<Irrep>().at(id);
+    else
+      return NULL;
+  }
+
+  /* Static function to get an irrep from the Database or create it otherwise */
+  Irrep* Irrep::get(const string id)
+  {
+    Irrep *irr = Irrep::find(id);
+    if(irr == NULL)
+    {
+      irr = new Irrep(id);
+      DB<Irrep>().set(id, irr);
+    }
+    return irr;
+  }
+
   /* Overloaded << operator with irreps on the right */
   ostream &operator<<(ostream &stream, const Irrep &i)
   {

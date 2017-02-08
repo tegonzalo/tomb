@@ -292,10 +292,8 @@ namespace Tomb
       _abelian = G.abelian();
       _Casimir = G.Casimir();
       _repsMaxDim = G.repsMaxDim();
-      _hasReps = G.hasReps();
-      _hasSubgroups = G.hasSubgroups();
-      if(_hasReps) _Irreps = G.Irreps();
-//      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+      _Irreps = G.Irreps();
+//      _Subgroups = G.SubgroupsConst();
     }
     catch (...) 
     {
@@ -315,8 +313,6 @@ namespace Tomb
     _abelian(move(G._abelian)),
     _Casimir(move(G._Casimir)),
     _repsMaxDim(move(G._repsMaxDim)),
-    _hasReps(move(G._hasReps)),
-    _hasSubgroups(move(G._hasSubgroups)),
     _Irreps(move(G._Irreps))//,
  //   _Subgroups(move(G._Subgroups))
   {
@@ -333,8 +329,6 @@ namespace Tomb
       G._abelian = false;
       G._Casimir = 0;
       G._repsMaxDim = 0;
-      G._hasReps = false;
-      G._hasSubgroups = false;
       G._Irreps.Clear();
 //      G._Subgroups.Clear();
       
@@ -366,10 +360,8 @@ namespace Tomb
       _abelian = G.abelian();
       _Casimir = G.Casimir();
       _repsMaxDim = G.repsMaxDim();
-      _hasReps = G.hasReps();
-      _hasSubgroups = G.hasSubgroups();
-      if(_hasReps) _Irreps = G.Irreps();
-//      if(_hasSubgroups) _Subgroups = G.SubgroupsConst();
+      _Irreps = G.Irreps();
+//      _Subgroups = G.SubgroupsConst();
       
       return *this;
     } catch (...) {
@@ -395,8 +387,6 @@ namespace Tomb
       _abelian = move(G._abelian);
       _Casimir = move(G._Casimir);
       _repsMaxDim = move(G._repsMaxDim);
-      _hasReps = move(G._hasReps);
-      _hasSubgroups = move(G._hasSubgroups);
       _Irreps = move(G._Irreps);
 //      _Subgroups = move(G._Subgroups);
       
@@ -410,8 +400,6 @@ namespace Tomb
       G._abelian = false;
       G._Casimir = 0;
       G._repsMaxDim = 0;
-      G._hasReps = false;
-      G._hasSubgroups = false;
       G._Irreps.Clear();
 //      G._Subgroups.Clear();
       
@@ -635,20 +623,6 @@ namespace Tomb
 
       DB<SimpleGroup>().set(id(), this);
        
-      // Output the info
-      /*ostringstream OutputDirectory;
-      OutputDirectory << "./out/" << id();
-
-      mkdir(OutputDirectory.str().c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-      ostringstream OutputFileName;
-      OutputFileName << OutputDirectory.str() << "/" << id() << ".out";
-
-      ofstream OutputFile;
-      OutputFile.open(OutputFileName.str().c_str());
-      OutputFile << json().write_formatted() << endl;
-      OutputFile.close();*/
-    
     } catch (...) {
       throw;
     }
@@ -720,18 +694,6 @@ namespace Tomb
   int SimpleGroup::repsMaxDim() const
   {
     return _repsMaxDim;
-  }
-
-  /* Returns whether the SimpleGroup has calculated its reps */
-  bool SimpleGroup::hasReps() const
-  {
-    return _hasReps;
-  }
-  
-  /* Returns whether the SimpleGroup has calculated its subgroups */
-  bool SimpleGroup::hasSubgroups() const
-  {
-    return _hasSubgroups;
   }
 
   List<Irrep> SimpleGroup::Irreps() const
@@ -1052,7 +1014,6 @@ namespace Tomb
       {
         Weight w(*this, 1);
         _Irreps =  List<Irrep>(Irrep(*this, w));
-        if(_Irreps.nterms()) _hasReps = true;
         _repsMaxDim = maxdim;
         return _Irreps;
       }
@@ -1089,7 +1050,7 @@ namespace Tomb
                 }
               } while(labels.Index(label) >= 0);
               Rep.setLabel(label);
-              _Irreps.AddTerm(Rep);
+              _Irreps.AddTermOrdered(Rep, "ASC");
               HWs.AddTerm(HW);
               labels.AddTerm(label);
             }	
@@ -1098,12 +1059,6 @@ namespace Tomb
         }
       }
 
-      _Irreps.Order("ASC");
-      
-      //cout << _Irreps << endl;
-      
-      // Set th hasReps flag to true and repsMaxDim to the current maxdim
-      if(_Irreps.nterms()) _hasReps = true;
       _repsMaxDim = maxdim;
       
       return _Irreps;
@@ -1802,8 +1757,8 @@ namespace Tomb
   }
 
   /* Returns the json string */
-/*  JSONNode SimpleGroup::json(string name) const {
-    
+  JSONNode SimpleGroup::json(string name) const
+  {
     if(name == "id") {
       return JSONNode("", id());
     }
@@ -1821,14 +1776,12 @@ namespace Tomb
     json.push_back(_G.json("G"));
     json.push_back(JSONNode("Casimir", _Casimir));
     json.push_back(JSONNode("repsMaxDim", _repsMaxDim));
-    json.push_back(JSONNode("hasReps", _hasReps));
-    json.push_back(JSONNode("hasSubgroups", _hasSubgroups));
     json.push_back(_Irreps.json("Irreps"));
-    json.push_back(_Subgroups.json("Subgroups"));
+//    json.push_back(_Subgroups.json("Subgroups"));
     
     return json;
   }
-*/
+
   /* Parses a json object into the attributes of the class */
 /*  void SimpleGroup::ParseJSON(const JSONNode & n, string what) {
     

@@ -50,8 +50,6 @@ namespace Tomb
       Matrix<double> _G;
       double _Casimir = 0;
       int _repsMaxDim = 50;
-      bool _hasReps = false;
-      bool _hasSubgroups = false;
       List<Root> _PRoots;
       List<Irrep> _Irreps;
 /*      List<SubGroup> _MaxSubgroups;
@@ -80,8 +78,6 @@ namespace Tomb
       Matrix<double> G() const;
       double Casimir() const;
       int repsMaxDim() const;
-      bool hasReps() const;
-      bool hasSubgroups() const;
       List<Irrep> Irreps() const;
       Root SRoot(int);
       List<Root> PRoots(string = "Dynkin");
@@ -110,7 +106,7 @@ namespace Tomb
       bool operator<(const SimpleGroup &) const;
       string Print() const;
       string Table() const;
-//      JSONNode json(string = "") const;
+      JSONNode json(string = "") const;
 //      void ParseJSON(const JSONNode &n, string = "");
       static bool GroupExists(int, char);
       static SimpleGroup* find(const string);

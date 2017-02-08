@@ -69,8 +69,8 @@ MLOBJ = $(ODIR)/$(MATHMAIN)tm.o
 $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
 	$(CC) -c -o $@ $< $(CFLAGS) $(INCS)
 
-#$(JSONDIR)/%.o: $(JSONDIR)/%.cpp
-#	$(CC) -c -o $@ $< $(CFLAGS)
+$(JSONDIR)/%.o: $(JSONDIR)/%.cpp
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 #$(MLOBJ): $(SDIR)/$(MATHMAIN).tm
 #	$(MPREP) $? -o $(ODIR)/$(MATHMAIN)tm.cc
@@ -79,7 +79,7 @@ $(ODIR)/%.o: $(SDIR)/%.cc $(DEPENDENCIES)
 #$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
 #	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
 
-group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o $(ODIR)/liegroup.o $(ODIR)/helper_functions.o $(ODIR)/weight.o $(ODIR)/irrep.o
+group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o $(ODIR)/liegroup.o $(ODIR)/helper_functions.o $(ODIR)/weight.o $(ODIR)/irrep.o $(JSOBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 
 

@@ -49,6 +49,7 @@ namespace Tomb
       TYPE &GetObject(int) const;
       TYPE &operator[](int) const;
       void AddTerm(const TYPE &);
+      void AddTermOrdered(const TYPE &, const std::string = "DESC");
       void InsertTerm(int, const TYPE &);
       void DeleteTerm(int);
       int DeleteObject(const TYPE &, int = 0);
@@ -278,6 +279,23 @@ namespace Tomb
     try
     {
       this->push_back(Object);
+    }
+    catch (...)
+    {
+      throw;
+    }
+  }
+
+  template <class TYPE> void List<TYPE>::AddTermOrdered(const TYPE &Object, const std::string order)
+  {
+    try
+    {
+      if(!order.compare("DESC"))
+        this->insert(std::upper_bound(this->rbegin(), this->rend(), Object).base(), Object);
+      else if(!order.compare("ASC")) 
+        this->insert(std::upper_bound(this->begin(), this->end(), Object), Object);
+      else
+        throw "List::Order::Ordering must be ASC or DESC";
     }
     catch (...)
     {

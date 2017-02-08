@@ -92,10 +92,8 @@ namespace Tomb
       this->_label = this->Print();
       this->_Casimir = Group.Casimir();
       this->_repsMaxDim = Group.repsMaxDim();
-      this->_hasReps = Group.hasReps();
-      this->_hasSubgroups = Group.hasSubgroups();
-//      if(_hasReps) _Reps = Group.Reps();
-//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps = Group.Reps();
+//      _Subgroups = Group.SubgroupsConst();
     }
     catch (...)
     {
@@ -118,10 +116,8 @@ namespace Tomb
       this->_label = this->Print();
       this->_Casimir.AddTerm(Group.Casimir());
       this->_repsMaxDim = Group.repsMaxDim();
-      this->_hasReps = Group.hasReps();
-      this->_hasSubgroups = Group.hasSubgroups();
-//      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
-//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps = Irreps2Reps(Group.Irreps());
+//      _Subgroups = Group.SubgroupsConst();
 
     }
     catch (...)
@@ -150,8 +146,6 @@ namespace Tomb
       }
       
       _label = this->Print();
-      _hasReps = false;
-      _hasSubgroups = false;
 
       init();
       
@@ -180,8 +174,6 @@ namespace Tomb
         AddTerm(Group.GetObject(i));
         
       _label = this->Print();
-      _hasReps = false;
-      _hasSubgroups = false;
       
       init();
     }
@@ -202,9 +194,7 @@ namespace Tomb
     _nabelians(move(Group._nabelians)),
     _label(move(Group._label)),
     _Casimir(move(Group._Casimir)),
-    _repsMaxDim(move(Group._repsMaxDim)),
-    _hasReps(move(Group._hasReps)),
-    _hasSubgroups(move(Group._hasSubgroups))//,
+    _repsMaxDim(move(Group._repsMaxDim))//,
 //    _Reps(move(Group._Reps))//,
 //    _Subgroups(move(Group._Subgroups))
   {
@@ -219,8 +209,6 @@ namespace Tomb
       Group._label = "";
       Group._Casimir.Clear();
       Group._repsMaxDim = 0;
-      Group._hasReps = false;
-      Group._hasSubgroups = false;
 //      Group._Reps.Clear();
 //      Group._Subgroups.Clear();
       
@@ -265,12 +253,10 @@ namespace Tomb
       _label = this->Print();
       _Casimir = Group.Casimir();
       _repsMaxDim = Group.repsMaxDim();
-      _hasReps = Group.hasReps();
-      _hasSubgroups = Group.hasSubgroups();
 //      _Reps.Clear();
 //      _Subgroups.Clear();
-//      if(_hasReps) _Reps = Group.Reps();
-//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps = Group.Reps();
+//      _Subgroups = Group.SubgroupsConst();
 
       return *this;
       
@@ -298,12 +284,10 @@ namespace Tomb
       _label = this->Print();
       _Casimir.AddTerm(Group.Casimir());
       _repsMaxDim = Group.repsMaxDim();
-      _hasReps = Group.hasReps();
-      _hasSubgroups = Group.hasSubgroups();
 //      _Reps.Clear();
 //      _Subgroups.Clear();
-//      if(_hasReps) _Reps = Irreps2Reps(Group.Irreps());
-//      if(_hasSubgroups) _Subgroups = Group.SubgroupsConst();
+//      _Reps = Irreps2Reps(Group.Irreps());
+//      _Subgroups = Group.SubgroupsConst();
       
       return *this;
     }
@@ -336,8 +320,6 @@ namespace Tomb
         AddTerm(Group.GetObject(i));
       
       _label = this->Print();
-      _hasReps = false;
-      _hasSubgroups = false;
 //      _Reps.Clear();
 //      _Subgroups.Clear();
       
@@ -372,8 +354,6 @@ namespace Tomb
         AddTerm(Group.GetObject(i));
       
       _label = this->Print();
-      _hasReps = false;
-      _hasSubgroups = false;
 //      _Reps.Clear();
 //      _Subgroups.Clear();
       
@@ -401,8 +381,6 @@ namespace Tomb
       _label = move(Group._label);
       _Casimir = move(Group._Casimir);
       _repsMaxDim = move(Group._repsMaxDim);
-      _hasReps = move(Group._hasReps);
-      _hasSubgroups = move(Group._hasSubgroups);
 //      _Reps = move(Group._Reps);
 //      _Subgroups = move(Group._Subgroups);
       
@@ -414,8 +392,6 @@ namespace Tomb
       Group._label = "";
       Group._Casimir.Clear();
       Group._repsMaxDim = 0;
-      Group._hasReps = false;
-      Group._hasSubgroups = false;
 //      Group._Reps.Clear();
 //      Group._Subgroups.Clear();
 
@@ -536,18 +512,6 @@ namespace Tomb
     return _repsMaxDim;
   }
   
-  /* Returns whether the LieGroup has calculated its reps */
-  bool LieGroup::hasReps() const 
-  {
-    return _hasReps;
-  }
-  
-  /* Returns whether the LieGroup has calculated its subgroups */
-  bool LieGroup::hasSubgroups() const 
-  {
-    return _hasSubgroups;
-  }
-
   /* Returns the Reps of the group */
 /*  List<Rrep> LieGroup::Reps() const
   {

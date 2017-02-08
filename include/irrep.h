@@ -92,7 +92,7 @@ namespace Tomb
       bool operator<(const Irrep) const;
       string Print() const;
       string Table() const;
-//      JSONNode json(string = "") const;
+      JSONNode json(string = "") const;
 //      void ParseJSON(const JSONNode &n, string = "");
       static Irrep* find(string);
       static Irrep* get(string);

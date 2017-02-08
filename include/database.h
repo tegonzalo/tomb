@@ -67,7 +67,7 @@ namespace Tomb
   template <class TYPE> DataBase<TYPE>::DataBase()
   {
     _outdir << "./out/" << typeid(TYPE).name() << "/";
-    //fill();
+    fill();
   }
 
   /* Destructor */
@@ -197,7 +197,7 @@ namespace Tomb
     {
       std::stringstream file;
       file << _outdir.str() << "/" << it->first;
-//      Files::WriteFileString(file.str(), it->second.json().write_formatted());
+      //Files::WriteFileString(file.str(), it->second->json().write_formatted());
     }
   }
 }
@@ -219,18 +219,6 @@ namespace Tomb
   // Fills the databases of variadic types with info from the files
   template <typename TYPE, typename ...Args> void database_fill();
 	
-  void group_database_fill();
-
-  void group_database_flush();
-
-  // Fills the model database with info from the files
-  void model_database_fill();
-	
-  // Flush the model database into json files
-  void model_database_flush();
-
-  // Filter the database with the observables
- // void model_database_filter(List<std::string> &);
 }
 
 /*****************************************/
