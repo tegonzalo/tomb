@@ -49,10 +49,11 @@ namespace Tomb
       string _label = "";
       List<double> _Casimir;
       int _repsMaxDim = 50;
-//      List<Rrep> _Reps;
-/*      List<SubGroup> _MaxSubgroups;
-      List<SubGroup> _Subgroups;*/
-    public:
+
+   public:
+      List<Rrep> _Reps;
+      List<SubGroup> _MaxSubgroups;
+//      List<SubGroup> _Subgroups;*/
       
       LieGroup();
       LieGroup(const string);
@@ -60,12 +61,14 @@ namespace Tomb
       LieGroup(const LieGroup &);
       LieGroup(const SimpleGroup &);
       LieGroup(const List<SimpleGroup> &);
+      LieGroup(const List<SimpleGroup *> &);
       LieGroup(const Product<SimpleGroup> &);
       LieGroup(LieGroup &&);
       ~LieGroup();
       LieGroup &operator=(const LieGroup &);
       LieGroup &operator=(const SimpleGroup &);
       LieGroup &operator=(const List<SimpleGroup> &);
+      LieGroup &operator=(const List<SimpleGroup *> &);
       LieGroup &operator=(const Product<SimpleGroup> &);
       LieGroup &operator=(LieGroup &&);
     
@@ -81,15 +84,16 @@ namespace Tomb
       string label() const;
       List<double> Casimir() const;
       int repsMaxDim() const;
-//      List<Rrep> Reps() const;
+      List<Rrep> Reps() const;
+      List<Rrep> &Reps(int);
 //      bool isSubgroupOf(LieGroup) const;
 //      bool isSubgroupOf(SimpleGroup) const;
       void DeleteTerm(int);
       void AddTerm(const SimpleGroup &);
       void AddTerm(const LieGroup &);
-/*      List<SubGroup> &MaximalSubgroups();
-      List<SubGroup> SpecialSubgroups();
-      List<SubGroup> &Subgroups();
+      List<SubGroup> &MaximalSubgroups();
+//      List<SubGroup> SpecialSubgroups();
+/*      List<SubGroup> &Subgroups();
       List<SubGroup> SubgroupsConst() const;
       List<SubGroup> Subgroups(int);
       List<SubGroup> Subgroups(int, int);
@@ -102,10 +106,10 @@ namespace Tomb
       Rrep GeneratingRep();
       List<Rrep> AdjointReps();
       Rrep SingletRep();
-      List<Rrep> &Reps(int=50);
-      List<Rrep> RepsConst() const;
+*/      List<Rrep> &CalculateReps(int=50);
+//      List<Rrep> RepsConst() const;
       List<Rrep> Irreps2Reps(List<Irrep>);
-*/      bool operator>(const LieGroup &);
+      bool operator>(const LieGroup &);
       bool operator<(const LieGroup &);
       bool operator>(const SimpleGroup &);
       bool operator<(const SimpleGroup &);

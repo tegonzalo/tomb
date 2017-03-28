@@ -79,7 +79,7 @@ $(JSONDIR)/%.o: $(JSONDIR)/%.cpp
 #$(ODIR)/$(MATHMAIN).o: $(SDIR)/$(MATHMAIN).cc $(DEPENDENCIES)
 #	$(CC) -c -o $@ $< $(CFLAGS) $(MATHINCS)
 
-group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o $(ODIR)/liegroup.o $(ODIR)/helper_functions.o $(ODIR)/weight.o $(ODIR)/irrep.o $(JSOBJ)
+group: $(ODIR)/group.o $(ODIR)/files.o $(ODIR)/simplegroup.o $(ODIR)/root.o $(ODIR)/liegroup.o $(ODIR)/helper_functions.o $(ODIR)/weight.o $(ODIR)/irrep.o $(JSOBJ) $(ODIR)/rrep.o $(ODIR)/subgroup.o
 	$(CC) -o $@ $^ $(CFLAGS) $(INCS) $(LIBS)
 
 

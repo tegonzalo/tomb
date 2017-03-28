@@ -50,12 +50,13 @@ namespace Tomb
       Matrix<double> _G;
       double _Casimir = 0;
       int _repsMaxDim = 50;
+	
+    public:
       List<Root> _PRoots;
       List<Irrep> _Irreps;
-/*      List<SubGroup> _MaxSubgroups;
+      List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;
-*/		
-    public:
+
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
       SimpleGroup(const string);
@@ -79,28 +80,29 @@ namespace Tomb
       double Casimir() const;
       int repsMaxDim() const;
       List<Irrep> Irreps() const;
+      List<Irrep> &Irreps(int);
       Root SRoot(int);
       List<Root> PRoots(string = "Dynkin");
-/*      List<Root> Roots();
+      List<Root> Roots();
       List<Irrep> SimpleReps();
       Irrep GeneratingRep();
       Irrep AdjointRep();
-*/      Irrep SingletRep();
+      Irrep SingletRep();
       List<Irrep> &CalculateIrreps(int=50);
-/*      List<Irrep> IrrepsConst() const;
       Matrix<double> ExtendedCartan();
-      List<SubGroup> &MaximalSubgroups();
-      List<SubGroup> SpecialSubgroups();
-      List<SubGroup> &Subgroups();
-      List<SubGroup> SubgroupsConst() const;
+      List<SubGroup> MaximalSubgroups() const;
+      List<SubGroup> &CalculateMaximalSubgroups();
+//      List<SubGroup> SpecialSubgroups()
+/*      List<SubGroup> Subgroups() const;
+      List<SubGroup> &CalculateSubgroups();
       List<SubGroup> Subgroups(int);
       List<SubGroup> Subgroups(int, int);
-      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
+/*      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
       List<Product<Irrep> > Invariants(const List<Irrep> &, const int = 4);
       bool isSubgroupOf(LieGroup) const;
-      bool isSubgroupOf(SimpleGroup) const*/;
-      bool operator==(const SimpleGroup &) const;
+      bool isSubgroupOf(SimpleGroup) const;
+*/      bool operator==(const SimpleGroup &) const;
       bool operator!=(const SimpleGroup &) const;
       bool operator>(const SimpleGroup &) const;
       bool operator<(const SimpleGroup &) const;
@@ -109,6 +111,7 @@ namespace Tomb
       JSONNode json(string = "") const;
 //      void ParseJSON(const JSONNode &n, string = "");
       static bool GroupExists(int, char);
+      static char GroupIdentify(int, const Matrix<double> &);
       static SimpleGroup* find(const string);
       static SimpleGroup* get (const string);
 

@@ -25,123 +25,117 @@ namespace Tomb
   // Member functions
   
   /* Constructor 0 */
-  Rrep::Rrep() {
+  Rrep::Rrep()
+  {
+
   }
 
   /* Constructor 1*/
-  Rrep::Rrep(const LieGroup &Group, const Weight &HWeight) : List<Irrep>() {
-
-    try {
-      if(Group.rank() != HWeight.cols()) {
+  Rrep::Rrep(LieGroup &Group, Weight &HWeight) : List<Irrep>()
+  {
+    try
+    {
+      if(Group.rank() != HWeight.cols())
         throw "Rrep::Rrep::Dimension of the weight doesn\'t match rank of the group";
-      }
 
-      //_Group = new LieGroup(Group);
-      _Group = Group.id();
-      _HWeight = new Weight(HWeight);
+      _Group = &Group;
+      _HWeight = &HWeight;
       
       init();
       
-    } catch (...) {
-      throw;
     }
-
+    catch (...) { throw; }
   }
 
   /* Constructor 2*/
-  Rrep::Rrep(const SubGroup &Group, const Weight &HWeight) : List<Irrep>() {
-
-    try {
-      if(Group.rank() != HWeight.cols()) {
+/*  Rrep::Rrep(SubGroup &Group, Weight &HWeight) : List<Irrep>()
+  {
+    try
+    {
+      if(Group.rank() != HWeight.cols())
         throw "Rrep::Rrep::Dimension of weight doesn\'t match rank of group";
-      }
 
-      //_Group = new LieGroup(Group);
-      _Group = Group.id();
-      _HWeight = new Weight(HWeight);
+      _Group = &Group;
+      _HWeight = &HWeight;
       
       init();
       
-    } catch (...) {
-      throw;
     }
-
+    catch (...) { throw; }
   }
-
+*/
   /* Constructor 3 */
-  Rrep::Rrep(const Irrep &Rep) : List<Irrep>(Rep) {
-    try {
-      //_Group = new LieGroup(Rep.Group());
-      _Group = Rep.GroupId();
-      _GroupRank = Rep.GroupRank();
-      _HWeight = new Weight(Rep.HWeight());
+  Rrep::Rrep(LieGroup &Group, const Irrep &Rep) : List<Irrep>(Rep)
+  {
+    try
+    {
+      _Group = &Group;
+      _HWeight = &Rep.HWeight();
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = 1;
       _label = Rep.label();
       _Casimir.AddTerm(Rep.Casimir());
       _DynkinIndex.AddTerm(Rep.DynkinIndex());
-      _hasWeights = Rep.hasWeights();
-      if(_hasWeights) _Weights = Rep.WeightsConst();
+      _Weights = Rep.Weights();
             
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Constructor 4, with strings */
-  Rrep::Rrep(const std::string id) {
-    
-    try {
+  Rrep::Rrep(const std::string id)
+  {   
+    try
+    {
       _HWeight = new Weight(id);
-      //_Group = new LieGroup(HWeight().Group());
-      _Group = HWeight().GroupId();
+      _Group = LieGroup::get(_HWeight->Group().id());
       
       init();
 
-    } catch (...) {
-      throw;
-    }	
+    }
+    catch (...) { throw; }	
   }
 
   /* Constructor 5, with JSON Nodes */
-  Rrep::Rrep(const JSONNode &n) {
-    if(n.as_string() != "") {
+/*  Rrep::Rrep(const JSONNode &n)
+    {
+    if(n.as_string() != "")
+    {
       _HWeight = new Weight(n.as_string());
       //_Group = new LieGroup(HWeight().Group());
       _Group = HWeight().GroupId();
       
       init();
-    } else {
+    }
+    else
+    {
       ParseJSON(n);
     }
   }
-
+*/
   /* Copy constructor */
-  Rrep::Rrep(const Rrep &Rep) : List<Irrep>(Rep) {
-    try {
-      //_Group = new LieGroup(Rep.Group());
-      _Group = Rep.GroupId();
-      _GroupRank = Rep.GroupRank();
-      _HWeight = new Weight(Rep.HWeight());
+  Rrep::Rrep(const Rrep &Rep) : List<Irrep>(Rep)
+  {
+    try
+    {
+      _Group = &Rep.Group();
+      _HWeight = &Rep.HWeight();
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = Rep.nirreps();
       _label = Rep.label();
       _Casimir = Rep.Casimir();
       _DynkinIndex = Rep.DynkinIndex();
-      _hasWeights = Rep.hasWeights();
-      if(_hasWeights) _Weights = Rep.WeightsConst();
-    } catch (...) {
-      throw;
+      _Weights = Rep.Weights();
     }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
   Rrep::Rrep(Rrep &&Rep) : 
     List<Irrep>(std::move(Rep)),
     _Group(std::move(Rep._Group)),
-    _GroupRank(std::move(Rep._GroupRank)),
     _HWeight(std::move(Rep._HWeight)),
     _dim(std::move(Rep._dim)),
     _real(std::move(Rep._real)),
@@ -149,64 +143,58 @@ namespace Tomb
     _label(std::move(Rep._label)),
     _Casimir(std::move(Rep._Casimir)),
     _DynkinIndex(std::move(Rep._DynkinIndex)),
-    _hasWeights(std::move(Rep._hasWeights)),
     _Weights(std::move(Rep._Weights))
   {
-    try {		
-      //Rep._Group = nullptr;
-      Rep._Group = "";
-      Rep._GroupRank = 0;
-      Rep._HWeight = nullptr;
+    try
+    {		
+      Rep._Group = NULL;
+      Rep._HWeight = NULL;
       Rep._dim = 0;
       Rep._real = false;
       Rep._nirreps = 0;
       Rep._label = "";
       Rep._Casimir.Clear();
       Rep._DynkinIndex.Clear();
-      Rep._hasWeights = false;
       Rep._Weights.Clear();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
-  Rrep::~Rrep() {
-    //if(_Group != NULL) delete _Group;
-    if(_HWeight != NULL) delete _HWeight;
+  Rrep::~Rrep()
+  {
   }
 
   /* Overloaded = operator */
-  Rrep &Rrep::operator=(const Rrep &Rep) {
-    try {
+  Rrep &Rrep::operator=(const Rrep &Rep)
+  {
+    try
+    {
       if(this == &Rep) return *this;
       List<Irrep>::operator=(Rep);
-      //_Group = new LieGroup(Rep.Group());
-      _Group = Rep.GroupId();
-      _GroupRank = Rep.GroupRank();
-      _HWeight = new Weight(Rep.HWeight());
+      _Group = &Rep.Group();
+      _HWeight = &Rep.HWeight();
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = Rep.nirreps();
       _label = Rep.label();
       _Casimir = Rep.Casimir();
       _DynkinIndex = Rep.DynkinIndex();
-      _hasWeights = Rep.hasWeights();
-      if(_hasWeights) _Weights = Rep.WeightsConst();
+      _Weights = Rep.Weights();
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move = operator */
-  Rrep &Rrep::operator=(Rrep &&Rep) {
-    try {
+  Rrep &Rrep::operator=(Rrep &&Rep)
+  {
+    try
+    {
       if(this == &Rep) return *this;
       List<Irrep>::operator=(std::move(Rep));
       _Group = std::move(Rep._Group);
-      _GroupRank = std::move(Rep._GroupRank);
       _HWeight = std::move(Rep._HWeight);
       _dim = std::move(Rep._dim);
       _real = std::move(Rep._real);
@@ -214,109 +202,85 @@ namespace Tomb
       _label = std::move(Rep._label);
       _Casimir = std::move(Rep._Casimir);
       _DynkinIndex = std::move(Rep._DynkinIndex);
-      _hasWeights = std::move(Rep._hasWeights);
       _Weights = std::move(Rep._Weights);
       
-      //Rep._Group = nullptr;
-      Rep._Group = "";
-      Rep._GroupRank = 0;
-      Rep._HWeight = nullptr;
+      Rep._Group = NULL;
+      Rep._HWeight = NULL;
       Rep._dim = 0;
       Rep._real = false;
       Rep._nirreps = 0;
       Rep._label = "";
       Rep._Casimir.Clear();
       Rep._DynkinIndex.Clear();
-      Rep._hasWeights = false;
       Rep._Weights.Clear();
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Initialises some internal variables */
-  void Rrep::init() {
-    
-    try {
-      
-      //if(_Group == NULL or _HWeight == NULL)
-      if(_Group == "" or _HWeight == NULL)
+  void Rrep::init()
+  {   
+    try
+    {
+      if(_Group == NULL or _HWeight == NULL)
         throw "Rrep::init::Not enough information to initialise the variables";
       
-      /*if(database_check(id())) {
-        //std::cout << "in the db " << DataBase.at(id()).nterms() << std::endl;
-        *this = DataBase.at(id());
-      } else {*/
-        LieGroup Group(_Group);
-        _GroupRank = Group.rank();
-        
-        _dim = 1;
-        _nirreps = 0;
-        int accumulated_rank = 0;
-        for(int i=0; i<Group.ngroups(); i++) {
-          RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + Group.GetObject(i).rank()-1).Row(0);
-          Weight HW(Group.GetObject(i), R);
-          Irrep aRep(Group.GetObject(i),HW); 
-          this->AddTerm(aRep);
-          _dim *= aRep.dim();
-          _nirreps++;
-          accumulated_rank += Group.GetObject(i).rank();
-        }
-        //std::cout << "dim = " << _dim << std::endl;
-        if(nirreps() > 1) {
-          std::stringstream ss;
-          ss << *this;
-          _label = ss.str();
-        } else {
-          _label = GetObject(0).label();
-        }
-        
-        _real = true;
-        for(int i=0; i<nirreps(); i++) {
-          if(!GetObject(i).real()) _real = false;
-          
-          _Casimir.AddTerm(GetObject(i).Casimir());
-          //std::cout << _Casimir << std::endl;
-          _DynkinIndex.AddTerm(GetObject(i).DynkinIndex()*dim()/GetObject(i).dim());
-          //std::cout << _DynkinIndex << std::endl;
-        }
-        
-        // Store the info in the database
-        //database_emplace(id(),*this);
+      _dim = 1;
+      _nirreps = 0;
+      int accumulated_rank = 0;
+      for(int i=0; i<_Group->ngroups(); i++)
+      {
+        RVector<double> R = _HWeight->ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
+        Weight HW(_Group->GetObject(i), R);
+        Irrep aRep(_Group->GetObject(i),HW); 
+        this->AddTerm(aRep);
+        _dim *= aRep.dim();
+        _nirreps++;
+        accumulated_rank += _Group->GetObject(i).rank();
+      }
 
-      //}
+      if(nirreps() > 1) {
+        std::stringstream ss;
+        ss << *this;
+        _label = ss.str();
+      } else {
+        _label = GetObject(0).label();
+      }
+        
+      _real = true;
+      for(int i=0; i<nirreps(); i++)
+      {
+        if(!GetObject(i).real()) _real = false;
+        _Casimir.AddTerm(GetObject(i).Casimir());
+        _DynkinIndex.AddTerm(GetObject(i).DynkinIndex()*dim()/GetObject(i).dim());
+      }
+
+      // Perhaps do not calculate reps for very large reps     
+      if(_dim < 1000)
+        _Weights = CalculateWeights();
+   
+      // Store the info in the database
+      DB<Rrep>().set(id(),this);
     
-    } catch(...) {
-      throw;
-    }	
+    }
+    catch(...) { throw; }	
   }
 
   /* Identifier of the Rrep */
-  std::string Rrep::id() const {
+  std::string Rrep::id() const
+  {
     std::stringstream s;
     s << HWeight().id();
     return s.str();
   }
 
   /* Returns the group */
-  LieGroup Rrep::Group() const 
+  LieGroup &Rrep::Group() const 
   {
-    return LieGroup(_Group);
+    return *_Group;
   }
   
-  /* Returns the group id */
-  std::string Rrep::GroupId() const
-  {
-    return _Group;
-  }
-  
-  /* Returns the group rank */
-  int Rrep::GroupRank() const
-  {
-    return _GroupRank;
-  }
-
   /* Returns the dimension */
   int Rrep::dim() const
   {
@@ -336,121 +300,106 @@ namespace Tomb
   }
 
   /* Returns the label */
-  std::string Rrep::label() const {
+  std::string Rrep::label() const
+  {
     return _label;
   }
 
   /* Returns the Casimir of the representation */
-  List<double> Rrep::Casimir() const {
+  List<double> Rrep::Casimir() const
+  {
     return _Casimir;
   }
   
-  /* Returns whether the Rrep has calculated its weights */
-  bool Rrep::hasWeights() const {
-    return _hasWeights;
-  }
-
   /* Returns the Dynkin Index of the representation */
-  List<double> Rrep::DynkinIndex() const {
+  List<double> Rrep::DynkinIndex() const
+  {
     return _DynkinIndex;
   }
 
   /* Returns the Height Weight */
-  Weight Rrep::HWeight() const {
+  Weight &Rrep::HWeight() const
+  {
     return *_HWeight;
   }
 
+  /* Returns the weight list */
+  List<Weight> Rrep::Weights() const
+  {
+    return _Weights;
+  }
+
   /* Sets the weights */
-  void Rrep::setWeights(const List<Weight> &Weights) {
-    if(Weights.nterms()) _hasWeights = true;
+  void Rrep::setWeights(const List<Weight> &Weights)
+  {
     _Weights = Weights;
   }
   
   /* Calculates the weights of the representation */
-  List<Weight> &Rrep::Weights() {
-    
-    try {
-      LieGroup Group(_Group);
-      
+  List<Weight> &Rrep::CalculateWeights()
+  {   
+    try
+    {
       // If the weights have been calculated already take them
-      if(_Weights.nterms()) 
-        return _Weights;
-      
-      /*if(database_check(id(), "Weights") and DataBase.at(id()).hasWeights())
-      {
-        _Weights = DataBase.at(id()).Weights();
-        if(_Weights.nterms()) _hasWeights = true;
-        return _Weights;
-      }*/
+      if(_Weights.nterms()) return _Weights;
+      _Weights.Clear();
       
       //std::cout << "Calculating weights of " << *this << std::endl;
       List< List<Weight> > ListofWeights;
       //std::cout << _nirreps << std::endl;
-      for(int i=0; i<this->nirreps(); i++) {
-        ListofWeights.AddTerm(this->GetObject(i).Weights());
-      }
+      for(int i=0; i<this->nirreps(); i++)
+        ListofWeights.AddTerm(this->GetObject(i)._Weights);
       //std::cout << ListofWeights << std::endl;
       
       int totalterms = 1;
-      for(int i=0; i<ListofWeights.nterms(); i++) {
+      for(int i=0; i<ListofWeights.nterms(); i++)
         totalterms *= ListofWeights.GetObject(i).nterms();
-      }
       
       // Reserve enough space for the weights
-      _Weights.reserve(dim());
+      _Weights.reserve(_dim);
       
-      for(int i=0; i<totalterms; i++) {
+      for(int i=0; i<totalterms; i++)
+      {
         Weight weight;
         //std::cout << "i = " << i << std::endl;
         int terms = 1;
-        for(int j=0; j<ListofWeights.nterms(); j++) {
+        for(int j=0; j<ListofWeights.nterms(); j++)
+        {
           //std::cout << "j = " << j << std::endl;
           int thisterms = ListofWeights.GetObject(j).nterms();
           terms *= thisterms;
           int index = (i*terms/totalterms)%thisterms;
-          if(j==0) {
-            weight = Weight(Group.GetObject(0),ListofWeights.GetObject(0).GetObject(index));
-          } else {	
-            //std::cout << weight << std::endl;
+          if(j==0)
+            weight = Weight(_Group->GetObject(0),ListofWeights.GetObject(0).GetObject(index));
+          else 
             weight.Append(ListofWeights.GetObject(j).GetObject(index));
-            //std::cout << weight << std::endl;
-          }
         }
         _Weights.AddTerm(weight);
         //std::cout << Weights << std::endl;
       }
       
       //std::cout << _Weights << std::endl;
-      // Set the hasWeights flag to true
-      if(_Weights.nterms()) _hasWeights = true;
-      
-      // If there is an entry in the database delete it and dump this
-      //database_emplace(id(), *this);
       
       return _Weights;
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
-  /* Returns the variable Weights */
-  List<Weight> Rrep::WeightsConst() const {
-    return _Weights;
-  }
-  
   /* Adds a irrep of another group to the rep */
-  Rrep Rrep::AddIrrep(Irrep Rep) {
-    
-    try {
+  Rrep Rrep::AddIrrep(Irrep Rep)
+  {
+    try
+    {
       this->AddTerm(Rep);
-      //_Group->AddTerm(Rep.Group());
-      _Group.push_back('x');
-      _Group.append(Rep.GroupId());
+      
+      string groupid;
+      groupid.push_back('x');
+      groupid.append(Rep.Group().id());
+      _Group = LieGroup::get(groupid);
       
       Weight w = *_HWeight;
-      //_HWeight = new Weight(*_Group, w.Append(Rep.HWeight()));
-      _HWeight = new Weight(_Group, w.Append(Rep.HWeight()));
+      _HWeight = new Weight(*_Group, w.Append(Rep.HWeight()));
     
       _dim *= Rep.dim();
       if(!Rep.real()) _real = false;
@@ -464,23 +413,23 @@ namespace Tomb
       _DynkinIndex.AddTerm(Rep.DynkinIndex()*dim()/Rep.dim());
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Adds a rep of another lie group to the rep */
-  Rrep Rrep::AddRrep(Rrep Rep) {
-    
-    try {
+  Rrep Rrep::AddRrep(Rrep Rep)
+  {   
+    try
+    {
       this->AppendList(Rep);
-      //_Group->AppendList(Rep.Group());
-      _Group.push_back('x');
-      _Group.append(Rep.GroupId());
+
+      string groupid;
+      groupid.push_back('x');
+      groupid.append(Rep.Group().id());
     
       Weight w = *_HWeight;
-      //_HWeight = new Weight(*_Group, w.Append(Rep.HWeight()));
-      _HWeight = new Weight(_Group, w.Append(Rep.HWeight()));
+      _HWeight = new Weight(*_Group, w.Append(Rep.HWeight()));
     
       _dim *= Rep.dim();
       if(!Rep.real()) _real = false;
@@ -494,13 +443,13 @@ namespace Tomb
       _DynkinIndex.AppendList(Rep.DynkinIndex());
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Checks whether the rep is a singlet */
-  bool Rrep::isSinglet(int which) const {
+  bool Rrep::isSinglet(int which) const
+  {
     if(which == -1)
     {
       if(dim() == 1)
@@ -510,42 +459,43 @@ namespace Tomb
             return false;
         return true;
       }
-    } else
+    }
+    else
       return GetObject(which).isSinglet();
     return false;
   }
 
   /* Projects the weights of a rrep into the weights of rreps of a subgroup */
-  List<Weight> Rrep::Project(SubGroup Subgroup)
-  {
-    
-    try {
+/*  List<Weight> Rrep::Project(SubGroup Subgroup)
+  { 
+    try
+    {
       List<Weight> Weights = this->Weights();
       //std::cout << Weights << std::endl;
       List<Weight> ProjectedWeights;
       //std::cout << Subgroup.Projection() << std::endl;
-      for(int i=0; i<Weights.nterms(); i++) {
+      for(int i=0; i<Weights.nterms(); i++)
+      {
         Weight weight = Weight(Subgroup, Subgroup.Projection()*Weights.GetObject(i));
         weight.setPositive(true);
-        for(int j=0; j<weight.cols()-Subgroup.nabelians(); j++) {
-          if(weight[j] < 0) {
+        for(int j=0; j<weight.cols()-Subgroup.nabelians(); j++)
+        {
+          if(weight[j] < 0)
             weight.setPositive(false);
-          }
         }
         ProjectedWeights.AddTerm(weight);
       }
     
       return ProjectedWeights;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-
+*/
   /* Obtains the decomposition into rreps of a subgroup */
-  Sum<Rrep> Rrep::Decompose(SubGroup &Subgroup)
+/*  Sum<Rrep> Rrep::Decompose(SubGroup &Subgroup)
   {
-
-    try {
+    try
+    {
       
       //std::cout << "decomposing " << *this << " into " << Subgroup << std::endl;
       //std::cout << "Weights = " << Weights()  << std::endl;
@@ -558,31 +508,38 @@ namespace Tomb
         return Reps;
       }*/
       
-      if(Subgroup.isSubgroupOf(this->Group())) {
+/*      if(Subgroup.isSubgroupOf(this->Group()))
+      {
         List<Weight> ProjectedWeights = this->Project(Subgroup);
         Subgroup.Order();
-        do {
+        do
+        {
           //std::cout << "Projected Weights = "<< std::endl << ProjectedWeights.Print() << std::endl;
           
           Weight HWeight = ProjectedWeights.GetObject(0);
           //int maximum_sum_of_values = 0;
           int highest_dim = 0;
           //std::cout << HWeight << std::endl;
-          for(List<Weight>::iterator it_ProjectedWeights = ProjectedWeights.begin(); it_ProjectedWeights != ProjectedWeights.end(); it_ProjectedWeights++) {
+          for(List<Weight>::iterator it_ProjectedWeights = ProjectedWeights.begin(); it_ProjectedWeights != ProjectedWeights.end(); it_ProjectedWeights++)
+          {
             //int sum_of_values = 0;
             int group = 0;
             int acc_rank = Subgroup.GetObject(0).rank();
             Weight weight = *it_ProjectedWeights;
             
-            for(int j=0; j<Subgroup.rank(); j++) {
-              if(j >= acc_rank) {
+            for(int j=0; j<Subgroup.rank(); j++)
+            {
+              if(j >= acc_rank)
+              {
                 group++;
                 acc_rank += Subgroup.GetObject(group).rank();
               }
             }
-            if(weight.positive()) {
+            if(weight.positive())
+            {
               Rrep Rep(Subgroup, weight);
-              if(Rep.dim() > highest_dim) {
+              if(Rep.dim() > highest_dim)
+              {
                 highest_dim = Rep.dim();
                 HWeight = weight;
               }
@@ -594,7 +551,8 @@ namespace Tomb
           //std::cout << "Rep = " << Rep << std::endl;
           List<Weight> SubWeights = Rep.Weights();
           //std::cout << SubWeights << std::endl;
-          for(List<Weight>::iterator it_SubWeights = SubWeights.begin(); it_SubWeights != SubWeights.end(); it_SubWeights++) {
+          for(List<Weight>::iterator it_SubWeights = SubWeights.begin(); it_SubWeights != SubWeights.end(); it_SubWeights++)
+          {
             //std::cout << *it_SubWeights << std::endl;	
             int n = ProjectedWeights.Index(*it_SubWeights);
             if(n >= 0)
@@ -604,30 +562,30 @@ namespace Tomb
         
           //std::cout << "terms = " << ProjectedWeights.nterms() << std::endl;
           
-        } while(ProjectedWeights.nterms()>0);
+        }
+        while(ProjectedWeights.nterms()>0);
       
-      } else {
-        throw "Rrep::Decompose::Not a subgroup";
       }
+      else
+        throw "Rrep::Decompose::Not a subgroup";
       
       /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
         DecomposeDataBase.erase(std::pair<std::string,std::string>(id(),Subgroup.id()));
       DecomposeDataBase.emplace(std::pair<std::string,std::string>(id(),Subgroup.id()), Reps);
       */
-      return Reps;
+/*      return Reps;
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-
+*/
   /* Overloaded * operator with Reps */
-  Sum<Rrep> Rrep::operator*(Rrep Rep) {
-    
-    try {
-      if(nirreps() != Rep.nirreps()) {
+  Sum<Rrep> Rrep::operator*(Rrep Rep)
+  {   
+    try
+    {
+      if(nirreps() != Rep.nirreps())
         throw "Rrep::operator*::Reps should belong to the same group";
-      }
 
       Sum<Rrep> ListofReps;
       Sum<Rrep> ListofReps2;
@@ -638,11 +596,15 @@ namespace Tomb
         return ListofReps;
       }*/
 
-      for(int i=0; i<nirreps(); i++) {
+      for(int i=0; i<nirreps(); i++)
+      {
         Sum<Irrep> Prod = GetObject(i)*Rep.GetObject(i);
-        if(ListofReps.nterms()) {
-          for(Sum<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++) {
-            for(Sum<Irrep>::iterator it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++) {
+        if(ListofReps.nterms())
+        {
+          for(Sum<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++)
+          {
+            for(Sum<Irrep>::iterator it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
+            {
               Rrep Rep(*it_ListofReps);
               Rep.AddIrrep(*it_Prod);
               ListofReps2.AddTerm(Rep);
@@ -651,9 +613,11 @@ namespace Tomb
           ListofReps = ListofReps2;
           ListofReps2.Clear();
               
-        } else {
+        }
+        else
+        {
           for(Sum<Irrep>::iterator it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
-            ListofReps.AddTerm(Rrep(*it_Prod));
+            ListofReps.AddTerm(Rrep(*_Group,*it_Prod));
         }
       }
       
@@ -663,15 +627,15 @@ namespace Tomb
       */
       return ListofReps;
 
-    } catch(...) {
-      throw;
     }
+    catch(...) { throw; }
   }
 
   /* Direct product of a list of representations */
-  Sum<Rrep> Rrep::Product(List<Rrep> &ListofReps) {
-    
-    try {
+  Sum<Rrep> Rrep::Product(List<Rrep> &ListofReps)
+  {   
+    try
+    {
 
       Sum<Rrep> Reps;
       Sum<Rrep> Reps2;
@@ -692,21 +656,21 @@ namespace Tomb
       
       return Reps;
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Checks whether the rep includes a singlet */
-  bool Rrep::hasSinglet() const {
-    try {
+  bool Rrep::hasSinglet() const
+  {
+    try
+    {
       for(Rrep::const_iterator it = this->begin(); it != this->end(); it++)
         if(it->dim() == 1)
           return true;
       return false;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Overloaded == operator */
@@ -722,13 +686,13 @@ namespace Tomb
   }
   
   /* Overloaded > operator */
-  bool Rrep::operator>(const Rrep &R) const {
-    
-    try {
+  bool Rrep::operator>(const Rrep &R) const
+  {   
+    try
+    {
       if(this->dim() > R.dim())
-      {
         return true;
-      } else if(this->dim() == R.dim())
+      else if(this->dim() == R.dim())
       {
         for(int i=0; i<nterms(); i++)
         {
@@ -739,27 +703,27 @@ namespace Tomb
         }
       }
       return false;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Overloaded < operator */
-  bool Rrep::operator<(const Rrep &R) const {
-    
-    try {
+  bool Rrep::operator<(const Rrep &R) const
+  {   
+    try
+    {
       if((*this)>R)
         return false;
       return true;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Returns the json string */
-  JSONNode Rrep::json(std::string name) const {
-    
-    if(name == "id") {
+  JSONNode Rrep::json(std::string name) const
+  {   
+    if(name == "id")
+    {
       return JSONNode("", id());
     }
     
@@ -768,37 +732,33 @@ namespace Tomb
     JSONNode json;
       
     json.push_back(JSONNode("id", id()));
-    //json.push_back(JSONNode("Group", Group().id()));
-    json.push_back(JSONNode("Group", _Group));
-    json.push_back(JSONNode("GroupRank", _GroupRank));
+    json.push_back(JSONNode("Group", _Group->id()));
     json.push_back(HWeight().json("HWeight"));
-    json.push_back(JSONNode("dim", dim()));
-    json.push_back(JSONNode("real",real()));
-    json.push_back(JSONNode("label",label()));
-    json.push_back(JSONNode("nirreps", nirreps()));
+    json.push_back(JSONNode("dim", _dim));
+    json.push_back(JSONNode("real",_real));
+    json.push_back(JSONNode("label",_label));
+    json.push_back(JSONNode("nirreps", _nirreps));
     
     JSONNode Casimir(JSON_ARRAY);
     Casimir.set_name("Casimir");
-    for(int i=0; i<_Casimir.nterms(); i++) {
+    for(int i=0; i<_Casimir.nterms(); i++)
       Casimir.push_back(JSONNode("",_Casimir.GetObject(i)));
-    }
     
     JSONNode DynkinIndex(JSON_ARRAY);
     DynkinIndex.set_name("DynkinIndex");
-    for(int i=0; i<_DynkinIndex.nterms(); i++) {
+    for(int i=0; i<_DynkinIndex.nterms(); i++)
       DynkinIndex.push_back(JSONNode("",_DynkinIndex.GetObject(i)));
-    }
     
     json.push_back(Casimir);
     json.push_back(DynkinIndex);
-    json.push_back(JSONNode("hasWeights", hasWeights()));
     json.push_back(_Weights.json("Weights"));
     
     return json;
   }
 
   /* Parses a json object into the attributes of the class */
-  void Rrep::ParseJSON(const JSONNode & n, std::string what) {
+/*  void Rrep::ParseJSON(const JSONNode & n, std::string what)
+  {
     JSONNode::const_iterator i = n.begin();
     while (i != n.end()){
   
@@ -879,5 +839,5 @@ namespace Tomb
     
 
   }
-
+*/
 }

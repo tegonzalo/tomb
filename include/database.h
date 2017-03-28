@@ -23,7 +23,7 @@
 #define DB_NOT_FOUND 0
 #define DB_FOUND 1
 #define DB_FOUND_JSON 2
-#define DB_FOUND_CONTENT 3
+#define DB_FOUND_FILE 3
 
 /*******************************/
 /* Class DataBase declarations */
@@ -67,13 +67,13 @@ namespace Tomb
   template <class TYPE> DataBase<TYPE>::DataBase()
   {
     _outdir << "./out/" << typeid(TYPE).name() << "/";
-    fill();
+    //fill();
   }
 
   /* Destructor */
   template <class TYPE> DataBase<TYPE>::~DataBase()
   {
-    flush();
+    //flush();
   }
 
   /* Check whether the key is in the database */
@@ -111,7 +111,7 @@ namespace Tomb
   {
     if(int flag = check(key))
     {
-      if(flag == DB_FOUND_CONTENT)
+      if(flag == DB_FOUND)
         return _content.at(key);
   /*    if(flag == DB_FOUND_JSON)
       {
@@ -146,7 +146,7 @@ namespace Tomb
     {
       if(int flag = check(key))
       {
-        if(flag == DB_FOUND_CONTENT and replace)
+        if(flag == DB_FOUND and replace)
           _content[key] = new TYPE(*Object);
 /*        if(flag == DB_FOUND_JSON)
         {
@@ -165,7 +165,7 @@ namespace Tomb
 */      }
       else
         _content.emplace(key, new TYPE(*Object));
-      _flags[key] = DB_FOUND_CONTENT;
+      _flags[key] = DB_FOUND;
     }
     catch (...)
     {
@@ -183,7 +183,7 @@ namespace Tomb
       std::stringstream file;
       file << _outdir.str() << *it;
       _files.emplace(*it,file.str());
-      _flags.emplace(*it, DB_FOUND);
+      _flags.emplace(*it, DB_FOUND_FILE);
     }
   }
 
@@ -197,7 +197,7 @@ namespace Tomb
     {
       std::stringstream file;
       file << _outdir.str() << "/" << it->first;
-      //Files::WriteFileString(file.str(), it->second->json().write_formatted());
+      Files::WriteFileString(file.str(), it->second->json().write_formatted());
     }
   }
 }

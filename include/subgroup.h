@@ -31,46 +31,48 @@ namespace Tomb
   class SubGroup: public LieGroup {
 
     private:
-      List<Tree<SimpleGroup> > _SuperGroups;
+      List<Tree<string> > _SuperGroups;
       Matrix<double> _Projection;
       List<std::string> _labels;
       bool _maximal = false;
       bool _regular = false;
       bool _special = false;
+      int _superRank;
 
     public:
       SubGroup();
-      SubGroup(const LieGroup &);
-      SubGroup(const SimpleGroup &);
-      SubGroup(const std::string);
-      SubGroup(const std::string, Matrix<double>);
-      SubGroup(const JSONNode &);
+      SubGroup(LieGroup &);
+      SubGroup(SimpleGroup &);
+      SubGroup(const string);
+      SubGroup(const string, Matrix<double>);
+//      SubGroup(const JSONNode &);
       SubGroup(const SubGroup &);
-      SubGroup(const LieGroup &, const LieGroup &);
-      SubGroup(const LieGroup &, const SimpleGroup &);
-      SubGroup(const SimpleGroup &, const SimpleGroup &);
-      SubGroup(const SubGroup &, const SimpleGroup &);
-      SubGroup(const SubGroup &, const SubGroup &);
+      SubGroup(LieGroup &, LieGroup &);
+      SubGroup(LieGroup &, SimpleGroup &);
+      SubGroup(SimpleGroup &, SimpleGroup &);
+      SubGroup(SubGroup &, SimpleGroup &);
+      SubGroup(SubGroup &, SubGroup &);
       SubGroup(SubGroup &&);
       ~SubGroup();
       SubGroup &operator=(const SubGroup &);
       SubGroup &operator=(SubGroup &&);
       
-      void init(const std::string);
-      List<Tree<SimpleGroup> > SuperGroups() const;
+      void init(const string);
+      List<Tree<string> > SuperGroups() const;
       LieGroup SuperGroup() const;
       LieGroup SuperGroup(int) const;
       Matrix<double> Projection() const;
       Matrix<double> SetProjection(Matrix<double>);
-      List<std::string> labels() const;
+      List<string> labels() const;
       void setLabels(const List<std::string>);
       void AddTerm(const SimpleGroup &, int = 0);
       void AddTerm(const LieGroup &, int = 0);
       void AddTerm(const SubGroup &, int = 0);
       void DeleteTerm(int);
       void Order();
-      bool isSubgroupOf(LieGroup) const;
-      bool isSubgroupOf(SimpleGroup) const;
+/*      bool isSubgroupOf(LieGroup) const;
+      bool isSubgroupOf(SimpleGroup) const;*/
+      int superRank() const;
       bool maximal() const;
       bool setMaximal(bool);
       bool regular() const;
@@ -81,7 +83,7 @@ namespace Tomb
       bool operator==(const SubGroup &) const;
       bool operator!=(const SubGroup &) const;
       JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &, std::string = "");
+//      void ParseJSON(const JSONNode &, std::string = "");
   };	
   
 }

@@ -32,7 +32,7 @@ namespace Tomb
     try
     {
       _Group = &G;
-      _HWeight = &HW;
+      _HWeight = new Weight(HW);
       init();
     }
     catch (...) { throw; }
@@ -44,7 +44,7 @@ namespace Tomb
   {
     try
     {
-      _HWeight = Weight::get(id);
+      _HWeight = new Weight(id);
       _Group = SimpleGroup::get(_HWeight->Group().id());
       
       init();
@@ -115,7 +115,7 @@ Si*/
       Rep._real = false;
       Rep._conjugate = 0;
       Rep._congruency = RVector<int>();
-      Rep._HWeight = nullptr;
+      Rep._HWeight = NULL;
       Rep._label = "";
       Rep._Casimir = 0;
       Rep._DynkinIndex = 0;
@@ -178,7 +178,7 @@ Si*/
       Rep._real = false;
       Rep._conjugate = 0;
       Rep._congruency = RVector<int>();
-      Rep._HWeight = nullptr;
+      Rep._HWeight = NULL;
       Rep._label = "";
       Rep._Casimir = 0;
       Rep._DynkinIndex = 0;
@@ -195,7 +195,7 @@ Si*/
   {
     try
     {
-      if(_Group == NULL or _HWeight == NULL)
+      if(_Group == NULL or !_HWeight->cols())
         throw "Irrep::init::Not enough information to initialise the variables";
       
       double aux = 1;    
@@ -292,18 +292,18 @@ Si*/
         {
           case 'A':
             for(int i=0; i<_Group->rank()/2;i++)
-              if((*_HWeight)[i]>(*_HWeight)[_Group->rank()-1-i])
+              if((*_HWeight)[i] > (*_HWeight)[_Group->rank()-1-i])
                 _conjugate = 0;
             break;
 
           case 'D':
-            if((*_HWeight)[_Group->rank()-1]<(*_HWeight)[_Group->rank()-2])
+            if((*_HWeight)[_Group->rank()-1] < (*_HWeight)[_Group->rank()-2])
               _conjugate = 0;
             break;
 
           case 'E':
             for(int i=0; i<(_Group->rank()-1)/2;i++)
-              if((*_HWeight)[i]>(*_HWeight)[_Group->rank()-2-i])
+              if((*_HWeight)[i] > (*_HWeight)[_Group->rank()-2-i])
                 _conjugate = 0;
             break;
         }
@@ -379,11 +379,11 @@ Si*/
             _Casimir += 0.5*(*_HWeight)[i]*_Group->G()[i][j]*((*_HWeight)[j]+2);
         _DynkinIndex = _Casimir*_dim/_Group->dim();
       }
-        
+
       // Perhaps do not calculate weights for very large reps
       if(_dim < 1000)
         _Weights = CalculateWeights();
-        
+
       // Store the info in the database
       DB<Irrep>().set(id(),this);  
       
@@ -436,7 +436,7 @@ Si*/
   }
 
   /* Returns HWeight */
-  Weight &Irrep::HWeight() const
+  Weight& Irrep::HWeight() const
   {
     return *_HWeight;
   }
@@ -478,18 +478,24 @@ Si*/
   {
     try
     {  
+      if(_Weights.nterms()) return _Weights;
+      _Weights.Clear();
 
       int rank = _Group->rank();
 
       //cout << "Calculating weights of " << *this << endl;
       // Reserve enough space for all the weights
-      _Weights.reserve(dim());
+      _Weights.reserve(_dim);
+      _DualWeights.reserve(_dim);
       _Weights.AddTerm(*_HWeight);
       
-      if(_Group->abelian()) {
+      if(_Group->abelian() or _dim == 1)
+      {
+        for(auto it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights++)
+          _DualWeights.AddTerm(it_Weights->Dual());
         return _Weights;
       }
-      
+
       int n = 0;
       
       for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end(); ++ it_Weights) {
@@ -506,7 +512,6 @@ Si*/
           }
         }
       }
-      
       // Already ordered
       //_Weights.Order("ASC");
 
@@ -562,6 +567,8 @@ Si*/
       // Calculate also the dual weights
       for(auto it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights++)
         _DualWeights.AddTerm(it_Weights->Dual());
+
+      //cout << _Weights << endl;
       
       return _Weights;
 
@@ -701,13 +708,13 @@ Si*/
       {
         case 'A':
           for(int i=0; i<_Group->rank(); i++)
-            if(this->HWeight()[i] != R.HWeight()[_Group->rank()-i-1])
+            if((*_HWeight)[i] != R.HWeight()[_Group->rank()-i-1])
               return false;
           return true;
 
         case 'D':
           if(_Group->rank()%2)
-            if(this->HWeight()[_Group->rank()-1] == R.HWeight()[_Group->rank()-2])
+            if((*_HWeight)[_Group->rank()-1] == R.HWeight()[_Group->rank()-2])
               return true;
           return false;
 
@@ -716,7 +723,7 @@ Si*/
             return false;
          
           for(int i=0; i<_Group->rank()-1; i++)
-            if(this->HWeight()[i] != R.HWeight()[_Group->rank()-i-2])
+            if((*_HWeight)[i] != R.HWeight()[_Group->rank()-i-2])
               return false;
           return true;
       }
@@ -743,7 +750,7 @@ Si*/
   {
     if(dim() == 1)
     {
-      if(_Group->abelian() and _HWeight[0] != 0) return false;
+      if(_Group->abelian() and (*_HWeight)[0] != 0) return false;
 
       return true;
     }

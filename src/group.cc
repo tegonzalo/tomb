@@ -162,9 +162,15 @@ int main(int argc, char *argv[]) {
     {
       SimpleGroup G1(rank, type);
       id = G1.id();  
-   }
-    
-/*    LieGroup G(id);
+    }
+
+    cout << DB<SimpleGroup>().check(id) << endl;
+    cout << DB<SimpleGroup>().at(id)->_Irreps << endl;
+    //cout << DB<SimpleGroup>().at(id)->_MaxSubgroups.nterms() << endl;
+   /* 
+    cout << "liegroup" << endl;
+
+    LieGroup G(id);
 
     std::cout << "Calculating group " << G << " info..." << std::endl;
       
@@ -175,9 +181,12 @@ int main(int argc, char *argv[]) {
     std::cout << "Reps = " << Reps << std::endl;
 
     // Subgroups
-    List<SubGroup> MaximalSubgroups = G.MaximalSubgroups();
-    std::cout << "Maximal subgroups = " << MaximalSubgroups << std::endl;
-
+    G.MaximalSubgroups();
+    for(auto it = G._MaxSubgroups.begin(); it != G._MaxSubgroups.end(); it++)
+      cout << "arg" << endl;
+    std::cout << "Maximal subgroups = " << std::endl;
+    //std::cout << "Maximal subgroups = " << G._MaxSubgroups << std::endl;
+/*
     List<SubGroup> Subgroups = G.Subgroups();
     std::cout << "Subgroups = " << Subgroups << std::endl;
     //std::cout << Subgroups.json().write_formatted() << std::endl;

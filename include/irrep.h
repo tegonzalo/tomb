@@ -46,7 +46,7 @@ namespace Tomb
       bool _real = true;
       int _conjugate = 0;
       RVector<int> _congruency;
-      Weight *_HWeight = NULL;
+      Weight* _HWeight = NULL;
       string _label = "";
       double _Casimir;
       double _DynkinIndex;

@@ -22,6 +22,8 @@
 #include <iterator>
 #include <algorithm>
 
+using namespace std;
+
 /***************************/
 /* Class List declarations */
 /***************************/

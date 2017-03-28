@@ -27,14 +27,17 @@ namespace Tomb
 
   /* Constructor */
   LieGroup::LieGroup() : Product<SimpleGroup>() {
-    this->_ngroups = 0;
-    this->_rank = 0;
-    this->_dim = 0;
-    this->_nabelians = 0;
-    this->_simple = false;
-    this->_semisimple = false;
-    this->_label = this->Print();
-    this->_Casimir.Clear();
+    _ngroups = 0;
+    _rank = 0;
+    _dim = 0;
+    _nabelians = 0;
+    _simple = false;
+    _semisimple = false;
+    _label = this->Print();
+    _Casimir.Clear();
+    _Reps.Clear();
+    _MaxSubgroups.Clear();
+   //_Subgroups.Clear();
      
   }
 
@@ -42,12 +45,12 @@ namespace Tomb
   LieGroup::LieGroup(const string id) : Product<SimpleGroup>() {
     
     try {
-      this->_ngroups = 0;
-      this->_rank = 0;
-      this->_dim = 0;
-      this->_nabelians = 0;
-      this->_simple = false;
-      this->_semisimple = false;
+      _ngroups = 0;
+      _rank = 0;
+      _dim = 0;
+      _nabelians = 0;
+      _simple = false;
+      _semisimple = false;
       
 
       string liegroupid(Strings::split_string(id, '[')[0]);
@@ -83,17 +86,18 @@ namespace Tomb
     try
     {
       cout << "lg::cpct1" << endl; 
-      this->_rank = Group.rank();
-      this->_dim = Group.dim();
-      this->_simple = Group.simple();
-      this->_semisimple = Group.semisimple();
-      this->_ngroups = Group.ngroups();
-      this->_nabelians = Group.nabelians();
-      this->_label = this->Print();
-      this->_Casimir = Group.Casimir();
-      this->_repsMaxDim = Group.repsMaxDim();
-//      _Reps = Group.Reps();
-//      _Subgroups = Group.SubgroupsConst();
+      _rank = Group.rank();
+      _dim = Group.dim();
+      _simple = Group.simple();
+      _semisimple = Group.semisimple();
+      _ngroups = Group.ngroups();
+      _nabelians = Group.nabelians();
+      _label = this->Print();
+      _Casimir = Group.Casimir();
+      _repsMaxDim = Group.repsMaxDim();
+      _Reps = Group._Reps;
+      _MaxSubgroups = Group._MaxSubgroups;
+//      _Subgroups = Group._Subgroups;
     }
     catch (...)
     {
@@ -107,17 +111,32 @@ namespace Tomb
     try
     {
       cout << "lg::cpct2" << endl;
-      this->_ngroups = 1;
-      this->_rank = Group.rank();
-      this->_dim = Group.dim();
-      this->_nabelians = (Group.abelian() ? 1 : 0);
-      this->_simple = true;
-      this->_semisimple = true;	
-      this->_label = this->Print();
-      this->_Casimir.AddTerm(Group.Casimir());
-      this->_repsMaxDim = Group.repsMaxDim();
-//      _Reps = Irreps2Reps(Group.Irreps());
-//      _Subgroups = Group.SubgroupsConst();
+      _ngroups = 1;
+      _rank = Group.rank();
+      _dim = Group.dim();
+      _nabelians = (Group.abelian() ? 1 : 0);
+      _simple = true;
+      _semisimple = true;	
+      _label = this->Print();
+      _Casimir.AddTerm(Group.Casimir());
+      _repsMaxDim = Group.repsMaxDim();
+
+      LieGroup *G = LieGroup::find(id());
+      bool replace = false;
+
+      if(G != NULL and G->_Reps.nterms() and G->_MaxSubgroups.nterms()/* and G->_Subgroups.nterms()*/)
+      {
+        _Reps = G->_Reps;
+        _MaxSubgroups = G->_MaxSubgroups;
+        //_Subgroups = G->_Subgroups;
+      } 
+      else
+      {
+        _Reps = Irreps2Reps(Group.Irreps());
+        _MaxSubgroups = Group._MaxSubgroups;
+        //_Subgroups = Group._Subgroups;
+        DB<LieGroup>().set(id(),this,true);
+      }
 
     }
     catch (...)
@@ -155,8 +174,39 @@ namespace Tomb
       throw;
     }
   }
-
+  
   /* Copy constructor 4 */
+  LieGroup::LieGroup(const List<SimpleGroup *> &Group) : Product<SimpleGroup>()
+  {
+    try
+    {
+      cout << "lg::cpct4" << endl;
+      _ngroups = 0;
+      _rank = 0;
+      _dim = 0;
+      _nabelians = 0;
+      _simple = false;
+      _semisimple = false;
+      _label = this->Print();
+      
+      for(int i=0; i<Group.nterms(); i++)
+      {
+        AddTerm(*Group.GetObject(i));
+      }
+      
+      _label = this->Print();
+
+      init();
+      
+    }
+    catch(...)
+    {
+      throw;
+    }
+  }
+
+
+  /* Copy constructor 5 */
   LieGroup::LieGroup(const Product<SimpleGroup> &Group) : Product<SimpleGroup>()
   {
     try
@@ -194,8 +244,9 @@ namespace Tomb
     _nabelians(move(Group._nabelians)),
     _label(move(Group._label)),
     _Casimir(move(Group._Casimir)),
-    _repsMaxDim(move(Group._repsMaxDim))//,
-//    _Reps(move(Group._Reps))//,
+    _repsMaxDim(move(Group._repsMaxDim)),
+    _Reps(move(Group._Reps)),
+    _MaxSubgroups(move(Group._MaxSubgroups))//,
 //    _Subgroups(move(Group._Subgroups))
   {
     try
@@ -209,7 +260,8 @@ namespace Tomb
       Group._label = "";
       Group._Casimir.Clear();
       Group._repsMaxDim = 0;
-//      Group._Reps.Clear();
+      Group._Reps.Clear();
+      Group._MaxSubgroups.Clear();
 //      Group._Subgroups.Clear();
       
     }
@@ -222,15 +274,16 @@ namespace Tomb
   /* Destructor */
   LieGroup::~LieGroup()
   {
-    this->_ngroups = 0;
-    this->_rank = 0;
-    this->_dim = 0;
-    this->_nabelians = 0;
-    this->_simple = false;
-    this->_semisimple = false;
-    this->_label = "";
-//    this->_Reps.Clear();
-//    this->_Subgroups.Clear();
+    _ngroups = 0;
+    _rank = 0;
+    _dim = 0;
+    _nabelians = 0;
+    _simple = false;
+    _semisimple = false;
+    _label = "";
+    _Reps.Clear();
+    _MaxSubgroups.Clear();
+    //_Subgroups.Clear();
   }
 
   /* Assignment operator 1 */
@@ -253,10 +306,9 @@ namespace Tomb
       _label = this->Print();
       _Casimir = Group.Casimir();
       _repsMaxDim = Group.repsMaxDim();
-//      _Reps.Clear();
-//      _Subgroups.Clear();
-//      _Reps = Group.Reps();
-//      _Subgroups = Group.SubgroupsConst();
+      _Reps = Group._Reps;
+      _MaxSubgroups = Group._MaxSubgroups;
+//      _Subgroups = Group._Subgroups;
 
       return *this;
       
@@ -284,10 +336,21 @@ namespace Tomb
       _label = this->Print();
       _Casimir.AddTerm(Group.Casimir());
       _repsMaxDim = Group.repsMaxDim();
-//      _Reps.Clear();
-//      _Subgroups.Clear();
-//      _Reps = Irreps2Reps(Group.Irreps());
-//      _Subgroups = Group.SubgroupsConst();
+
+      LieGroup *G = LieGroup::find(id());
+      if(G != NULL and G->_Reps.nterms() and G->_MaxSubgroups.nterms() /*and G->Subgroups.nterms()*/)
+      {
+        _Reps = G->_Reps;
+        _MaxSubgroups = G->_MaxSubgroups;
+        //_Subgroups = G->_Subgroups;
+      }
+      else
+      {
+        _Reps = Irreps2Reps(Group.Irreps());
+        _MaxSubgroups = Group._MaxSubgroups;
+        //_Subgroups = Group._Subgroups;
+        DB<LieGroup>().set(id(),this);
+      }
       
       return *this;
     }
@@ -306,7 +369,7 @@ namespace Tomb
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-//      _Reps.Clear();
+      _Reps.Clear();
 //      _Subgroups.Clear();
       
       _ngroups = 0;
@@ -320,8 +383,8 @@ namespace Tomb
         AddTerm(Group.GetObject(i));
       
       _label = this->Print();
-//      _Reps.Clear();
-//      _Subgroups.Clear();
+
+      init();
       
       return *this;
     }
@@ -332,6 +395,38 @@ namespace Tomb
   }
 
   /* Assignment operator 4 */
+  LieGroup &LieGroup::operator=(const List<SimpleGroup*> &Group)
+  {
+    try
+    {
+      if(this->ngroups()) this->Clear();
+      _Reps.Clear();
+
+      _ngroups = 0;
+      _rank = 0;
+      _dim = 0;
+      _nabelians = 0;
+      _simple = false;
+      _semisimple = false;
+      
+      for(int i=0; i<Group.nterms(); i++)
+        AddTerm(*Group.GetObject(i));
+      
+      _label = this->Print();
+
+      init();
+      
+      return *this;
+    }
+    catch(...)
+    {
+      throw;
+    }
+  }
+
+     
+
+  /* Assignment operator 5 */
   LieGroup &LieGroup::operator=(const Product<SimpleGroup> &Group)
   {
     try
@@ -340,8 +435,6 @@ namespace Tomb
       if(this == &Group) return *this;
       
       if(this->ngroups()) this->Clear();
-//      _Reps.Clear();
-//      _Subgroups.Clear();
       
       _ngroups = 0;
       _rank = 0;
@@ -354,8 +447,8 @@ namespace Tomb
         AddTerm(Group.GetObject(i));
       
       _label = this->Print();
-//      _Reps.Clear();
-//      _Subgroups.Clear();
+
+      init();
       
       return *this;
     }
@@ -381,7 +474,8 @@ namespace Tomb
       _label = move(Group._label);
       _Casimir = move(Group._Casimir);
       _repsMaxDim = move(Group._repsMaxDim);
-//      _Reps = move(Group._Reps);
+      _Reps = move(Group._Reps);
+      _MaxSubgroups = move(Group._MaxSubgroups);
 //      _Subgroups = move(Group._Subgroups);
       
       Group._rank = 0;
@@ -392,7 +486,8 @@ namespace Tomb
       Group._label = "";
       Group._Casimir.Clear();
       Group._repsMaxDim = 0;
-//      Group._Reps.Clear();
+      Group._Reps.Clear();
+      Group._MaxSubgroups.Clear();
 //      Group._Subgroups.Clear();
 
       return *this;
@@ -406,7 +501,37 @@ namespace Tomb
   {
     try
     {
-      DB<LieGroup>().set(id(), this);
+      cout << "init" << endl;
+ 
+      LieGroup *G = LieGroup::find(id());
+      bool replace = false;
+
+      if(G != NULL and G->_Reps.nterms() and G->repsMaxDim() >= _repsMaxDim)
+        _Reps = G->_Reps;
+      else
+      {
+        _Reps = CalculateReps(_repsMaxDim);
+        replace = true;
+      }
+
+      if(G != NULL and G->_MaxSubgroups.nterms())
+        _MaxSubgroups = G->_MaxSubgroups;
+      else
+      {
+        _MaxSubgroups = MaximalSubgroups();
+        replace = true;
+      }
+
+//      if(G != NULL and G->_Subgroups.nterms())
+//        _Subgroups = G->_Subgroups;
+//      else
+//      {  
+//        _Subgroups = CalculateSubgroups();
+//        replace = true;
+//      }
+
+      if(replace)
+        DB<LieGroup>().set(id(), this);
     }
     catch (...) { throw; }
   }
@@ -513,16 +638,31 @@ namespace Tomb
   }
   
   /* Returns the Reps of the group */
-/*  List<Rrep> LieGroup::Reps() const
+  List<Rrep> LieGroup::Reps() const
   {
     return _Reps;
   }
-*/
+ 
+  /* Returns the reps or calculate them if the dimension is larger */
+  List<Rrep> &LieGroup::Reps(int maxdim)
+  {
+    try
+    {
+      if(maxdim > _repsMaxDim)
+        return CalculateReps(maxdim);
+      else
+        return _Reps;
+    }
+    catch (...) { throw; }
+  }
+
   /* Delete a subgroup of the LieGroup */
-  void LieGroup::DeleteTerm(int i) {
-    
-    try {
-      if(GetObject(i).abelian()) {
+  void LieGroup::DeleteTerm(int i)
+  {   
+    try
+    {
+      if(GetObject(i).abelian())
+      {
         _nabelians--;
       }
       _rank -= GetObject(i).rank();
@@ -536,15 +676,15 @@ namespace Tomb
       
       _label = this->Print();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Adds a simple group to the Lie group */
-  void LieGroup::AddTerm(const SimpleGroup &Group) {
-
-    try {
+  void LieGroup::AddTerm(const SimpleGroup &Group)
+  {
+    try
+    {
       Product<SimpleGroup>::AddTerm(Group);
       if(_ngroups == 0) _dim = 0;
       _rank += Group.rank();
@@ -559,46 +699,48 @@ namespace Tomb
       _label = this->Print();
       _Casimir.AddTerm(Group.Casimir());
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Adds a lie group to the lie group */
-  void LieGroup::AddTerm(const LieGroup &Group) {
-    try {
-      for(int i=0; i<Group.ngroups(); i++) {
+  void LieGroup::AddTerm(const LieGroup &Group)
+  {
+    try
+    {
+      for(int i=0; i<Group.ngroups(); i++)
+      {
         AddTerm(Group.GetObject(i));
       }
 
-    } catch(...) {
-      throw;
     }
+    catch(...) { throw; }
   }
 
   /* Calculates the maximal subgroups of a Lie Group */
-/*  List<SubGroup> &LieGroup::MaximalSubgroups() {
-    
-    try {
-      
+  List<SubGroup> &LieGroup::MaximalSubgroups()
+  { 
+    try
+    {   
       // If maximal subgroups have been calculated already return them
-      if(_MaxSubgroups.nterms()) {
+      if(_MaxSubgroups.nterms())
         return _MaxSubgroups;
-      }
       
       // If the group consists only on abelian groups return the empty variable
-      if(ngroups() == nabelians()) {
+      if(ngroups() == nabelians())
         return _MaxSubgroups;
-      }
       
       // If there is only one group return the maximal subgroups of that simple group
-      if(this->ngroups() == 1) {
-        return this->GetObject(0).MaximalSubgroups();
+      if(this->ngroups() == 1)
+      {
+        _MaxSubgroups = GetObject(0)._MaxSubgroups;
+        return _MaxSubgroups;
       }
       
       List<List<SubGroup> > ListofSubgroups;
       
-      for(LieGroup::iterator it = this->begin(); it != this->end(); it++) {
+      for(LieGroup::iterator it = this->begin(); it != this->end(); it++)
+      {
         List<SubGroup> Subgroups(SubGroup(*it,*it));
         
         Subgroups.AppendList(it->MaximalSubgroups());
@@ -606,19 +748,20 @@ namespace Tomb
       }
       
       int nterms = 1;
-      for(int i=0; i<ListofSubgroups.nterms(); i++) {
+      for(int i=0; i<ListofSubgroups.nterms(); i++)
         nterms *= ListofSubgroups.GetObject(i).nterms();
-      }
 
       //cout << ListofSubgroups << endl;
 
       //time1 = clock();
-      for(int i=0; i<nterms; i++) {
+      for(int i=0; i<nterms; i++)
+      {
         ///cout << "i = " << i << endl;
         SubGroup Subgroup(*this);
         
         int terms = 1;
-        for(int j=0; j<ngroups(); j++) {
+        for(int j=0; j<ngroups(); j++)
+        {
           //cout << "j = " << j << endl;
           int thisterms = ListofSubgroups.GetObject(j).nterms();
           terms *= thisterms;
@@ -646,11 +789,10 @@ namespace Tomb
       
       return _MaxSubgroups;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Calculates the special subgroups of a Lie Group */
 /*  List<SubGroup> LieGroup::SpecialSubgroups() {
     
@@ -1424,8 +1566,8 @@ namespace Tomb
     }
   }
 */
-  /* Returns all the representations of the group up to dimension maxdim */
-/*  List<Rrep> &LieGroup::Reps(int maxdim)
+  /* Calculates all the representations of the group up to dimension maxdim */
+  List<Rrep> &LieGroup::CalculateReps(int maxdim)
   {  
     try
     {
@@ -1441,46 +1583,28 @@ namespace Tomb
         return _Reps;
       }
       
-      List<Rrep> Reps;
-*/      
-      // If info is already on the db, pull it
-      /*if(database_check(id(), "Reps") and DataBase.at(id()).hasReps() and DataBase.at(id()).repsMaxDim() >= maxdim) {
-        _Reps = DataBase.at(id()).Reps(maxdim);
-        if(_Reps.nterms()) _hasReps = true;
-        _repsMaxDim = maxdim;
-        return _Reps;
-      }*/
-      
       
       // If it is a simple group, calculate irreps
-/*      if(ngroups() == 1) {
-        List<Irrep> Irreps = GetObject(0).Irreps(maxdim);
-        for(List<Irrep>::iterator it_Irreps = Irreps.begin(); it_Irreps != Irreps.end(); it_Irreps++)
-          Reps.AddTerm(Rrep(*it_Irreps)); 
-        _Reps = Reps;
-        
-        // Set th hasReps flag to true and repsMaxDim to the current maxdim
-        if(_Reps.nterms()) _hasReps = true;
+      if(ngroups() == 1)
+      {
+        List<Irrep> Irreps = GetObject(0).CalculateIrreps(maxdim);
+        _Reps = Irreps2Reps(Irreps);
         _repsMaxDim = maxdim;
       
-        // If there is an entry in the database delete it and dump this
-        //database_emplace(id(), *this);
-        
         return _Reps;
       }
 
       //cout << "Calculating Reps of " << *this << endl;
       // If not, calculate it
 
-
       List<List<Rrep> > ListofReps;
     
       LieGroup Group = *this;
       Group.DeleteTerm(Group.nterms()-1);
-      ListofReps.AddTerm(Group.Reps(maxdim));
+      ListofReps.AddTerm(Group.Reps());
 
       Group = this->GetObject(this->nterms()-1);
-      ListofReps.AddTerm(Group.Reps(maxdim));
+      ListofReps.AddTerm(Group.Reps());
         
       int nirreps = ListofReps.GetObject(0).nterms()*ListofReps.GetObject(1).nterms();
     
@@ -1508,14 +1632,11 @@ namespace Tomb
         if(dim <= maxdim) {
           Rrep Rep(*this,w);
           //cout << Rep << endl;
-          Reps.AddTerm(Rep);
+          _Reps.AddTerm(Rep);
         }
       }
-      _Reps = Reps;
       //cout << "Reps = " << Reps << endl;
       
-      // Set th hasReps flag to true and repsMaxDim to the current maxdim
-      if(_Reps.nterms()) _hasReps = true;
       _repsMaxDim = maxdim;
       
       // If there is an entry in the database delete it and dump this
@@ -1528,27 +1649,27 @@ namespace Tomb
     }
     
   }
-*/
+
   /* Returns the variable Reps */
 /*  List<Rrep> LieGroup::RepsConst() const {
     return _Reps;
   }
 */  
   /* Transform a list of irreps into a list of reps (if the LieGroup is simple) */
-/*  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps)
+  List<Rrep> LieGroup::Irreps2Reps(List<Irrep> Irreps)
   {
     try 
     {
       if(ngroups() != 1) throw "LieGroup::Irreps2Reps::Operation only permitted on simple groups";
       
       List<Rrep> Reps;
-      for(auto it = Irreps.begin(); it != Irreps.end(); it++) Reps.AddTerm(Rrep(*it));
+      for(auto it = Irreps.begin(); it != Irreps.end(); it++) Reps.AddTerm(Rrep(*this,*it));
       
       return Reps;
     }
     catch (...) { throw; }
   }
-*/    
+    
   /* Overloaded > operator with LieGroups */
   bool LieGroup::operator>(const LieGroup &Group) {
     if(this->rank() > Group.rank()) {
