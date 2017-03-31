@@ -95,8 +95,8 @@ namespace Tomb
       _label = this->Print();
       _Casimir = Group.Casimir();
       _repsMaxDim = Group.repsMaxDim();
-      _Reps = Group._Reps;
-      _MaxSubgroups = Group._MaxSubgroups;
+//      _Reps = Group._Reps;
+//      _MaxSubgroups = Group._MaxSubgroups;
 //      _Subgroups = Group._Subgroups;
     }
     catch (...)
@@ -122,21 +122,21 @@ namespace Tomb
       _repsMaxDim = Group.repsMaxDim();
 
       LieGroup *G = LieGroup::find(id());
-      bool replace = false;
-
       if(G != NULL and G->_Reps.nterms() and G->_MaxSubgroups.nterms()/* and G->_Subgroups.nterms()*/)
       {
-        _Reps = G->_Reps;
-        _MaxSubgroups = G->_MaxSubgroups;
+        //_Reps = G->_Reps;
+        //_MaxSubgroups = G->_MaxSubgroups;
         //_Subgroups = G->_Subgroups;
+        return ;
       } 
-      else
       {
-        _Reps = Irreps2Reps(Group.Irreps());
-        _MaxSubgroups = Group._MaxSubgroups;
-        //_Subgroups = Group._Subgroups;
-        DB<LieGroup>().set(id(),this,true);
-      }
+      //_Reps = Irreps2Reps(Group.Irreps());
+      //_MaxSubgroups = Group._MaxSubgroups;
+      //_Subgroups = Group._Subgroups;
+      DB<LieGroup>().set(id(),this,true);
+      DB<LieGroup>().at(id())->Irreps2Reps(Group.Irreps());
+      DB<LieGroup>().at(id())->CalculateMaximalSubgroups();
+      //DB<LieGroup>().at(id())->CalculateSubgroups();
 
     }
     catch (...)
@@ -306,8 +306,8 @@ namespace Tomb
       _label = this->Print();
       _Casimir = Group.Casimir();
       _repsMaxDim = Group.repsMaxDim();
-      _Reps = Group._Reps;
-      _MaxSubgroups = Group._MaxSubgroups;
+//      _Reps = Group._Reps;
+//      _MaxSubgroups = Group._MaxSubgroups;
 //      _Subgroups = Group._Subgroups;
 
       return *this;

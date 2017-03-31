@@ -218,8 +218,8 @@ namespace Tomb
     _Casimir(move(G._Casimir)),
     _repsMaxDim(move(G._repsMaxDim)),
     _PRoots(move(G._PRoots))//,
-//    _Irreps(move(G._Irreps)),
- //   _MaxSubgroups(move(G._MaxSubgroups))//,
+    _Irreps(move(G._Irreps)),
+    _MaxSubgroups(move(G._MaxSubgroups))//,
  //   _Subgroups(move(G._Subgroups))
   {
     cout << "sg::mvct" << endl;  
@@ -299,8 +299,8 @@ namespace Tomb
       _Casimir = move(G._Casimir);
       _repsMaxDim = move(G._repsMaxDim);
       _PRoots = move(G._PRoots);
-//      _Irreps = move(G._Irreps);
-//      _MaxSubgroups = move(G._MaxSubgroups);
+      _Irreps = move(G._Irreps);
+      _MaxSubgroups = move(G._MaxSubgroups);
 //      _Subgroups = move(G._Subgroups);
       
       G._rank = 0;
@@ -1387,12 +1387,11 @@ namespace Tomb
               from = j+1;
             }
           }	
-          cout << "bleh" << endl;
           //SimpleGroup AuxGroup(1,'U');
           //Subgroup.AddTerm(AuxGroup);
           Subgroup.AddTerm(SimpleGroup(1,'U'));
 
-          cout << "Subgroup = " << Subgroup << endl;
+          //cout << "Subgroup = " << Subgroup << endl;
           //cout << Subweights << endl;
           
           // And the projection matrix

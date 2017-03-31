@@ -17,6 +17,7 @@
 #include "database.h"
 #include "simplegroup.h"
 #include "liegroup.h"
+#include "subgroup.h"
 
 /****************************************/
 /* Main function for group calculations */
@@ -164,10 +165,6 @@ int main(int argc, char *argv[]) {
       id = G1.id();  
     }
 
-    cout << DB<SimpleGroup>().check(id) << endl;
-    cout << DB<SimpleGroup>().at(id)->_Irreps << endl;
-    //cout << DB<SimpleGroup>().at(id)->_MaxSubgroups.nterms() << endl;
-   /* 
     cout << "liegroup" << endl;
 
     LieGroup G(id);
@@ -175,13 +172,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Calculating group " << G << " info..." << std::endl;
       
     std::cout << "Casimir = " << G.Casimir() << std::endl;
-
+/*
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);
     std::cout << "Reps = " << Reps << std::endl;
 
     // Subgroups
-    G.MaximalSubgroups();
+/*    G.MaximalSubgroups();
     for(auto it = G._MaxSubgroups.begin(); it != G._MaxSubgroups.end(); it++)
       cout << "arg" << endl;
     std::cout << "Maximal subgroups = " << std::endl;
