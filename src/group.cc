@@ -165,24 +165,18 @@ int main(int argc, char *argv[]) {
       id = G1.id();  
     }
 
-    cout << "liegroup" << endl;
-
     LieGroup G(id);
 
     std::cout << "Calculating group " << G << " info..." << std::endl;
       
     std::cout << "Casimir = " << G.Casimir() << std::endl;
-/*
+
     // Reps
     List<Rrep> Reps = G.Reps(maxdim);
     std::cout << "Reps = " << Reps << std::endl;
 
     // Subgroups
-/*    G.MaximalSubgroups();
-    for(auto it = G._MaxSubgroups.begin(); it != G._MaxSubgroups.end(); it++)
-      cout << "arg" << endl;
-    std::cout << "Maximal subgroups = " << std::endl;
-    //std::cout << "Maximal subgroups = " << G._MaxSubgroups << std::endl;
+    cout << "Maximal Subgroups = " << G.MaximalSubgroups() << endl;
 /*
     List<SubGroup> Subgroups = G.Subgroups();
     std::cout << "Subgroups = " << Subgroups << std::endl;

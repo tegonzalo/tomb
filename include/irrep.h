@@ -94,8 +94,6 @@ namespace Tomb
       string Table() const;
       JSONNode json(string = "") const;
 //      void ParseJSON(const JSONNode &n, string = "");
-      static Irrep* find(string);
-      static Irrep* get(string);
   
   };
   

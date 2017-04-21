@@ -53,7 +53,7 @@ namespace Tomb
    public:
       List<Rrep> _Reps;
       List<SubGroup> _MaxSubgroups;
-//      List<SubGroup> _Subgroups;*/
+      List<SubGroup> _Subgroups;
       
       LieGroup();
       LieGroup(const string);
@@ -86,29 +86,33 @@ namespace Tomb
       int repsMaxDim() const;
       List<Rrep> Reps() const;
       List<Rrep> &Reps(int);
+      List<SubGroup> MaximalSubgroups() const;
+//      List<SubGroup> SpecialSubgroups();
+      List<SubGroup> Subgroups() const;
 //      bool isSubgroupOf(LieGroup) const;
 //      bool isSubgroupOf(SimpleGroup) const;
+
       void DeleteTerm(int);
       void AddTerm(const SimpleGroup &);
       void AddTerm(const LieGroup &);
-      List<SubGroup> &MaximalSubgroups();
-//      List<SubGroup> SpecialSubgroups();
-/*      List<SubGroup> &Subgroups();
-      List<SubGroup> SubgroupsConst() const;
-      List<SubGroup> Subgroups(int);
+ 
+      List<Rrep> SimpleReps();
+      Rrep GeneratingRep();
+      List<Rrep> AdjointReps();
+      Rrep SingletRep();
+
+      List<Rrep> &Irreps2Reps(List<Irrep>);
+      List<Rrep> &CalculateReps(int=50);
+      List<SubGroup> &CalculateMaximalSubgroups();
+      List<SubGroup> &CalculateSubgroups();
+/*      List<SubGroup> Subgroups(int);
       List<SubGroup> Subgroups(int, int);
       List<SubGroup> SplitToSubGroups(int = 0);
       List<SubGroup> SplitToSubGroups(int, int);
       List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
       List<Product<Rrep> > Invariants(const List<Rrep> &, const int = 4);
-      List<Rrep> SimpleReps();
-      Rrep GeneratingRep();
-      List<Rrep> AdjointReps();
-      Rrep SingletRep();
-*/      List<Rrep> &CalculateReps(int=50);
-//      List<Rrep> RepsConst() const;
-      List<Rrep> Irreps2Reps(List<Irrep>);
+*/ 
       bool operator>(const LieGroup &);
       bool operator<(const LieGroup &);
       bool operator>(const SimpleGroup &);
@@ -120,8 +124,6 @@ namespace Tomb
       bool operator!=(const SimpleGroup &);
 //      JSONNode json(string = "") const;
 //      void ParseJSON(const JSONNode &n, string = "");
-      static LieGroup* find(const string);
-      static LieGroup* get(const string);
       static LieGroup* get(const SimpleGroup&);
 
   };

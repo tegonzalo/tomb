@@ -45,7 +45,7 @@ namespace Tomb
     try
     {
       _HWeight = new Weight(id);
-      _Group = SimpleGroup::get(_HWeight->Group().id());
+      _Group = DB<SimpleGroup>().get(_HWeight->Group().id());
       
       init();
       
@@ -129,7 +129,6 @@ Si*/
   /* Destructor */
   Irrep::~Irrep()
   {
-    //cout << "deleting irrep" << endl;
   }
 
   /* Overloaded = operator */
@@ -380,12 +379,16 @@ Si*/
         _DynkinIndex = _Casimir*_dim/_Group->dim();
       }
 
-      // Perhaps do not calculate weights for very large reps
-      if(_dim < 1000)
-        _Weights = CalculateWeights();
-
+      // If the irrep is already in the database, do nothing
+      if(DB<Irrep>().find(id()) != NULL)
+        return ;
       // Store the info in the database
       DB<Irrep>().set(id(),this);  
+
+      // Perhaps do not calculate weights for very large reps
+      if(_dim < 1000)
+        DB<Irrep>().at(id())->CalculateWeights();
+
       
     } 
     catch (...) { throw; }
@@ -444,11 +447,17 @@ Si*/
   /* Returns the weight list */
   List<Weight> Irrep::Weights() const
   {
+    Irrep *R = DB<Irrep>().find(id());
+    if(R != NULL)
+      return R->_Weights;
     return _Weights;
   }
 
   List<Weight> Irrep::DualWeights() const
   {
+    Irrep *R = DB<Irrep>().find(id());
+    if(R != NULL)
+      return R->_DualWeights;
     return _DualWeights;
   }
   
@@ -456,6 +465,9 @@ Si*/
   void Irrep::setWeights(const List<Weight> &Weights)
   {
     _Weights = Weights;
+    
+    if(DB<Irrep>().find(id()) != NULL)
+      DB<Irrep>().at(id())->setWeights(Weights);
   }
 
    /* Sets the label */
@@ -466,8 +478,8 @@ Si*/
       _label = label;
 
       // Replace the DB irrep if label is different
-      if(Irrep::find(id()) != NULL and Irrep::get(id())->label() != label)
-        DB<Irrep>().set(id(),this,true);      
+      if(DB<Irrep>().find(id()) != NULL and DB<Irrep>().at(id())->label() != label)
+        DB<Irrep>().at(id())->setLabel(label);      
 
     }
     catch (...) { throw; }
@@ -483,7 +495,6 @@ Si*/
 
       int rank = _Group->rank();
 
-      //cout << "Calculating weights of " << *this << endl;
       // Reserve enough space for all the weights
       _Weights.reserve(_dim);
       _DualWeights.reserve(_dim);
@@ -531,30 +542,23 @@ Si*/
             int index = 0;
             do {
               Weight v = w + alpha*k;
-              //cout << v << endl;
               if((index=_Weights.Index(v)) >=0) {
-                //cout << "index = " << index << endl;
-                //cout << v*alpha << endl;
                 multiplicity += 2.0*_Weights.GetObject(index).multiplicity() * v*alpha;
               }
               k++;
             } while(index >=0);
-            //cout << "multiplicity = " << multiplicity << endl;
           }
           double norm = ((*_HWeight)++)*((*_HWeight)++) - (w++)*(w++);
-          //cout << "norm = " << norm << endl;
           if(norm > 0)
             multiplicity /= norm;
           else
             multiplicity = 1;
          
-          //cout << "final multiplicity = " << multiplicity << endl;
           _Weights.DeleteTerm(i);
           w.setMultiplicity((int)round(multiplicity));
           for(int j=0; j<w.multiplicity(); j++)
           {
             _Weights.InsertTerm(i,w);
-            //cout << _Weights.GetObject(i) << endl;
             i++;
           }
           it_Weights += w.multiplicity()-1;
@@ -568,8 +572,6 @@ Si*/
       for(auto it_Weights = _Weights.begin(); it_Weights != _Weights.end(); it_Weights++)
         _DualWeights.AddTerm(it_Weights->Dual());
 
-      //cout << _Weights << endl;
-      
       return _Weights;
 
     } catch (...) {
@@ -611,8 +613,6 @@ Si*/
         }
       }
 
-      //cout << W << endl;
-
       int n;
 
       do
@@ -634,21 +634,13 @@ Si*/
         for(int i=0; i<Rep.dim(); i++)
         {
           n = W.Index(RepWeights.GetObject(i));
-          //cout << " n = " << n << endl;
-          //cout << "RepWeights(" << i << ") = " << RepWeights.GetObject(i) << endl;
-          //cout << "W(n) = " << W.GetObject(n) << endl;
           if(n >= 0)
             W.DeleteTerm(n);
         }	
         totaldim -= Rep.dim();
 
-        //cout << W << endl;
-
-        //cout << "Dimension = " << Rep.dim() << endl;
         Reps.AddTerm(Rep);
         nreps++;
-        //cout << "nreps = " << nreps << endl;
-        //cout << "totaldim = " << totaldim << endl;
         
       } 
       while(totaldim>0 and W.nterms() > 0);
@@ -764,9 +756,7 @@ Si*/
     
     try {
       List<Weight> Weights = this->Weights();
-      //cout << Weights.nterms() << endl;
       List<Weight> ProjectedWeights;
-      //cout << Subgroup.Projection() << endl;
       for(int i=0; i<Weights.nterms(); i++) {
         Weight weight = Weight(Subgroup, Subgroup.Projection()*Weights.GetObject(i));
         weight.setPositive(true);
@@ -789,7 +779,6 @@ Si*/
     
     try {
       
-      //cout << "decomposing " << *this << " into " << Subgroup << endl;
       Sum<Rrep> Reps;
       
       /*if(DecomposeDataBase.find(pair<string,string>(id(),Subgroup.id())) != DecomposeDataBase.end())
@@ -800,11 +789,9 @@ Si*/
     
 /*      if(Subgroup.isSubgroupOf(this->Group())) {
         List<Weight> ProjectedWeights = this->Project(Subgroup);
-        //cout << "Projected Weights = "<< endl << ProjectedWeights.Print() << endl;
         
         Subgroup.Order();
         do {
-          //cout << "Projected Weights = "<< endl << ProjectedWeights.Print() << endl;
           Weight HWeight = ProjectedWeights.GetObject(0);
           int maximum_sum_of_values = 0;
           for(int i=0; i<ProjectedWeights.nterms(); i++) {
@@ -812,7 +799,6 @@ Si*/
             int group = 0;
             int acc_rank = Subgroup.GetObject(0).rank();
             Weight weight = ProjectedWeights.GetObject(i);
-            //cout << "weight = " << weight << " is positive? " << weight.positive() << endl;
             for(int j=0; j<Subgroup.rank(); j++) {
               if(j >= acc_rank) {
                 group++;
@@ -831,17 +817,10 @@ Si*/
               }
             }
           }
-          //cout << Subgroup << endl;
-          //cout << HWeight << endl;
           Rrep Rep(Subgroup, HWeight);
-          //cout << "The rep is " << Rep << ", " << Rep.id() << endl;
-          //cout << Rep.json().write_formatted() << endl;
           List<Weight> SubWeights = Rep.Weights();
-          //cout << SubWeights << endl;
           for(int i=0; i<SubWeights.nterms(); i++) {
-            //cout << "i = " << i << endl;
             int n = ProjectedWeights.Index(SubWeights.GetObject(i));
-            //cout << "n = " << n << endl;
             if(n >= 0) {
               ProjectedWeights.DeleteTerm(n);
             }
@@ -853,12 +832,9 @@ Si*/
       } else {
         throw "Irrep:Decompose:Not a subgroup";
       }
-      //cout << Reps << endl;
       int dim=0;
       for(int i=0; i<Reps.nterms(); i++) {
         dim += Reps.GetObject(i).dim();
-        //cout << Reps.GetObject(i) << endl;
-        //cout << dim << endl;
       }
       if(dim != this->dim()) {
         throw "Irrep::Decompose::Dimension of the result doesn't match the dimension of the rep";
@@ -1004,7 +980,6 @@ Si*/
       } else if(node_name == "hasWeights" and what == "Weights") {
         _hasWeights = i->as_bool();
       } else if(node_name == "Weights" and what == "Weights") {
-        //cout << i->write_formatted() << endl;
         _Weights.ParseJSON(*i);
       }
   
@@ -1013,26 +988,6 @@ Si*/
     }
   }
 */
-  /* Static function to find an irrep in the DataBase */
-  Irrep* Irrep::find(const string id)
-  {
-    if(DB<Irrep>().check(id))
-      return DB<Irrep>().at(id);
-    else
-      return NULL;
-  }
-
-  /* Static function to get an irrep from the Database or create it otherwise */
-  Irrep* Irrep::get(const string id)
-  {
-    Irrep *irr = Irrep::find(id);
-    if(irr == NULL)
-    {
-      irr = new Irrep(id);
-      DB<Irrep>().set(id, irr);
-    }
-    return irr;
-  }
 
   /* Overloaded << operator with irreps on the right */
   ostream &operator<<(ostream &stream, const Irrep &i)

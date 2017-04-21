@@ -77,7 +77,14 @@ namespace Tomb
       _label = Rep.label();
       _Casimir.AddTerm(Rep.Casimir());
       _DynkinIndex.AddTerm(Rep.DynkinIndex());
-      _Weights = Rep.Weights();
+
+      // If the rrep is already in the database, do nothing
+      if(DB<Rrep>().find(id()) != NULL)
+        return ;
+
+      // Store the rrep in the database
+      DB<Rrep>().set(id(), this);
+      DB<Rrep>().at(id())->_Weights = Rep.Weights();
             
     }
     catch (...) { throw; }
@@ -89,7 +96,7 @@ namespace Tomb
     try
     {
       _HWeight = new Weight(id);
-      _Group = LieGroup::get(_HWeight->Group().id());
+      _Group = DB<LieGroup>().get(_HWeight->Group().id());
       
       init();
 
@@ -256,12 +263,16 @@ namespace Tomb
         _DynkinIndex.AddTerm(GetObject(i).DynkinIndex()*dim()/GetObject(i).dim());
       }
 
-      // Perhaps do not calculate reps for very large reps     
-      if(_dim < 1000)
-        _Weights = CalculateWeights();
-   
+      // If the rrep is already in the database, do nothing
+      if(DB<Rrep>().find(id()) != NULL)
+        return ;
+
       // Store the info in the database
       DB<Rrep>().set(id(),this);
+
+      // Perhaps do not calculate reps for very large reps     
+      if(_dim < 1000)
+        DB<Rrep>().at(id())->CalculateWeights();
     
     }
     catch(...) { throw; }	
@@ -326,6 +337,9 @@ namespace Tomb
   /* Returns the weight list */
   List<Weight> Rrep::Weights() const
   {
+    Rrep *R = DB<Rrep>().find(id());
+    if(R != NULL)
+      return R->_Weights;
     return _Weights;
   }
 
@@ -333,6 +347,10 @@ namespace Tomb
   void Rrep::setWeights(const List<Weight> &Weights)
   {
     _Weights = Weights;
+ 
+    if(DB<Rrep>().find(id()) != NULL)
+      DB<Rrep>().at(id())->_Weights = Weights;
+   
   }
   
   /* Calculates the weights of the representation */
@@ -344,12 +362,9 @@ namespace Tomb
       if(_Weights.nterms()) return _Weights;
       _Weights.Clear();
       
-      //std::cout << "Calculating weights of " << *this << std::endl;
       List< List<Weight> > ListofWeights;
-      //std::cout << _nirreps << std::endl;
       for(int i=0; i<this->nirreps(); i++)
         ListofWeights.AddTerm(this->GetObject(i)._Weights);
-      //std::cout << ListofWeights << std::endl;
       
       int totalterms = 1;
       for(int i=0; i<ListofWeights.nterms(); i++)
@@ -361,11 +376,9 @@ namespace Tomb
       for(int i=0; i<totalterms; i++)
       {
         Weight weight;
-        //std::cout << "i = " << i << std::endl;
         int terms = 1;
         for(int j=0; j<ListofWeights.nterms(); j++)
         {
-          //std::cout << "j = " << j << std::endl;
           int thisterms = ListofWeights.GetObject(j).nterms();
           terms *= thisterms;
           int index = (i*terms/totalterms)%thisterms;
@@ -375,10 +388,8 @@ namespace Tomb
             weight.Append(ListofWeights.GetObject(j).GetObject(index));
         }
         _Weights.AddTerm(weight);
-        //std::cout << Weights << std::endl;
       }
       
-      //std::cout << _Weights << std::endl;
       
       return _Weights;
 
@@ -396,7 +407,7 @@ namespace Tomb
       string groupid;
       groupid.push_back('x');
       groupid.append(Rep.Group().id());
-      _Group = LieGroup::get(groupid);
+      _Group = DB<LieGroup>().get(groupid);
       
       Weight w = *_HWeight;
       _HWeight = new Weight(*_Group, w.Append(Rep.HWeight()));
@@ -447,6 +458,25 @@ namespace Tomb
     catch (...) { throw; }
   }
 
+  /* Finish the rrep */
+  Rrep Rrep::FinishRrep()
+  {
+    try
+    {
+      // If the rrep is already in the database, do nothing
+      if(DB<Rrep>().find(id()) != NULL)
+        return *this;
+
+      // Store the rep in the database
+      DB<Rrep>().set(id(), this);
+      DB<Rrep>().at(id())->CalculateWeights();
+
+      return *this;
+
+    }
+    catch (...) { throw; }
+  }
+
   /* Checks whether the rep is a singlet */
   bool Rrep::isSinglet(int which) const
   {
@@ -471,9 +501,7 @@ namespace Tomb
     try
     {
       List<Weight> Weights = this->Weights();
-      //std::cout << Weights << std::endl;
       List<Weight> ProjectedWeights;
-      //std::cout << Subgroup.Projection() << std::endl;
       for(int i=0; i<Weights.nterms(); i++)
       {
         Weight weight = Weight(Subgroup, Subgroup.Projection()*Weights.GetObject(i));
@@ -497,9 +525,6 @@ namespace Tomb
     try
     {
       
-      //std::cout << "decomposing " << *this << " into " << Subgroup << std::endl;
-      //std::cout << "Weights = " << Weights()  << std::endl;
-      //std::cout << "Projection matrix" << std::endl << Subgroup.Projection() << std::endl;
       Sum<Rrep> Reps;
       
       /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
@@ -514,12 +539,10 @@ namespace Tomb
         Subgroup.Order();
         do
         {
-          //std::cout << "Projected Weights = "<< std::endl << ProjectedWeights.Print() << std::endl;
           
           Weight HWeight = ProjectedWeights.GetObject(0);
           //int maximum_sum_of_values = 0;
           int highest_dim = 0;
-          //std::cout << HWeight << std::endl;
           for(List<Weight>::iterator it_ProjectedWeights = ProjectedWeights.begin(); it_ProjectedWeights != ProjectedWeights.end(); it_ProjectedWeights++)
           {
             //int sum_of_values = 0;
@@ -545,22 +568,16 @@ namespace Tomb
               }
             }
           }
-          //std::cout << Subgroup << std::endl;
-          //std::cout << HWeight << std::endl;
           Rrep Rep(Subgroup, HWeight);
-          //std::cout << "Rep = " << Rep << std::endl;
           List<Weight> SubWeights = Rep.Weights();
-          //std::cout << SubWeights << std::endl;
           for(List<Weight>::iterator it_SubWeights = SubWeights.begin(); it_SubWeights != SubWeights.end(); it_SubWeights++)
           {
-            //std::cout << *it_SubWeights << std::endl;	
             int n = ProjectedWeights.Index(*it_SubWeights);
             if(n >= 0)
               ProjectedWeights.DeleteTerm(n);
           }
           Reps.AddTerm(Rep);
         
-          //std::cout << "terms = " << ProjectedWeights.nterms() << std::endl;
           
         }
         while(ProjectedWeights.nterms()>0);
@@ -840,4 +857,6 @@ namespace Tomb
 
   }
 */
+
+
 }

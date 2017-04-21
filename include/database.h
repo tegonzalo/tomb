@@ -48,6 +48,8 @@ namespace Tomb
       int check(std::string);
    //   JSONNode json(std::string);
       TYPE* at(std::string);
+      TYPE* find(std::string);
+      TYPE* get(std::string);
       void set(std::string, TYPE*, bool = false);
       std::string import(std::string);
       void fill();
@@ -127,6 +129,31 @@ namespace Tomb
  */   }
     else
       throw "DataBase::Could not find key on the database";
+  }
+
+  /* Finds the object corresponding to the key or return null */
+  template <class TYPE> TYPE *DataBase<TYPE>::find(std::string key)
+  {
+    try
+    {
+      if(check(key) == DB_FOUND)
+        return at(key);
+      else
+        return NULL;
+    }
+    catch (...) { throw; }
+  }
+
+  /* Gets the object corresponding to the key or creates it otherwise */
+  template <class TYPE> TYPE *DataBase<TYPE>::get(std::string key)
+  {
+    try
+    {
+      if(!check(key))
+        set(key, new TYPE(key));
+      return at(key);
+    }
+    catch (...) { throw; }
   }
 
   /* Imports the file corresponding to the key */

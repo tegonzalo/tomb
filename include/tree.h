@@ -675,7 +675,6 @@ namespace Tomb
         return ;
       }
 
-      //std::cout << branches << std::endl;
       if(!nbranches() and i==0)
       {
         std::string label = this->label();
@@ -686,26 +685,17 @@ namespace Tomb
           tree.setLabel(label);
           AddBranch(tree);
           label[label.length()-1]++;
-          //std::cout << "******" << std::endl;
-          //std::cout << Branch(k).label() << std::endl;
-          //std::cout << "******" << std::endl;
         }
         return ;
       } 
       for(int j=0; j<nbranches() and count <= i; j++)
       {
-        //std::cout << "j = " << j << std::endl;
-        //std::cout << Branch(j).nleaves() << std::endl;
         if(Branch(j).nleaves() > i - count)
         {
           Tree<TYPE> branch = Branch(j);
           branch.AttachToLeaf(i - count, branches);
           DeleteBranch(j);
           InsertBranch(j,branch);
-          //std::cout << "******" << std::endl;
-          //std::cout << Branch(j) << std::endl;
-          //std::cout << Branch(j).label() << std::endl;
-          //std::cout << "******" << std::endl;
         }
         count += Branch(j).nleaves();
       }
@@ -929,25 +919,21 @@ namespace Tomb
       if(i == 0)
         throw "Tree::DeleteLevel::Can't delete the first level";
       
-      //std::cout << "------" << std::endl;
       if(i == level()+1)
       {
         int branches = nbranches();
         int count = 0;
         for(int j=0; j<branches; j++)
         {
-          //std::cout << "j = " << j << std::endl;
           Tree<TYPE> tree = Branch(0);
           tree.setLevel(tree.level()+1);
           DeleteBranch(0);
           for(int k=0; k<tree.nbranches(); k++)
           {
-            //std::cout << " k = " << k << std::endl;
             AddBranch(tree.Branch(k));
             count ++;
           }
         }
-        //std::cout << *this << std::endl;
       }
       else
       {
@@ -958,10 +944,7 @@ namespace Tomb
           DeleteBranch(j);
           InsertBranch(j, tree);
         }
-        //std::cout << *this << std::endl;
       }
-      //std::cout << "depth = " << depth() << std::endl;
-      //std::cout << "------" << std::endl;
       
     }
     catch (...) { throw; }
@@ -1015,12 +998,9 @@ namespace Tomb
   {   
     try
     {
-      /*if(nbranches())
-        this->~Tree();*/
       
       JSONNode::const_iterator i = n.begin();
       
-      //std::cout << i->write_formatted() << std::endl;
 
       std::stringstream ss;
       std::string str1,str2;
@@ -1037,9 +1017,7 @@ namespace Tomb
       else
         _label = str2;
       _Branches.ParseJSON(*i);
-      //std::cout << _Branches << std::endl;
       _nbranches = _Branches.nterms();
-      //std::cout << _nbranches << std::endl;
       _nleaves = 0;
       if(_nbranches)
       {
@@ -1059,7 +1037,6 @@ namespace Tomb
       }
       else
         _nleaves = 1;
-      //std::cout << _nleaves << std::endl;
       _depth = calculateDepth();
       _level = 0;
       

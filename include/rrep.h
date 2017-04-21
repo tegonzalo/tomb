@@ -76,6 +76,7 @@ namespace Tomb
       List<Weight> &CalculateWeights();
       Rrep AddIrrep(Irrep);
       Rrep AddRrep(Rrep);
+      Rrep FinishRrep();
       bool isSinglet(int = -1) const;
 //      List<Weight> Project(SubGroup);
 //      Sum<Rrep> Decompose(SubGroup &);

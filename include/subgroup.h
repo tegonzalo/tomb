@@ -31,7 +31,6 @@ namespace Tomb
   class SubGroup: public LieGroup {
 
     private:
-      List<Tree<string> > _SuperGroups;
       Matrix<double> _Projection;
       List<std::string> _labels;
       bool _maximal = false;
@@ -40,6 +39,8 @@ namespace Tomb
       int _superRank;
 
     public:
+      List<Tree<string> > _SuperGroups;
+
       SubGroup();
       SubGroup(LieGroup &);
       SubGroup(SimpleGroup &);
@@ -65,10 +66,13 @@ namespace Tomb
       Matrix<double> SetProjection(Matrix<double>);
       List<string> labels() const;
       void setLabels(const List<std::string>);
+
       void AddTerm(const SimpleGroup &, int = 0);
       void AddTerm(const LieGroup &, int = 0);
       void AddTerm(const SubGroup &, int = 0);
       void DeleteTerm(int);
+      void FinishSubgroup();
+
       void Order();
 /*      bool isSubgroupOf(LieGroup) const;
       bool isSubgroupOf(SimpleGroup) const;*/
@@ -80,6 +84,7 @@ namespace Tomb
       bool special() const;
       bool setSpecial(bool);
       std::string id() const;
+      std::string lg_id() const;
       bool operator==(const SubGroup &) const;
       bool operator!=(const SubGroup &) const;
       JSONNode json(std::string = "") const;

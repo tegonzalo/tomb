@@ -354,7 +354,6 @@ namespace Tomb
 
   /* Destructor */
   template <class TYPE> Matrix<TYPE>::~Matrix() {
-    //std::cout << "deleting matrix " << this << std::endl;
     
     if(_M != nullptr )
     {
@@ -962,8 +961,6 @@ namespace Tomb
         L = 1;
         return ;
       }
-      
-      //std::cout << "LU decomposition" << std::endl;
       
       double sum = 0;
 
@@ -1654,13 +1651,11 @@ namespace Tomb
       
       _rows = n.size();
       _diag = true;
-      //std::cout << "rows = " << _rows << std::endl;
       
       _M = new TYPE*[_rows];
       JSONNode::const_iterator it = n.begin();
       for(int i=0; i < _rows; i++) {
         _cols = it->size();
-        //std::cout << _cols << std::endl;
         
         if(_cols) {
           _M[i] = new TYPE[_cols];
@@ -1688,7 +1683,6 @@ namespace Tomb
         }
         ++it;
       }
-      //std::cout << "cols = " << _cols << std::endl;
     
       if(_rows == _cols) {
         _square = true;

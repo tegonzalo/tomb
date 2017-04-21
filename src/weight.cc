@@ -94,7 +94,7 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G);
+      _Group = DB<LieGroup>().get(G);
       _positive = true;
       _multiplicity = 1;
       _level = 0;
@@ -107,7 +107,7 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G);
+      _Group = DB<LieGroup>().get(G);
       _positive = true;
       for(int i=0; i<V.cols(); i++)
       {
@@ -132,7 +132,7 @@ namespace Tomb
       string G;
       getline(ss, G, '\0');
             
-      _Group = LieGroup::get(G);
+      _Group = DB<LieGroup>().get(G);
 
       //*this = Weight(Group(),Group().rank());
       
@@ -174,7 +174,7 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G.id());
+      _Group = DB<LieGroup>().get(G.id());
       (*this)[0] = value;
       _positive = true;
       _multiplicity = 1;
@@ -479,7 +479,7 @@ namespace Tomb
       string G(_Group->id());
       G.push_back('x');
       G.append(w.Group().id());
-      _Group = LieGroup::get(G);
+      _Group = DB<LieGroup>().get(G);
       
       if(positive() and w.positive())
         setPositive(true);

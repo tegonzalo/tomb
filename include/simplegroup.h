@@ -93,9 +93,9 @@ namespace Tomb
       List<SubGroup> MaximalSubgroups() const;
       List<SubGroup> &CalculateMaximalSubgroups();
 //      List<SubGroup> SpecialSubgroups()
-/*      List<SubGroup> Subgroups() const;
+      List<SubGroup> Subgroups() const;
       List<SubGroup> &CalculateSubgroups();
-      List<SubGroup> Subgroups(int);
+/*      List<SubGroup> Subgroups(int);
       List<SubGroup> Subgroups(int, int);
 /*      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
@@ -112,8 +112,6 @@ namespace Tomb
 //      void ParseJSON(const JSONNode &n, string = "");
       static bool GroupExists(int, char);
       static char GroupIdentify(int, const Matrix<double> &);
-      static SimpleGroup* find(const string);
-      static SimpleGroup* get (const string);
 
     };	
 

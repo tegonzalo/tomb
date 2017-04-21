@@ -95,7 +95,6 @@ namespace Tomb
 
       getline(ss, Gstr, '[');
       getline(ss, SGstr, ']');
-      //std::cout << SGstr << std::endl;
     
       std::stringstream ss2(Gstr);
       std::string Gstr2;
@@ -120,7 +119,6 @@ namespace Tomb
           getline(ss3, labels, ')');
           for(int i=0; i<ids.nterms(); i++)
           {
-            //std::cout << " i = " << i << std::endl;
             std::stringstream mixss;
             mixss << ids.GetObject(i);
             ids.DeleteTerm(i);
@@ -175,8 +173,6 @@ namespace Tomb
           }
           mixlabels.AddTerm(Gstr3);
         }
-        //std::cout << ids << std::endl;
-        //std::cout << mixings << std::endl;
       }
     
       // Finish the ids by adding the supergroup
@@ -188,9 +184,6 @@ namespace Tomb
         ids.InsertTerm(i, idsstream.str());
       }
       
-      //std::cout << ids << std::endl;
-      //std::cout << mixings << std::endl;
-    
       // If there is no U(1) mixing, initialise as usual
       if(ids.nterms() == 1)
       {
@@ -206,8 +199,6 @@ namespace Tomb
         }
       }*/
       size = Mixing.cols();
-      //std::cout << ids.nterms() << std::endl;
-      //std::cout << Mixing << std::endl;	
       if(size != ids.nterms())
         throw "SubGroup::SubGroup::Mixing vector of the wrong size";
     
@@ -310,6 +301,8 @@ namespace Tomb
 
       _regular = true;
       _special = false;
+
+      FinishSubgroup();
       
     }
     catch (...) { throw; }
@@ -345,6 +338,8 @@ namespace Tomb
 
       _regular = true;
       _special = false;
+
+      FinishSubgroup();
       
     }
     catch (...) { throw; }
@@ -374,6 +369,8 @@ namespace Tomb
 
       _regular = true;
       _special = false;
+
+      FinishSubgroup();
       
     }
     catch (...) { throw; }
@@ -384,17 +381,17 @@ namespace Tomb
   {
     try
     {
-      if(Group.SuperGroups().nterms() != 1 or Group.SuperGroup() != SuperGroup)
+      if(Group._SuperGroups.nterms() != 1 or Group.SuperGroup() != SuperGroup)
       {
         Tree<string> tree(SuperGroup.id());
         tree.setLabel("A");
-        for(int i=0; i<Group.SuperGroups().nterms(); i++)
-          tree.AddBranch(Group.SuperGroups().GetObject(i));
+        for(int i=0; i<Group._SuperGroups.nterms(); i++)
+          tree.AddBranch(Group._SuperGroups.GetObject(i));
         _SuperGroups.AddTerm(tree);
         _superRank = SuperGroup.rank();
       } 
       else
-        _SuperGroups = Group.SuperGroups();
+        _SuperGroups = Group._SuperGroups;
       
       _Projection = Matrix<double>(Group.Projection());
       
@@ -409,9 +406,9 @@ namespace Tomb
       }*/
       
       int depth = 0;
-      for(int i=0; i<SuperGroups().nterms(); i++)
-        if(depth < SuperGroups().GetObject(i).depth())
-          depth = SuperGroups().GetObject(i).depth();
+      for(int i=0; i<_SuperGroups.nterms(); i++)
+        if(depth < _SuperGroups.GetObject(i).depth())
+          depth = _SuperGroups.GetObject(i).depth();
 
       if(_rank == _superRank and depth == 2)
         _maximal = true;
@@ -420,6 +417,8 @@ namespace Tomb
 
       _regular = Group.regular();
       _special = Group.special();
+
+      FinishSubgroup();
       
     }
     catch (...) { throw; }
@@ -430,18 +429,13 @@ namespace Tomb
   {
     try
     {   
-      //std::cout << "===================" << std::endl;
-      //std::cout << Group << std::endl;
-      
-      _SuperGroups = SuperGroup.SuperGroups();
+      _SuperGroups = SuperGroup._SuperGroups;
       _superRank = SuperGroup.rank(); 
-      //std::cout << _SuperGroups.json().write_formatted() << std::endl;
-      //std::cout << Group.SuperGroups().json().write_formatted() << std::endl;
       
       bool replace = true;
-      for(int i=0; i<Group.SuperGroups().nterms(); i++)
-        if(Group.SuperGroups().GetObject(i).nbranches())
-          if(Group.SuperGroups().GetObject(i).Level(0) != Group.SuperGroups().GetObject(i).Level(1))
+      for(int i=0; i<Group._SuperGroups.nterms(); i++)
+        if(Group._SuperGroups.GetObject(i).nbranches())
+          if(Group._SuperGroups.GetObject(i).Level(0) != Group._SuperGroups.GetObject(i).Level(1))
             replace = false;
       
       int count = 0;
@@ -454,17 +448,13 @@ namespace Tomb
           {
             if(Group.nterms() != SuperGroup.nterms() and replace)
             {
-              if(Group.SuperGroups().GetObject(count).nbranches())
+              if(Group._SuperGroups.GetObject(count).nbranches())
               {
-                //std::cout << "replacing business" << std::endl;
-                //std::cout << Group.SuperGroups().GetObject(count).Branch(0).label() << std::endl;
-                tree.ReplaceLeaf(j, Group.SuperGroups().GetObject(count).Branches());
-                //std::cout << tree.Leaf(j).label() << std::endl;
-                j += Group.SuperGroups().GetObject(count).nleaves() - 1;
+                tree.ReplaceLeaf(j, Group._SuperGroups.GetObject(count).Branches());
+                j += Group._SuperGroups.GetObject(count).nleaves() - 1;
               }
               else
               {
-                //std::cout << "deleting business" << std::endl;
                 int nleaves = tree.nleaves();
                 do
                 {
@@ -476,16 +466,13 @@ namespace Tomb
             }
             else
             {
-              if(Group.SuperGroups().GetObject(count).nbranches())
+              if(Group._SuperGroups.GetObject(count).nbranches())
               {
-                //std::cout << "attaching business" << std::endl;
-                tree.AttachToLeaf(j, Group.SuperGroups().GetObject(count).Branches());
-                j += Group.SuperGroups().GetObject(count).nleaves() - 1;
-                //std::cout << j << std::endl;
+                tree.AttachToLeaf(j, Group._SuperGroups.GetObject(count).Branches());
+                j += Group._SuperGroups.GetObject(count).nleaves() - 1;
               }
               else
               {
-                //std::cout << "deleting business" << std::endl;
                 int nleaves = tree.nleaves();
                 do
                 {
@@ -497,7 +484,6 @@ namespace Tomb
             }	
             count ++;
           }
-          //std::cout << tree.json().write_formatted() << std::endl;
         }
         if(tree != _SuperGroups.GetObject(i))
         {
@@ -521,7 +507,7 @@ namespace Tomb
       _regular = Group.regular();
       _special = Group.special();
       
-      if(Group.SuperGroups().nterms() > 1)
+      if(Group._SuperGroups.nterms() > 1)
       {
         for(int i=0; i<Group.nterms(); i++)
         {
@@ -535,7 +521,7 @@ namespace Tomb
       else
         _labels = Group.labels();
       
-        
+      FinishSubgroup(); 
     }
     catch (...) { throw; }
   }
@@ -580,7 +566,7 @@ namespace Tomb
       
       LieGroup::operator=(Group);
       
-      _SuperGroups = Group.SuperGroups();
+      _SuperGroups = Group._SuperGroups;
       _Projection = Matrix<double>(Group.Projection());
       _labels = Group.labels();
       _superRank = Group.superRank();
@@ -652,22 +638,23 @@ namespace Tomb
       
       std::string id = ss.str();
           
-      LieGroup Supergroup(SGstr);
-      Supergroup.Order();
+      LieGroup *Supergroup = DB<LieGroup>().get(SGstr);
 //TODO: uncomment
 //        Supergroup.Subgroups();
-        //if(FileExists(filepath.str())) {
+        //if(FileExists(filepath.str()))
+        // {
         //	JSONNode json = libjson::parse(ReadFileString(filepath.str()));
         //	ParseJSON(json);
+        //}
       std::stringstream ss2(Gstr);
       std::string str,label;
           
-      SubGroup Subgroup(Supergroup);
+      SubGroup Subgroup(*Supergroup);
       List<std::string> labels;
           
       while(getline(ss2, str, '('))
       {
-        Subgroup.AddTerm(SimpleGroup(str));
+        Subgroup.AddTerm(*DB<SimpleGroup>().get(str));
         getline(ss2, label, ')');
         labels.AddTerm(label);
         getline(ss2, str, 'x');
@@ -684,30 +671,41 @@ namespace Tomb
         oldlabels.AddTerm(label);
         setLabels(oldlabels);
       }
+
+      // If the subgroup is already in the database, do nothing
+      SubGroup *G = DB<SubGroup>().find(Id);
+      if(G != NULL)
+        return ;
+        
+      DB<SubGroup>().set(Id, this);
       
     }
     catch (...) { throw; }
   }
 
+
   /* Returns the list of Supergroups */
   List<Tree<string> > SubGroup::SuperGroups() const
   {
+    SubGroup *G = DB<SubGroup>().find(id());
+    if(G != NULL)
+      return G->_SuperGroups;
     return _SuperGroups;
   }
 
   /* Returns the hightest Supergroup */
   LieGroup SubGroup::SuperGroup() const
   {
-    if(SuperGroups().nterms())
+    if(_SuperGroups.nterms())
     {
       string Supergroup;
-      for(int i=0; i<SuperGroups().nterms(); i++)
+      for(int i=0; i<_SuperGroups.nterms(); i++)
       {
-        Supergroup.append(SuperGroups().GetObject(i).Object());
+        Supergroup.append(_SuperGroups.GetObject(i).Object());
         Supergroup.append("x");
       }
       Supergroup.pop_back();
-      return *LieGroup::get(Supergroup);
+      return *DB<LieGroup>().get(Supergroup);
     }
     else
       throw "SubGroup::SuperGroup::No supergroups";
@@ -719,11 +717,11 @@ namespace Tomb
     try
     {
       string Supergroup;
-      for(int j=0; j<SuperGroups().nterms(); j++)
+      for(int j=0; j<_SuperGroups.nterms(); j++)
       {
-        if(SuperGroups().GetObject(j).nbranches())
+        if(_SuperGroups.GetObject(j).nbranches())
         {
-          List<string> level = SuperGroups().GetObject(j).Level(i);
+          List<string> level = _SuperGroups.GetObject(j).Level(i);
           for(int k=0; k<level.nterms(); k++)
           {
             Supergroup.append(level.GetObject(k));
@@ -732,7 +730,7 @@ namespace Tomb
         }
       }
       Supergroup.pop_back();
-      return *LieGroup::get(Supergroup);
+      return *DB<LieGroup>().get(Supergroup);
     }
     catch (...) { throw; }
   }
@@ -817,7 +815,7 @@ namespace Tomb
         for(int j=0; j<Group.ngroups(); j++)
         {
           //if(Object.Object() != Group.GetObject(j)) {
-            Object.AddBranch(*SimpleGroup::get(Group.GetObject(j).id()));
+            Object.AddBranch(*DB<SimpleGroup>().get(Group.GetObject(j).id()));
           //}
         }
         _SuperGroups.DeleteTerm(where);
@@ -850,7 +848,7 @@ namespace Tomb
         for(int j=0; j<Group.ngroups(); j++)
         {
           //if(Object.Object() != Group.GetObject(j)) {
-            Object.AddBranch(*SimpleGroup::get(Group.GetObject(j).id()));
+            Object.AddBranch(*DB<SimpleGroup>().get(Group.GetObject(j).id()));
           //}
         }
         _SuperGroups.DeleteTerm(where);
@@ -936,12 +934,28 @@ namespace Tomb
     catch(...) { throw; }
   }
 
+  /* Finish the subgroup by adding it to the database */
+  void SubGroup::FinishSubgroup()
+  {
+    try
+    {
+      // If the subgroup is already in the database, do nothing
+      SubGroup *G = DB<SubGroup>().find(id());
+      if(G != NULL)
+        return ;
+
+      DB<SubGroup>().set(id(), this);
+
+ 
+    }
+    catch (...) { throw; }
+  }
+
   /* Order the groups in the subgroup and the projection matrix */
   void SubGroup::Order()
   {
     try
     { 
-      //std::cout << *this << std::endl;
       if(nterms() <= 1)
         return ;
       
@@ -978,13 +992,8 @@ namespace Tomb
         {
           int rank2 = GetObject(toswap).rank();
           SwapTerms(i,toswap);
-          //std::cout << "row1 = " << row1 << ", row2 = " << row2 << std::endl;
-          //std::cout << "rank1 = " << rank1 << ", rank2 = " << rank2 << std::endl;
-          //std::cout << "Projection" << std::endl << _Projection << std::endl;
           _Projection.MoveRows(row2, row2+rank2-1, row1);
-          //std::cout << "Projection" << std::endl << _Projection << std::endl;
           _Projection.MoveRows(row1+rank2, row1+rank2+rank1-1, row2+rank2-rank1);
-          //std::cout << "Projection" << std::endl << _Projection << std::endl;
           _Casimir.SwapTerms(i, toswap);
           if(!_maximal or SuperGroup().nterms() > 1)
             _labels.SwapTerms(i, toswap);
@@ -1088,50 +1097,16 @@ namespace Tomb
   }
 
   /* Identifier of the Subgroup */
-  std::string SubGroup::id() const
+  string SubGroup::id() const
   {   
     if(!nterms())
       return "";
     
-    std::stringstream s;
+    stringstream s;
 
-    /*int depth = 0;
-    for(int i=0; i<SuperGroups().nterms(); i++)
-      if(SuperGroups().GetObject(i).depth() > depth)
-        depth = SuperGroups().GetObject(i).depth();
-    
-    for(int i=0; i<SuperGroups().nterms(); i++) {
-      //std::cout << SuperGroups().GetObject(i).json().write_formatted() << std::endl;
-      //std::cout << SuperGroups().GetObject(i).nleaves() << std::endl;
-      for(int j=0; j<SuperGroups().GetObject(i).nleaves(); j++) {
-        if(SuperGroups().GetObject(i).Leaf(j).level() != 0) {
-          s << SuperGroups().GetObject(i).Leaf(j).Object().id() << "(" << SuperGroups().GetObject(i).Leaf(j).label() << ")" << 'x';
-        }
-      }
-    }
-    
-    std::string str = s.str();
-    
-    if(str[str.length()-1] == 'x') {
-      str.pop_back();
-    }*/
-    
-      
     for(int i=0; i<nterms()-1; i++)
       s << GetObject(i).id() << "(" << _labels.GetObject(i) << ")" << "x";
     s << GetObject(nterms()-1).id() << "(" << _labels.GetObject(nterms()-1) << ")";
-    
-    //std::cout << str << std::endl;
-    //std::cout << SuperGroups() << std::endl;
-    //std::cout << depth << std::endl;
-    
-    /*str.append("[");
-    for(int i=depth-2; i>0; i--) {
-      str.append(SuperGroup(i).id());
-      str.append(",");
-    }
-    str.append(SuperGroup().id());
-    str.append("]");*/
     
     s << "[";
     for(int i = 0; i < _SuperGroups.nterms()-1; i++)
@@ -1139,9 +1114,13 @@ namespace Tomb
     s << _SuperGroups.GetObject(-1).Object() << "]";
     string str = s.str();
     
-    //std::cout << str << std::endl;
-    
     return str;
+  }
+
+  /* Identifier of the Liegroup */
+  string SubGroup::lg_id() const
+  {
+    return LieGroup::id();
   }
 
   /* Overloaded == operator */
@@ -1149,9 +1128,6 @@ namespace Tomb
   {   
     try
     {
-      //std::cout << id() << " == " << Group.id() << "?" << std::endl;
-      //return false;
-      //std::cout << 'a' << std::endl;
       if(this->ngroups() != Group.ngroups() or this->rank() != Group.rank())
         return false;
       
@@ -1161,17 +1137,13 @@ namespace Tomb
       if(maximal() != Group.maximal() or regular() != Group.regular() or special() != Group.special())
         return false;
       
-    
-      //std::cout << 'c' << std::endl;
       // Assume that groups are ordered 
       //this->Order();
       //Group.Order();
       
-      //std::cout << 'd' << std::endl;
       if(LieGroup(*this) != LieGroup(Group))
         return false;
     
-      //std::cout << 'f' << std::endl;
       if(this->Projection() == Group.Projection())
         return true;
       
@@ -1180,12 +1152,10 @@ namespace Tomb
       
       return false;
       
-      //std::cout << 'g' << std::endl;
       if(SuperGroups() == Group.SuperGroups())
         return true;
       
       // Speed things up a bit
-      //std::cout << 'h' << std::endl;
       return false;
           
       
@@ -1214,9 +1184,7 @@ namespace Tomb
       JSONNode json = LieGroup::json();
       json.pop_back("id");
       json.push_back(JSONNode("id",id()));
-      //std::cout << json.write_formatted() << std::endl;
       json.push_back(_SuperGroups.json("SuperGroups"));
-      //std::cout << json.write_formatted() << std::endl;
       json.push_back(_Projection.json("Projection"));
       
       JSONNode labels(JSON_ARRAY);
@@ -1242,9 +1210,7 @@ namespace Tomb
     try
     {   
       JSONNode json = n;
-      //std::cout << json.write_formatted() << std::endl;
       std::string id = json.at("id").as_string();
-      //std::cout << json.write_formatted() << std::endl;
       
       std::stringstream ss(id), ss2;
       
@@ -1254,14 +1220,10 @@ namespace Tomb
         getline(ss, id, ')');
       }
       getline(ss2,id,'[');
-      //std::cout << id << std::endl;
       json.insert(json.begin(),JSONNode("id",id));
       
       
-      //std::cout << json.write_formatted() << std::endl;
-      //std::cout << "about to parse" << std::endl;
       LieGroup::ParseJSON(json,what);
-      //std::cout << "lie group parsed" << std::endl;
       JSONNode::const_iterator i = json.begin();
       while (i != json.end())
       {
@@ -1271,11 +1233,7 @@ namespace Tomb
         // find out where to store the values
         if(node_name == "SuperGroups")
         {
-            //std::cout << "parsing supergroups" << std::endl;
-            //std::cout << i->write_formatted() << std::endl;
             _SuperGroups.ParseJSON(*i);
-            //std::cout << "supergroups parsed" << std::endl;
-            //std::cout << _SuperGroups << std::endl;
         }
         else if(node_name == "Projection")
           _Projection.ParseJSON(*i);

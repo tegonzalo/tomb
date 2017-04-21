@@ -631,7 +631,6 @@ namespace Tomb
         if(it->as_string() != "" or std::is_same<TYPE, std::string>::value)
         {
           TYPE Object(it->as_string());
-          //std::cout << it->as_string() << " ---> " << Object << std::endl;
           this->AddTerm(Object);
         } 
         else
@@ -643,7 +642,6 @@ namespace Tomb
         
       }
       
-      //cout << *this << endl;
       
     } catch (...) {
       throw;

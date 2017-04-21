@@ -163,9 +163,8 @@ namespace Tomb
       
       init();
     
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Constructor 4, with json nodes */
@@ -181,7 +180,6 @@ namespace Tomb
   /* Copy constructor */
   SimpleGroup::SimpleGroup(const SimpleGroup &G) 
   {
-    cout << "sg::cpct for " << G << endl;  
     try 
     {
       _rank = G.rank();
@@ -199,10 +197,7 @@ namespace Tomb
 //      _MaxSubgroups = G._MaxSubgroups;
 //      _Subgroups = G._Subgroups;
     }
-    catch (...) 
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
@@ -217,12 +212,11 @@ namespace Tomb
     _abelian(move(G._abelian)),
     _Casimir(move(G._Casimir)),
     _repsMaxDim(move(G._repsMaxDim)),
-    _PRoots(move(G._PRoots))//,
+    _PRoots(move(G._PRoots)),
     _Irreps(move(G._Irreps)),
-    _MaxSubgroups(move(G._MaxSubgroups))//,
- //   _Subgroups(move(G._Subgroups))
+    _MaxSubgroups(move(G._MaxSubgroups)),
+    _Subgroups(move(G._Subgroups))
   {
-    cout << "sg::mvct" << endl;  
     try
     {
       G._rank = 0;
@@ -238,24 +232,22 @@ namespace Tomb
       G._PRoots.Clear();
       G._Irreps.Clear();
       G._MaxSubgroups.Clear();
-//      G._Subgroups.Clear();
+      G._Subgroups.Clear();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
   SimpleGroup::~SimpleGroup()
   {
-    //cout << "deleting group " << endl;
   }
 
   /* Assignment operator */
   SimpleGroup &SimpleGroup::operator=(const SimpleGroup &G)
   {
-    cout << "sg::asop" << endl;  
-    try {
+    try
+    {
       if(this == &G) return *this;
       
       _rank = G.rank();
@@ -274,16 +266,13 @@ namespace Tomb
 //      _Subgroups = G._Subgroups;
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move assignment operator */
   SimpleGroup &SimpleGroup::operator=(SimpleGroup &&G)
   {
-  
-    cout << "sg::mvasop" << endl;  
     try
     {
       if(this == &G) return *this;
@@ -301,7 +290,7 @@ namespace Tomb
       _PRoots = move(G._PRoots);
       _Irreps = move(G._Irreps);
       _MaxSubgroups = move(G._MaxSubgroups);
-//      _Subgroups = move(G._Subgroups);
+      _Subgroups = move(G._Subgroups);
       
       G._rank = 0;
       G._type = '\0';
@@ -316,12 +305,11 @@ namespace Tomb
       G._PRoots.Clear();
       G._Irreps.Clear();
       G._MaxSubgroups.Clear();
-//      G._Subgroups.Clear();
+      G._Subgroups.Clear();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Initialise variables */
@@ -329,7 +317,6 @@ namespace Tomb
   {
     try
     {
-
       if(_rank == 0 or _type == 0)
         throw "SimpleGroup::init::Not enough variables no initialise";
             
@@ -551,36 +538,15 @@ namespace Tomb
         //_Casimir = Adjoint.DynkinIndex();
       }
 
-
-      // If the group is in the database, then pull the info
-      SimpleGroup *Group = SimpleGroup::find(id());
-      if(Group != NULL)
-      {
-//        _Irreps = Group->_Irreps;
-//        _MaxSubgroups = Group->_MaxSubgroups;
-        //Subgroups = Group->_Subgroups;
+      // If the group is in the database, do nothing
+      if(DB<SimpleGroup>().find(id()) != NULL)
         return ;
-      }
-
-      //_Irreps = this->CalculateIrreps(_repsMaxDim);      
-     
-
-      //cout << "Irreps of " << *this << " = " << _Irreps << endl;
-
-      //_MaxSubgroups = this->MaximalSubgroups();
-
-      //cout << "Maximal subgroups of " << *this << " = " << _MaxSubgroups << endl;
-
-      //_Subgroups = this->CalculateSubgroups();
 
       // Add the group to the database
       DB<SimpleGroup>().set(id(), this);
-      cout << *DB<SimpleGroup>().at(id()) << endl;
       DB<SimpleGroup>().at(id())->CalculateIrreps(_repsMaxDim);
-      cout << DB<SimpleGroup>().at(id())->_Irreps << endl;
       DB<SimpleGroup>().at(id())->CalculateMaximalSubgroups();
-      //cout << DB<SimpleGroup>().at(id())->_MaxSubgroups << endl;
-      //DB<SimpleGroup>().at(id())->CalculateSubgroups();
+//      DB<SimpleGroup>().at(id())->CalculateSubgroups();
 
     } catch (...) {
       throw;
@@ -658,9 +624,13 @@ namespace Tomb
   /* Returns the Irreps of the simple group */
   List<Irrep> SimpleGroup::Irreps() const
   {
-    SimpleGroup *G = SimpleGroup::find(id());
+    SimpleGroup *G = DB<SimpleGroup>().find(id());
     if(G != NULL and G->_Irreps.nterms() and G->repsMaxDim() >= _repsMaxDim)
+    {
+      if(G->repsMaxDim() < _repsMaxDim)
+        G->CalculateIrreps(_repsMaxDim);
       return G->_Irreps; 
+    }
     return _Irreps;
   }
 
@@ -669,11 +639,13 @@ namespace Tomb
   {
     try
     {
-      SimpleGroup *G = SimpleGroup::find(id());
-      if(G != NULL and G->_Irreps.nterms() and G->repsMaxDim() >= maxdim)
+      SimpleGroup *G = DB<SimpleGroup>().find(id());
+      if(G != NULL and G->_Irreps.nterms())
+      {
+        if(G->repsMaxDim() < maxdim)
+          G->CalculateIrreps(maxdim);
         return G->_Irreps;
-      else if(maxdim > _repsMaxDim)
-        return CalculateIrreps(maxdim);
+      }
       else
         return _Irreps;
     }
@@ -736,18 +708,12 @@ namespace Tomb
       double n = 0;
 
       for (int i=0; i<nproots; i++) {
-        //cout << "i = " << i << endl;
         for(int j=0; j<_rank; j++) {
-          //cout << "-j = "<< j << endl;
           if(i!=j) {
             n = -Roots.GetObject(i)[j];
-            //cout << "n = " << n << endl;
             if(n>0){
               for(int l=1; l<=n; l++) {
-                //cout << "l = " << l << endl;
-                //cout << this->SRoot(j) << endl;
                 Root alpha = Roots.GetObject(i) + this->SRoot(j)*(double)l;
-                //cout << alpha << endl;
                 if(Roots.Index(alpha) < 0) {
                   Roots.AddTerm(alpha);
             }						
@@ -757,9 +723,7 @@ namespace Tomb
       }
       }
     
-      //cout << "Roots = " << Roots << endl;
       Roots.Reverse();
-      //cout << "Roots = " << Roots << endl;
       
       if(basis=="DUAL") {
         List<Root> DualRoots;
@@ -769,7 +733,6 @@ namespace Tomb
         return DualRoots;
       }
 
-      //cout << Roots << endl;
       return Roots;
     
     } catch (...) {
@@ -1009,10 +972,8 @@ namespace Tomb
         
         for(int k=0; k<_rank; k++) {
           HW[k] ++;
-          //cout << HW << endl;
           if(HWs.Index(HW) < 0) {
             Irrep Rep(*this, HW);
-            //cout << Rep << endl;
             dim = Rep.dim();
             if(dim<=maxdim && dim>0) {
               string label = to_string(Rep.dim());
@@ -1151,7 +1112,7 @@ namespace Tomb
   /* Returns the maximal subgroups of a simpled group */
   List<SubGroup> SimpleGroup::MaximalSubgroups() const
   {
-    SimpleGroup *G = SimpleGroup::find(id());
+    SimpleGroup *G = DB<SimpleGroup>().find(id());
     if(G != NULL and G->_MaxSubgroups.nterms())
       return G->_MaxSubgroups;
     else
@@ -1163,10 +1124,9 @@ namespace Tomb
   {
     try
     {
-      //cout << "Calculating the maximal subgroups of " << *this << endl;
       // If the maximal subgroups have been calculated already return them
       if(_MaxSubgroups.nterms()) return _MaxSubgroups;
-      
+
       // If the group is abelian return the empty list
       if(abelian()) return _MaxSubgroups;
       
@@ -1176,10 +1136,9 @@ namespace Tomb
       {   
         // Create the extended root
         Root ExtendedRoot(_PRoots.GetObject(0)*-1);
-        cout << "ExtendedRoot = " << ExtendedRoot << endl;
         
         // Calculate the projection matrix for this subgroup, first get the weights of the generating representation of the group
-        List<Weight> Weights = this->GeneratingRep()._Weights;
+        List<Weight> Weights = GeneratingRep().Weights();
         Matrix<double> Superweights(this->rank(), Weights.nterms());
         Matrix<double> Subweights(this->rank(), Weights.nterms());
         int col = 0;
@@ -1189,68 +1148,44 @@ namespace Tomb
           Superweights.SetColumn(col,it_Weights->Transpose());
           col++;
         }
-        //cout << Superweights << endl;
 
         // Calculate the weight coefficient for the new root
         RVector<double> ExtendedWeight(Subweights.cols());
         for(int col=0; col<Subweights.cols(); col++)
           ExtendedWeight[col] = Weights.GetObject(col)*ExtendedRoot; 
-        //cout << "ExtendedWeight = " << ExtendedWeight << endl;
 
-        //clock_t time1 = clock();
         for(int i=0; i<this->rank()+1; i++)
         {
-          //clock_t time2 = clock();
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the extended Cartan matrix
           Matrix<double> SubCartan(this->ExtendedCartan().Adjoint(i,i));
-          //cout << ExtendedCartan() << endl;
           SubGroup Subgroup(*this);
-          //cout << SubCartan << endl;
-          //cout << "in 1 = " << double(clock()-time2)/CLOCKS_PER_SEC << endl;
-          //time2 = clock();
           Subweights = Superweights;
           // Insert the extended weight and delete the row of the subweights corresponding with the deleted root
-          //cout << Subweights << endl;
-          //cout << " adsf" << endl;
           Subweights.InsertRow(0, ExtendedWeight);
-          //cout << Subweights << endl;
           Subweights.DeleteRow(i);
-          //cout << Subweights << endl;
           //if(i) {
           //	Subweights.MoveRow(0,i-1);
           //}
-          //cout << Subweights << endl;
-          
+
           // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
           int from = 0;
           for(int j=0; j<SubCartan.rows(); j++)
           {
-            //cout << "j = " << j << endl;
             Matrix<double> Piece1(SubCartan.ExtractMatrix(from,j,0,from-1));
             Matrix<double> Piece2(SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1));
             if(Piece1 == 0 && Piece2 == 0)
             {
               Matrix<double> BlockMatrix(SubCartan.ExtractMatrix(from,j));
-              //cout << BlockMatrix << endl;
               if(_rank != j-from+1 or _type != SimpleGroup::GroupIdentify(_rank,BlockMatrix))
               {
                 SimpleGroup AuxGroup(j-from+1, BlockMatrix);
                 Matrix<double> Auxweights = Subweights;
-                //cout << "======" << endl;
-                //cout << BlockMatrix << endl;
-                //cout << "------" << endl;
-                //cout << AuxGroup.Cartan() << endl;
-                //cout << "======" << endl;
                 int k=0;
                 while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows())
                 {
                   BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
                   BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
                   Subweights.MoveRow(from,j);
-                  //cout << BlockMatrix << endl;
-                  //cout << "------" << endl;
-                  //cout << Subweights << endl;
-                  //cout << "------" << endl;
                   k++;
                 }
                 if(AuxGroup.Cartan() != BlockMatrix)
@@ -1263,9 +1198,6 @@ namespace Tomb
                     Subweights.SwapRows(from+k,from+BlockMatrix.rows()-1-k);
                   }
                 }
-                //cout << BlockMatrix << endl;
-                //cout << "======" << endl;
-                //cout << AuxGroup << endl;
                 Subgroup.AddTerm(AuxGroup);
                 from = j+1;
               }
@@ -1274,13 +1206,12 @@ namespace Tomb
 
          if(Subgroup.nterms())
          {
-           
-            //cout << Subweights << endl;
-            //cout << "Subgroup = " << Subgroup << endl;
+
+            // Tell the subgrup that is finished adding terms
+            Subgroup.FinishSubgroup();
 
             // And the projection matrix
             Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
-            //cout << Subgroup.Projection() << endl;
           
             // Final changes
             Subgroup.setMaximal(true);
@@ -1288,52 +1219,42 @@ namespace Tomb
           
             // Order the projection matrix columns with respect to the rank of the groups
             Subgroup.Order();
-            //cout << Subgroup << endl;
-            //cout << Subgroup.Projection() << endl;
           
           
             // Add to the list
             if(_MaxSubgroups.Index(Subgroup) == -1)
               _MaxSubgroups.AddTermOrdered(Subgroup, "DESC");
           
-            //cout << Subgroup << endl;
         
           }
-          //cout << "time in loop = " << double(clock()-time1)/CLOCKS_PER_SEC << endl;
         
         }
       }
       
-      //cout << _MaxSubgroups << endl;
     
       // Second, the non-semisimple groups obtained by removing a dot from the Dynkin diagram
-      //clock_t time2 = clock();
       if(this->type() != 'U' and this->rank() >= 1)
       {
         
         // To calculate the projection matrix for a subgroup, first get the weights of the generating representation of the group
-        List<Weight> Weights = GeneratingRep()._Weights;
-        List<Weight> WeightsDual = GeneratingRep()._DualWeights;
+        List<Weight> Weights = GeneratingRep().Weights();
+        List<Weight> WeightsDual = GeneratingRep().DualWeights();
 
         Matrix<double> Superweights(this->rank(), Weights.nterms());
         Matrix<double> Subweights(this->rank(), Weights.nterms());
         for(int col=0; col<Superweights.cols(); col++)
           Superweights.SetColumn(col, Weights.GetObject(col).Transpose());
-        //cout << Superweights << endl;
         
         for(int i=0; i<this->rank(); i++)
         {
-          //cout << "i = " << i << endl;
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the Cartan matrix
           Matrix<double> SubCartan = Cartan().Adjoint(i,i);
           SubGroup Subgroup(*this);
-          //cout << "SubCartan" << endl << SubCartan << endl;
 
           // Construct the subweights by moving the deleted node row to the end and substituting it with its dual values
           Subweights = Superweights;
           for(int col=0; col<Superweights.cols(); col++)
             Subweights[i][col] = WeightsDual.GetObject(col)[i];
-          //cout << Subweights << endl;
           //for(int j=i+1; j<Subweights.rows(); j++) {
           //	Subweights.MoveRow(Subweights.rows()-1,0);
           //}
@@ -1344,21 +1265,16 @@ namespace Tomb
           //	Subweights.SetRow(j,Subweights.Row(j)*(-1));
           //}
           
-          //cout << Subweights << endl;
-        
           // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
           int from = 0;
           for(int j=0; j<SubCartan.rows(); j++)
           {
-            //cout << "j = " << j << endl;
             Matrix<double> Piece1 = SubCartan.ExtractMatrix(from,j,0,from-1);
             Matrix<double> Piece2 = SubCartan.ExtractMatrix(from,j,j+1,SubCartan.rows()-1);
             if(Piece1 == 0 && Piece2 == 0)
             {
               Matrix<double> BlockMatrix = SubCartan.ExtractMatrix(from,j);
-              //cout << *this << endl;
               SimpleGroup AuxGroup(j-from+1, BlockMatrix);
-              //cout << "AuxGroup = " << AuxGroup << endl;
               Matrix<double> Auxweights = Subweights;
               int k=0;
               while(AuxGroup.Cartan() != BlockMatrix and k<BlockMatrix.rows())
@@ -1366,10 +1282,6 @@ namespace Tomb
                 BlockMatrix.MoveRow(0,BlockMatrix.rows()-1);
                 BlockMatrix.MoveColumn(0,BlockMatrix.rows()-1);
                 Subweights.MoveRow(from,j);
-                //cout << BlockMatrix << endl;
-                //cout << "------" << endl;
-                //cout << Subweights << endl;
-                //cout << "------" << endl;
                 k++;
               }
               if(AuxGroup.Cartan() != BlockMatrix) 
@@ -1387,45 +1299,30 @@ namespace Tomb
               from = j+1;
             }
           }	
-          //SimpleGroup AuxGroup(1,'U');
-          //Subgroup.AddTerm(AuxGroup);
-          Subgroup.AddTerm(SimpleGroup(1,'U'));
 
-          //cout << "Subgroup = " << Subgroup << endl;
-          //cout << Subweights << endl;
-          
+          Subgroup.AddTerm(SimpleGroup(1,'U'));
+          Subgroup.FinishSubgroup();
+
           // And the projection matrix
           //Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
           Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
           //Projection.SwapRows(i, Projection.rows()-1);
           //Projection.SwapColumns(i, Projection.cols()-1);
           Subgroup.SetProjection(Projection);
-          //cout << Subgroup.Projection() << endl;
           
           // Final changes
           Subgroup.setMaximal(true);
           Subgroup.setRegular(true);
           Subgroup.setSpecial(false);
-          //cout << Subgroup << endl;
           
-          //cout << Subgroup << endl;
-          //cout << Subgroup.Projection() << endl;
           // Order the projection matrix columns with respect to the rank of the groups
           Subgroup.Order();
-          //cout << Subgroup << endl;
-          //cout << Subgroup.Projection() << endl;
           
-          //cout << Projection*Superweights << endl;
-          
-          //cout << Subgroup.json().write_formatted() << endl;
           // Add to the list
           if(_MaxSubgroups.Index(Subgroup) == -1)
             _MaxSubgroups.AddTermOrdered(Subgroup,"DESC");
-          //cout << _MaxSubgroups << endl;
-          //time3 = clock();
         }
       }
-      //cout << "---> " << double(clock()-time2)/CLOCKS_PER_SEC << endl;
 
       // Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
       /*_MaxSubgroups.DeleteObject(SubGroup(*this,*this));
@@ -1442,10 +1339,6 @@ namespace Tomb
         }
       }*/
     
-      //cout << "Regular subgroups " << *this << "->" << _MaxSubgroups << endl;
-
-      //cout << "First step = " << double(time2 - time1)/CLOCKS_PER_SEC << endl;
-      //cout << "Second step = " << double(clock() - time2)/CLOCKS_PER_SEC << endl;
 
       // Finally, calculate singular subgroups
       //List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
@@ -1466,15 +1359,6 @@ namespace Tomb
         }*/
       //}
       
-      // This is obsolete if we check before adding
-      //_MaxSubgroups.EliminateRepeated();	
-      //cout << "total time = " << double(clock()-time1)/CLOCKS_PER_SEC << endl;
-      
-      //for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-      //	cout << _MaxSubgroups.GetObject(i).json().write_formatted() << endl;
-      //}
-      cout << "MaxSubgroups = " << _MaxSubgroups << endl;
-      
       return _MaxSubgroups;
     } catch (...) {
       throw;
@@ -1493,7 +1377,6 @@ namespace Tomb
       
       // Get the generating rep for this grou
       Irrep GenRep = GeneratingRep();
-      cout << "Generating Rep " << GenRep << endl;
       Matrix<double> Superweights(rank(), GenRep.dim());
       for(int col=0; col<Superweights.cols(); col++) {
         Superweights.SetColumn(col, GenRep.Weights().GetObject(col).Transpose());
@@ -1515,7 +1398,6 @@ namespace Tomb
       }
       SimpleGroups.EliminateRepeated();
       CandidateSpecialGroups.EliminateRepeated();
-      //cout << "rank = " << rank() << ", dim = " << dim() << endl;
       
       for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
         if(it_CSG->rank() < rank()) {
@@ -1531,25 +1413,19 @@ namespace Tomb
         }
       }
       
-      cout << CandidateSpecialGroups << endl;
 
       // Check the representation dimensions and calculate the subgroup properties
-      //cout << Superweights << endl;
       for(List<LieGroup>::iterator it_CSG = CandidateSpecialGroups.begin(); it_CSG != CandidateSpecialGroups.end(); it_CSG++) {
         List<Rrep> ListofReps = it_CSG->Reps(GenRep.dim());
-        //cout << ListofReps << endl;
         for(List<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++) {
           if(it_ListofReps->dim() == GenRep.dim() and !it_ListofReps->hasSinglet() and (!GenRep.real() or (GenRep.real() and it_ListofReps->real()))) {
             SubGroup Subgroup(*it_CSG,*this);
-            //cout << Subgroup << endl;
             // Add projection matrix and other properties
             Matrix<double> Subweights(Subgroup.rank(), it_ListofReps->dim());
             for(int col=0; col<Subweights.cols(); col++) {
               Subweights.SetColumn(col, it_ListofReps->Weights().GetObject(col).Transpose());
             }
-            //cout << Subweights << endl;
             Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
-            //cout << Projection << endl;
             Subgroup.SetProjection(Projection);
             Subgroup.setMaximal(true);
             Subgroup.setRegular(false);
@@ -1559,8 +1435,6 @@ namespace Tomb
             
             bool flag = false;
             for(List<SubGroup>::iterator it_SS = SpecialSubgroups.begin(); it_SS != SpecialSubgroups.end(); it_SS++) {
-              //cout << "---- " << *it_SS << endl;
-              //cout << "---- " << it_SS->SpecialSubgroups() << endl;
               if(it_SS->SpecialSubgroups().Index(Subgroup) != -1) {
                 flag = true;
               }
@@ -1572,7 +1446,6 @@ namespace Tomb
         }
       }
       
-      cout << "Special Subgroups = " << *this << "->" << SpecialSubgroups << endl;
       
       return SpecialSubgroups;
       
@@ -1581,44 +1454,69 @@ namespace Tomb
     }
   }
 */
-  /* Calculates all the subgroups of a simple group */
-/*  List<SubGroup> &SimpleGroup::Subgroups() {
-    
-    try {
 
+  /* Returns the subgroups */
+  List<SubGroup> SimpleGroup::Subgroups() const
+  {
+    try
+    {
+      SimpleGroup *G = DB<SimpleGroup>().find(id());
+      if(G != NULL and G->_Subgroups.nterms())
+        return G->_Subgroups;
+      return _Subgroups;
+    }
+    catch (...) { throw; }
+  }
+
+  /* Calculates all the subgroups of a simple group */
+  List<SubGroup> &SimpleGroup::CalculateSubgroups()
+  {  
+    try
+    {
       // If the group is abelian, return empty
       if(abelian()) return _Subgroups;
       
       if(_Subgroups.nterms()) return _Subgroups;
-*/      
-      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
-        _Subgroups = DataBase.at(id()).Subgroups();
-        if(_Subgroups.nterms()) _hasSubgroups = true;
-        return _Subgroups;
-      }*/
       
-      // Use LieGroup function
-/*      LieGroup G(*this);
-      _Subgroups = G.Subgroups();
-      
-      // Set the hasSubgroups flag to true
-      if(_Subgroups.nterms()) _hasSubgroups = true;
-      
-      // If there is an entry in the database delete it and dump this
-      //database_emplace(id(), *this);
-      
+      _Subgroups.AppendList(_MaxSubgroups);
+
+      // Now, iterate to find the subgroups of the subroups
+      int nsubgroups = _Subgroups.nterms();
+      int group = 0;
+      for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
+      {
+        LieGroup *G = DB<LieGroup>().get(it->lg_id());
+        List<SubGroup> AuxSubgroups = G->Subgroups();
+cout << AuxSubgroups << endl;
+
+        for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
+        {
+          SubGroup Subgroup(*it2, *it);
+          Subgroup.SetProjection(it2->Projection()*it->Projection());
+          if(_Subgroups.Index(Subgroup) == -1)
+            _Subgroups.AddTerm(Subgroup);
+        }
+
+        group++;
+      }
+
+      // Calculate subgroups by truncating the group
+//      if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
+
+
+      // Last operations on the groups
+//      _Subgroups.Order();
+//      _Subgroups.EliminateRepeated();
+
+cout << _Subgroups << endl;
+
       return _Subgroups;
       
     } catch (...) {
       throw;
     }
   }
-*/
-  /* Returns the variable Subgroups */
-/*  List<SubGroup> SimpleGroup::SubgroupsConst() const {
-    return _Subgroups;
-  }
-*/  
+
   /* Calculates the subgroups with rank greater that specified */
 /*  List<SubGroup> SimpleGroup::Subgroups(int rank) {
     
@@ -1990,27 +1888,6 @@ namespace Tomb
 
     }
     catch (...) { throw; }
-  }
-
-  /* Static function to find a simplegroup in the Database */
-  SimpleGroup* SimpleGroup::find(const string id)
-  {
-    if(DB<SimpleGroup>().check(id))
-      return DB<SimpleGroup>().at(id);
-    else
-      return NULL;
-  }
-
-  /* Static function to get a simplegroup from the Database or create it otherwise */
-  SimpleGroup* SimpleGroup::get(const string id)
-  {
-    SimpleGroup *sg = SimpleGroup::find(id);
-    if(sg == NULL)
-    {
-      sg = new SimpleGroup(id);
-      DB<SimpleGroup>().set(id, sg);
-    }
-    return sg;
   }
 
   /* Overloaded << operator with simple groups on the right */
