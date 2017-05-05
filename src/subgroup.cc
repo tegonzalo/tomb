@@ -267,6 +267,7 @@ namespace Tomb
   {
     try
     {   
+cout << "AAAAA" << endl;
       if(Group != SuperGroup)
         throw "SubGroup::SubGroup::Nothing to do here";
       else
@@ -302,7 +303,8 @@ namespace Tomb
       _regular = true;
       _special = false;
 
-      FinishSubgroup();
+      // TODO: Commented out because it causes problems, not sure if required or not
+      //FinishSubgroup();
       
     }
     catch (...) { throw; }
@@ -841,7 +843,7 @@ namespace Tomb
     {
       for(int i=0; i<Group.ngroups(); i++)
         LieGroup::AddTerm(Group.GetObject(i));
-          
+
       if(where < _SuperGroups.nterms())
       {
         /*Tree<SimpleGroup> Object = _SuperGroups.GetObject(where);
@@ -864,7 +866,8 @@ namespace Tomb
       else
       {
         Matrix<double> AuxProjection = Group.Projection();
-        if(_superRank > _rank)
+//TODO: new added bit, maybe not 100% correct
+        if(_superRank > Group.rank())
           AuxProjection.Append(Matrix<double>(Group.rank(), _Projection.cols()),"LEFT");
         _Projection.Append(Matrix<double>(_Projection.rows(), Group.SuperGroup().rank()),"RIGHT");
         _Projection.Append(AuxProjection);
@@ -939,13 +942,18 @@ namespace Tomb
   {
     try
     {
+cout << "finishing subgroup " << *this << endl;
       // If the subgroup is already in the database, do nothing
       SubGroup *G = DB<SubGroup>().find(id());
-      if(G != NULL)
+      if(G == NULL)
+        DB<SubGroup>().set(id(), this);
+
+      // Add the liegroup corresponding to the subgroup to the database
+      LieGroup *LG = DB<LieGroup>().find(lg_id());
+      if(LG != NULL)
         return ;
-
-      DB<SubGroup>().set(id(), this);
-
+cout << "initing " << *this << endl;
+      LieGroup::init();
  
     }
     catch (...) { throw; }

@@ -546,7 +546,7 @@ namespace Tomb
       DB<SimpleGroup>().set(id(), this);
       DB<SimpleGroup>().at(id())->CalculateIrreps(_repsMaxDim);
       DB<SimpleGroup>().at(id())->CalculateMaximalSubgroups();
-//      DB<SimpleGroup>().at(id())->CalculateSubgroups();
+      DB<SimpleGroup>().at(id())->CalculateSubgroups();
 
     } catch (...) {
       throw;
@@ -953,7 +953,8 @@ namespace Tomb
       if(abelian())
       {
         Weight w(*this, 1);
-        _Irreps =  List<Irrep>(Irrep(*this, w));
+        Irrep Rep(*this, w);
+        _Irreps =  List<Irrep>(Rep);
         _repsMaxDim = maxdim;
         return _Irreps;
       }
@@ -1301,7 +1302,6 @@ namespace Tomb
           }	
 
           Subgroup.AddTerm(SimpleGroup(1,'U'));
-          Subgroup.FinishSubgroup();
 
           // And the projection matrix
           //Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
@@ -1317,28 +1317,17 @@ namespace Tomb
           
           // Order the projection matrix columns with respect to the rank of the groups
           Subgroup.Order();
-          
+cout << Subgroup << endl;          
+          // The group is finished, add it to the database
+          Subgroup.FinishSubgroup();
+
           // Add to the list
           if(_MaxSubgroups.Index(Subgroup) == -1)
             _MaxSubgroups.AddTermOrdered(Subgroup,"DESC");
         }
       }
 
-      // Eliminate the original group as a subgroup, repetitions and subgroups that are subgroups of others
-      /*_MaxSubgroups.DeleteObject(SubGroup(*this,*this));
-      if(_MaxSubgroups.GetObject(0).rank() == rank() && _MaxSubgroups.GetObject(0).dim() == dim()) {
-        _MaxSubgroups.DeleteObject(_MaxSubgroups.GetObject(0));
-      }
-      for(int i=0; i<_MaxSubgroups.nterms(); i++) {
-        List<SubGroup> AuxMax = _MaxSubgroups.GetObject(i).MaximalSubgroups();
-        for(int j=i; j<_MaxSubgroups.nterms(); j++) {
-          if(AuxMax.Index(_MaxSubgroups.GetObject(j)) != -1) {
-            _MaxSubgroups.DeleteTerm(j);
-            j--;
-          }
-        }
-      }*/
-    
+      cout << "Maximal subgroups of " << *this << " are "<< _MaxSubgroups << endl;
 
       // Finally, calculate singular subgroups
       //List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
@@ -1486,10 +1475,10 @@ namespace Tomb
       for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
       {
         LieGroup *G = DB<LieGroup>().get(it->lg_id());
-        List<SubGroup> AuxSubgroups = G->Subgroups();
-cout << AuxSubgroups << endl;
+        if(!G->_Subgroups.nterms())
+          G->CalculateSubgroups();
 
-        for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
+        for(auto it2 = G->_Subgroups.begin(); it2 != G->_Subgroups.end(); it2++)
         {
           SubGroup Subgroup(*it2, *it);
           Subgroup.SetProjection(it2->Projection()*it->Projection());
@@ -1500,16 +1489,7 @@ cout << AuxSubgroups << endl;
         group++;
       }
 
-      // Calculate subgroups by truncating the group
-//      if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
-
-
-      // Last operations on the groups
-//      _Subgroups.Order();
-//      _Subgroups.EliminateRepeated();
-
-cout << _Subgroups << endl;
-
+      cout << "Subgroups of " << *this << " are " << _Subgroups << endl;
       return _Subgroups;
       
     } catch (...) {

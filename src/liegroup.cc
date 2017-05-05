@@ -452,7 +452,7 @@ namespace Tomb
   {
     try
     {
- 
+      // If it is already in the database and has all the info, exit
       LieGroup *G = DB<LieGroup>().find(id());
       if(G != NULL and G->_Reps.nterms() and G->_MaxSubgroups.nterms() and G->_Subgroups.nterms())
       {
@@ -460,6 +460,10 @@ namespace Tomb
           G->CalculateReps(_repsMaxDim);
         return ;
       }
+
+      // If it is on the database and it is abelian, exit
+      if(G != NULL and G->abelian())
+        return ;
 
       if(nterms() == 1)
       {
@@ -474,7 +478,7 @@ namespace Tomb
       DB<LieGroup>().set(id(), this);
       DB<LieGroup>().at(id())->CalculateReps(_repsMaxDim);
       DB<LieGroup>().at(id())->CalculateMaximalSubgroups();
-//      DB<LieGroup>().at(id())->CalculateSubgroups();
+      DB<LieGroup>().at(id())->CalculateSubgroups();
     }
     catch (...) { throw; }
   }
@@ -876,15 +880,13 @@ namespace Tomb
       List<List<Rrep> > ListofReps;
     
       LieGroup Group = *this;
-      Group.DeleteTerm(Group.nterms()-1);
+      Group.DeleteTerm(-1);
       ListofReps.AddTerm(Group.Reps());
 
       Group = this->GetObject(this->nterms()-1);
       ListofReps.AddTerm(Group.Reps());
-        
+cout << ListofReps << endl;
       int nirreps = ListofReps.GetObject(0).nterms()*ListofReps.GetObject(1).nterms();
-    
-
       for(int i=0; i<nirreps; i++)
       {
         Weight w;
@@ -895,12 +897,15 @@ namespace Tomb
           int thisreps = ListofReps.GetObject(j).nterms();
           reps *= thisreps;
           int index = (i*reps/nirreps)%thisreps;
+cout << ListofReps.GetObject(0).GetObject(index) << endl;
           if(j==0)
             w = ListofReps.GetObject(0).GetObject(index).HWeight();
           else
             w.Append(ListofReps.GetObject(j).GetObject(index).HWeight());
           dim *= ListofReps.GetObject(j).GetObject(index).dim();
+cout << w << endl;
         }
+cout << w << endl;
         
         if(dim <= maxdim)
         {
@@ -908,7 +913,6 @@ namespace Tomb
           _Reps.AddTerm(Rep);
         }
       }
-      
       _repsMaxDim = maxdim;
       
       return _Reps;
@@ -947,7 +951,6 @@ namespace Tomb
         Subgroups.AppendList(it->MaximalSubgroups());
         ListofSubgroups.AddTerm(Subgroups);
       }
-      
       int nterms = 1;
       for(int i=0; i<ListofSubgroups.nterms(); i++)
         nterms *= ListofSubgroups.GetObject(i).nterms();
@@ -965,12 +968,13 @@ namespace Tomb
           Subgroup.AddTerm(ListofSubgroups.GetObject(j).GetObject(index),j);
         }
         Subgroup.Order();
-        _MaxSubgroups.AddTerm(Subgroup);
+        if(Subgroup.lg_id() != id() and _MaxSubgroups.Index(Subgroup) == -1)
+        {
+          Subgroup.FinishSubgroup();
+          _MaxSubgroups.AddTerm(Subgroup);
+        }
       }
-      _MaxSubgroups.DeleteTerm(0);
       _MaxSubgroups.Order();
-      _MaxSubgroups.EliminateRepeated();
-
 
       return _MaxSubgroups;
       
@@ -1038,6 +1042,7 @@ namespace Tomb
   {
     try 
     {
+cout << "Calculating subgroups of " << *this << endl;
       // If Subgroups are known, return them
       if(_Subgroups.nterms())
         return _Subgroups;
@@ -1047,15 +1052,16 @@ namespace Tomb
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = _Subgroups.nterms();
       int group = 0;
-      for(List<SubGroup>::iterator it_Subgroups = _MaxSubgroups.begin(); it_Subgroups != _MaxSubgroups.end() and group < nsubgroups; it_Subgroups++)
+      for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
       {
-        SubGroup subgroup = *it_Subgroups;
-        List<SubGroup> AuxSubgroups = subgroup.Subgroups();
+        LieGroup *G = DB<LieGroup>().get(it->lg_id());
+        if(G->_Subgroups.nterms())
+          G->CalculateSubgroups();
 
-        for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++)
+        for(auto it2 = G->_Subgroups.begin(); it2 != G->_Subgroups.end(); it2++)
         {
-          SubGroup Subgroup(*it_AuxSubgroups, subgroup);
-          Subgroup.SetProjection(it_AuxSubgroups->Projection()*it_Subgroups->Projection());
+          SubGroup Subgroup(*it2, *it);
+          Subgroup.SetProjection(it2->Projection()*it->Projection());
           Subgroup.Order();
           if(_Subgroups.Index(Subgroup) == -1)
             _Subgroups.AddTerm(Subgroup);
@@ -1063,16 +1069,15 @@ namespace Tomb
         
         group++;
       }	
-
+cout << *this << endl;
       // Calculate subgroups by truncating the group
-//      if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
+      if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
       
 
       // Last operations on the groups
-//      _Subgroups.Order();
+      _Subgroups.Order();
 //      _Subgroups.EliminateRepeated();
 
-cout << _Subgroups << endl;
       
       return _Subgroups;
     
@@ -1217,26 +1222,33 @@ cout << _Subgroups << endl;
   }
 */
   /* Splits the group into subgroups */
-/*  List<SubGroup> LieGroup::SplitToSubGroups(int rank) {
-    try {
-      
+  List<SubGroup> LieGroup::SplitToSubGroups(int rank)
+  {
+    try
+    {   
       List<SubGroup> Subgroups;
       
-      if(!nabelians()) return Subgroups;
-            
-      for(int j=0; j<nabelians(); j++) {
-        SubGroup Subgroup(SubGroup(*this,*this));
+      for(int j=0; j<nabelians(); j++)
+      {
+        // Make a copy of this liegroup as a subgroup and delete one of the abelians
+cout << "BBBB" << endl;
+        SubGroup Subgroup(*this,*this);
         Subgroup.DeleteTerm(ngroups()-j-1);
-        if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1) {
+
+         // If is not on the list add it and split it as well
+        if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1)
+        {
+          Subgroup.FinishSubgroup();
           Subgroups.AddTerm(Subgroup);
+
           List<SubGroup> AuxSubgroups = Subgroup.SplitToSubGroups();
-          for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++) {	
-            SubGroup subgroup(*it_AuxSubgroups, Subgroup);
-            subgroup.SetProjection(it_AuxSubgroups->Projection()*Subgroup.Projection());
+          for(auto it = AuxSubgroups.begin(); it != AuxSubgroups.end(); it++)
+          {	
+            SubGroup subgroup(*it, Subgroup);
+            subgroup.SetProjection(it->Projection()*Subgroup.Projection());
             subgroup.Order();
-            if(Subgroups.Index(subgroup) == -1 and (!rank or subgroup.rank() == rank)) {
+            if(Subgroups.Index(subgroup) == -1 and (!rank or subgroup.rank() == rank))
               Subgroups.AddTerm(subgroup);
-            }
           }
         }
       }
@@ -1246,7 +1258,7 @@ cout << _Subgroups << endl;
       throw;
     }
   }
-*/
+
   /* Splits the group into subgroups between two ranks */
 /*  List<SubGroup> LieGroup::SplitToSubGroups(int r1, int r2) {
     try {

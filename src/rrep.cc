@@ -40,7 +40,7 @@ namespace Tomb
 
       _Group = &Group;
       _HWeight = &HWeight;
-      
+
       init();
       
     }
@@ -134,7 +134,7 @@ namespace Tomb
       _label = Rep.label();
       _Casimir = Rep.Casimir();
       _DynkinIndex = Rep.DynkinIndex();
-      _Weights = Rep.Weights();
+      //_Weights = Rep.Weights();
     }
     catch (...) { throw; }
   }
@@ -232,7 +232,7 @@ namespace Tomb
     {
       if(_Group == NULL or _HWeight == NULL)
         throw "Rrep::init::Not enough information to initialise the variables";
-      
+
       _dim = 1;
       _nirreps = 0;
       int accumulated_rank = 0;
@@ -240,9 +240,17 @@ namespace Tomb
       {
         RVector<double> R = _HWeight->ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
         Weight HW(_Group->GetObject(i), R);
-        Irrep aRep(_Group->GetObject(i),HW); 
-        this->AddTerm(aRep);
-        _dim *= aRep.dim();
+        if(DB<Irrep>().check(HW.id()))
+        {
+          AddTerm(*DB<Irrep>().at(HW.id()));
+          _dim *= DB<Irrep>().at(HW.id())->dim();
+        }
+        else
+        {
+          Irrep aRep = Irrep(_Group->GetObject(i),HW);
+          AddTerm(aRep);
+          _dim *= aRep.dim();
+        }
         _nirreps++;
         accumulated_rank += _Group->GetObject(i).rank();
       }

@@ -177,12 +177,9 @@ int main(int argc, char *argv[]) {
 
     // Subgroups
     cout << "Maximal Subgroups = " << G.MaximalSubgroups() << endl;
-/*
-    List<SubGroup> Subgroups = G.Subgroups();
-    std::cout << "Subgroups = " << Subgroups << std::endl;
-    //std::cout << Subgroups.json().write_formatted() << std::endl;
+    std::cout << "Subgroups = " << G.Subgroups() << std::endl;
     
-    // Decomposition of reps
+/*    // Decomposition of reps
     for(int j=0; j<Reps.nterms(); j++) {
       for(int i=0; i<MaximalSubgroups.nterms(); i++) {
         Sum<Rrep> reps = Reps.GetObject(Reps.nterms()-1-j).Decompose(MaximalSubgroups.GetObject(i));

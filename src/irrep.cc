@@ -86,8 +86,8 @@ Si*/
       _label = Rep.label();
       _Casimir = Rep.Casimir();
       _DynkinIndex = Rep.DynkinIndex();
-      _Weights = Rep.Weights();
-      _DualWeights = Rep.DualWeights();
+      //_Weights = Rep.Weights();
+      //_DualWeights = Rep.DualWeights();
 
     }
     catch (...) { throw; }

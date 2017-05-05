@@ -105,11 +105,11 @@ namespace Tomb
       List<Rrep> &CalculateReps(int=50);
       List<SubGroup> &CalculateMaximalSubgroups();
       List<SubGroup> &CalculateSubgroups();
-/*      List<SubGroup> Subgroups(int);
-      List<SubGroup> Subgroups(int, int);
+//      List<SubGroup> Subgroups(int);
+//      List<SubGroup> Subgroups(int, int);
       List<SubGroup> SplitToSubGroups(int = 0);
       List<SubGroup> SplitToSubGroups(int, int);
-      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
+/*      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
       List<Product<Rrep> > Invariants(const List<Rrep> &, const int = 4);
 */ 
