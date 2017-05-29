@@ -47,10 +47,11 @@ namespace Tomb
 
     public:
       List<Weight> _Weights;
+      map<string, Sum<Rrep> > _Subreps;
 
       Rrep();
       Rrep(LieGroup &, Weight &);
-//      Rrep(SubGroup &, Weight &);
+      Rrep(SubGroup &, Weight &);
       Rrep(LieGroup &, const Irrep &);
       Rrep(const std::string);
 //      Rrep(const JSONNode &);
@@ -78,8 +79,8 @@ namespace Tomb
       Rrep AddRrep(Rrep);
       Rrep FinishRrep();
       bool isSinglet(int = -1) const;
-//      List<Weight> Project(SubGroup);
-//      Sum<Rrep> Decompose(SubGroup &);
+      List<Weight> Project(SubGroup &);
+      Sum<Rrep> Decompose(SubGroup &);
       Sum<Rrep> operator*(Rrep);
       static Sum<Rrep> Product(List<Rrep> &);
       bool hasSinglet() const;

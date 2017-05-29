@@ -37,7 +37,8 @@ using namespace std;
 
 namespace Tomb 
 {
-  class LieGroup: public Product<SimpleGroup>{
+  class LieGroup: public Product<SimpleGroup>
+  {
 
     protected:
       int _rank = 0;
@@ -89,8 +90,8 @@ namespace Tomb
       List<SubGroup> MaximalSubgroups() const;
 //      List<SubGroup> SpecialSubgroups();
       List<SubGroup> Subgroups() const;
-//      bool isSubgroupOf(LieGroup) const;
-//      bool isSubgroupOf(SimpleGroup) const;
+      bool isSubgroupOf(LieGroup) const;
+      bool isSubgroupOf(SimpleGroup) const;
 
       void DeleteTerm(int);
       void AddTerm(const SimpleGroup &);

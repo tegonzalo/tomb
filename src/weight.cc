@@ -134,21 +134,17 @@ namespace Tomb
             
       _Group = DB<LieGroup>().get(G);
 
-      //*this = Weight(Group(),Group().rank());
-      
-      W.insert(0,"[[");
-      W.append("]]");
-            
-//      RVector<double>::ParseJSON(libjson::parse(W));
-
-      /*stringstream Ws(W);
-      :string s;
-      for(int i=0; i<this->cols()-1; i++) {
+      *this = Weight(Group(),Group().rank());
+  
+      stringstream Ws(W);
+      string s;
+      for(int i=0; i<this->cols()-1; i++)
+      {
         getline(Ws,s,',');
         (*this)[i] = atof(s.c_str());
       }
       getline(Ws,s,')');
-      (*this)[this->cols()-1] = atof(s.c_str());*/
+      (*this)[this->cols()-1] = atof(s.c_str());
       
       _positive = true;
       _multiplicity = 1;
@@ -266,7 +262,7 @@ namespace Tomb
       if(fabs((*this)[i]) < pow(10,-5)) 
         s << 0;
       else
-        s << setprecision(3) << (*this)[i];
+        s << setprecision(4) << (*this)[i];
       s << ",";
     }
     s << (*this)[cols()-1] << ')';
@@ -470,6 +466,35 @@ namespace Tomb
     return false;
   }
 
+  /* Overloaded == operator */
+  bool Weight::operator==(const Weight &w) const
+  {
+    if(RVector<double>::operator==(w))
+      return true;
+    else if (id() == w.id())
+      return true;
+    else
+      return false;
+  }
+
+  /* Overloaded != operator */
+  bool Weight::operator!=(const Weight &w) const
+  {
+    return !((*this) == w);
+  }
+
+  /* Overloaded == operator with doubles */
+  bool Weight::operator==(const double &n) const
+  {
+    return RVector<double>::operator==(n);
+  }
+
+  /* Overloaded != operator with doubles */
+  bool Weight::operator!=(const double &n) const
+  {
+    return RVector<double>::operator!=(n);
+  }
+
   /* Append a weight to the right */
   Weight Weight::Append(Weight w)
   {
@@ -535,5 +560,4 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-
 }

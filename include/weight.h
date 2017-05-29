@@ -78,6 +78,10 @@ namespace Tomb
       Weight operator*(Matrix<double>);
       bool operator>(const Weight) const;
       bool operator<(const Weight) const;
+      bool operator==(const Weight&) const;
+      bool operator!=(const Weight&) const;
+      bool operator==(const double&) const;
+      bool operator!=(const double&) const;
       Weight Append(Weight);
 //      JSONNode json(string = "") const;
   };

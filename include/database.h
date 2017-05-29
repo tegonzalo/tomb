@@ -47,6 +47,8 @@ namespace Tomb
 
       int check(std::string);
    //   JSONNode json(std::string);
+      typename std::map<std::string,TYPE*>::iterator begin();
+      typename std::map<std::string,TYPE*>::iterator end();
       TYPE* at(std::string);
       TYPE* find(std::string);
       TYPE* get(std::string);
@@ -108,6 +110,19 @@ namespace Tomb
       throw "DataBase::Could not find key on the database";
   }
 */
+
+  /* Returns an iterator to the map */
+   template <class TYPE> typename std::map<std::string, TYPE*>::iterator DataBase<TYPE>::begin()
+  {
+    return _content.begin();
+  }
+
+  /* Returns the end of the map */
+  template <class TYPE> typename std::map<std::string, TYPE*>::iterator DataBase<TYPE>::end()
+  {
+    return _content.end();
+  }
+
   /* Gets the object corresponding to the key */
   template <class TYPE> TYPE *DataBase<TYPE>::at(std::string key)
   {

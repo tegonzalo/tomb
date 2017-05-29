@@ -1155,7 +1155,7 @@ namespace Tomb
         for(int col=0; col<Subweights.cols(); col++)
           ExtendedWeight[col] = Weights.GetObject(col)*ExtendedRoot; 
 
-        for(int i=0; i<this->rank()+1; i++)
+        for(int i=rank(); i>=0; i--)
         {
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the extended Cartan matrix
           Matrix<double> SubCartan(this->ExtendedCartan().Adjoint(i,i));
@@ -1246,7 +1246,7 @@ namespace Tomb
         for(int col=0; col<Superweights.cols(); col++)
           Superweights.SetColumn(col, Weights.GetObject(col).Transpose());
         
-        for(int i=0; i<this->rank(); i++)
+        for(int i=rank()-1; i>=0; i--)
         {
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the Cartan matrix
           Matrix<double> SubCartan = Cartan().Adjoint(i,i);
@@ -1308,6 +1308,7 @@ namespace Tomb
           Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
           //Projection.SwapRows(i, Projection.rows()-1);
           //Projection.SwapColumns(i, Projection.cols()-1);
+cout << Projection << endl;
           Subgroup.SetProjection(Projection);
           
           // Final changes
@@ -1317,7 +1318,6 @@ namespace Tomb
           
           // Order the projection matrix columns with respect to the rank of the groups
           Subgroup.Order();
-cout << Subgroup << endl;          
           // The group is finished, add it to the database
           Subgroup.FinishSubgroup();
 
@@ -1327,7 +1327,6 @@ cout << Subgroup << endl;
         }
       }
 
-      cout << "Maximal subgroups of " << *this << " are "<< _MaxSubgroups << endl;
 
       // Finally, calculate singular subgroups
       //List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
@@ -1489,7 +1488,7 @@ cout << Subgroup << endl;
         group++;
       }
 
-      cout << "Subgroups of " << *this << " are " << _Subgroups << endl;
+
       return _Subgroups;
       
     } catch (...) {
@@ -1580,28 +1579,28 @@ cout << Subgroup << endl;
   }
 */
   /* Returns whether the simple group is a subgroup of a Lie Group */
-/*  bool SimpleGroup::isSubgroupOf(LieGroup Group) const {
-
-    try {
-      LieGroup G(*this);	
-      return G.isSubgroupOf(Group);
+  bool SimpleGroup::isSubgroupOf(LieGroup Group) const
+  {
+    try
+    {
+      LieGroup *G = DB<LieGroup>().get(id());	
+      return G->isSubgroupOf(Group);
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
-  /* Returns whether the Lie group is a subgroup of another simple Group */
-/*  bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const {
 
-    try {
-      LieGroup G(*this);
-      return G.isSubgroupOf(Group);
-    } catch (...) {
-      throw;
+  /* Returns whether the Lie group is a subgroup of another simple Group */
+  bool SimpleGroup::isSubgroupOf(SimpleGroup Group) const
+  {
+    try
+    {
+      LieGroup *G = DB<LieGroup>().get(id());
+      return G->isSubgroupOf(Group);
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Overloaded == operator */
   bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
 

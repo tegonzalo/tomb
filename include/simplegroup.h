@@ -95,14 +95,14 @@ namespace Tomb
 //      List<SubGroup> SpecialSubgroups()
       List<SubGroup> Subgroups() const;
       List<SubGroup> &CalculateSubgroups();
-/*      List<SubGroup> Subgroups(int);
-      List<SubGroup> Subgroups(int, int);
-/*      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
-      List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
-      List<Product<Irrep> > Invariants(const List<Irrep> &, const int = 4);
+//      List<SubGroup> Subgroups(int);
+//      List<SubGroup> Subgroups(int, int);
+//      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
+//      List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
+//      List<Product<Irrep> > Invariants(const List<Irrep> &, const int = 4);
       bool isSubgroupOf(LieGroup) const;
       bool isSubgroupOf(SimpleGroup) const;
-*/      bool operator==(const SimpleGroup &) const;
+      bool operator==(const SimpleGroup &) const;
       bool operator!=(const SimpleGroup &) const;
       bool operator>(const SimpleGroup &) const;
       bool operator<(const SimpleGroup &) const;

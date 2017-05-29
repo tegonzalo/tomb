@@ -176,17 +176,20 @@ int main(int argc, char *argv[]) {
     std::cout << "Reps = " << Reps << std::endl;
 
     // Subgroups
-    cout << "Maximal Subgroups = " << G.MaximalSubgroups() << endl;
-    std::cout << "Subgroups = " << G.Subgroups() << std::endl;
-    
-/*    // Decomposition of reps
-    for(int j=0; j<Reps.nterms(); j++) {
-      for(int i=0; i<MaximalSubgroups.nterms(); i++) {
+    List<SubGroup> MaximalSubgroups = G.MaximalSubgroups();
+    cout << "Maximal Subgroups = " << MaximalSubgroups << endl;
+    cout << "Subgroups = " << G.Subgroups() << endl;
+
+    // Decomposition of reps
+    for(int j=0; j<Reps.nterms(); j++)
+    {
+      for(int i=0; i<MaximalSubgroups.nterms(); i++)
+      {
         Sum<Rrep> reps = Reps.GetObject(Reps.nterms()-1-j).Decompose(MaximalSubgroups.GetObject(i));
-        std::cout << Reps.GetObject(Reps.nterms()-1-j) << "(" << G << ") -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << std::endl;
+        cout << Reps.GetObject(Reps.nterms()-1-j) << "(" << G << ") -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << endl;
       }
     }
-    */
+  
     // Breaking Chains
 /*		LieGroup SMGroup("A2xA1xU1");
 

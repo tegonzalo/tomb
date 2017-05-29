@@ -39,7 +39,7 @@ namespace Tomb
         throw "Rrep::Rrep::Dimension of the weight doesn\'t match rank of the group";
 
       _Group = &Group;
-      _HWeight = &HWeight;
+      _HWeight = new Weight(HWeight);
 
       init();
       
@@ -48,7 +48,7 @@ namespace Tomb
   }
 
   /* Constructor 2*/
-/*  Rrep::Rrep(SubGroup &Group, Weight &HWeight) : List<Irrep>()
+  Rrep::Rrep(SubGroup &Group, Weight &HWeight) : List<Irrep>()
   {
     try
     {
@@ -56,21 +56,21 @@ namespace Tomb
         throw "Rrep::Rrep::Dimension of weight doesn\'t match rank of group";
 
       _Group = &Group;
-      _HWeight = &HWeight;
+      _HWeight = new Weight(HWeight);
       
       init();
       
     }
     catch (...) { throw; }
   }
-*/
+
   /* Constructor 3 */
   Rrep::Rrep(LieGroup &Group, const Irrep &Rep) : List<Irrep>(Rep)
   {
     try
     {
       _Group = &Group;
-      _HWeight = &Rep.HWeight();
+      _HWeight = new Weight(Rep.HWeight());
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = 1;
@@ -97,7 +97,6 @@ namespace Tomb
     {
       _HWeight = new Weight(id);
       _Group = DB<LieGroup>().get(_HWeight->Group().id());
-      
       init();
 
     }
@@ -127,7 +126,7 @@ namespace Tomb
     try
     {
       _Group = &Rep.Group();
-      _HWeight = &Rep.HWeight();
+      _HWeight = new Weight(Rep.HWeight());
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = Rep.nirreps();
@@ -171,6 +170,7 @@ namespace Tomb
   /* Destructor */
   Rrep::~Rrep()
   {
+    delete _HWeight;
   }
 
   /* Overloaded = operator */
@@ -181,7 +181,7 @@ namespace Tomb
       if(this == &Rep) return *this;
       List<Irrep>::operator=(Rep);
       _Group = &Rep.Group();
-      _HWeight = &Rep.HWeight();
+      _HWeight = new Weight(Rep.HWeight());
       _dim = Rep.dim();
       _real = Rep.real();
       _nirreps = Rep.nirreps();
@@ -246,7 +246,7 @@ namespace Tomb
           _dim *= DB<Irrep>().at(HW.id())->dim();
         }
         else
-        {
+       {
           Irrep aRep = Irrep(_Group->GetObject(i),HW);
           AddTerm(aRep);
           _dim *= aRep.dim();
@@ -254,7 +254,6 @@ namespace Tomb
         _nirreps++;
         accumulated_rank += _Group->GetObject(i).rank();
       }
-
       if(nirreps() > 1) {
         std::stringstream ss;
         ss << *this;
@@ -262,7 +261,6 @@ namespace Tomb
       } else {
         _label = GetObject(0).label();
       }
-        
       _real = true;
       for(int i=0; i<nirreps(); i++)
       {
@@ -274,7 +272,6 @@ namespace Tomb
       // If the rrep is already in the database, do nothing
       if(DB<Rrep>().find(id()) != NULL)
         return ;
-
       // Store the info in the database
       DB<Rrep>().set(id(),this);
 
@@ -290,7 +287,7 @@ namespace Tomb
   std::string Rrep::id() const
   {
     std::stringstream s;
-    s << HWeight().id();
+    s << _HWeight->id();
     return s.str();
   }
 
@@ -372,7 +369,7 @@ namespace Tomb
       
       List< List<Weight> > ListofWeights;
       for(int i=0; i<this->nirreps(); i++)
-        ListofWeights.AddTerm(this->GetObject(i)._Weights);
+        ListofWeights.AddTerm(DB<Irrep>().at(GetObject(i).id())->_Weights);
       
       int totalterms = 1;
       for(int i=0; i<ListofWeights.nterms(); i++)
@@ -504,21 +501,25 @@ namespace Tomb
   }
 
   /* Projects the weights of a rrep into the weights of rreps of a subgroup */
-/*  List<Weight> Rrep::Project(SubGroup Subgroup)
+  List<Weight> Rrep::Project(SubGroup &Subgroup)
   { 
     try
     {
-      List<Weight> Weights = this->Weights();
       List<Weight> ProjectedWeights;
-      for(int i=0; i<Weights.nterms(); i++)
+      Rrep *R = DB<Rrep>().find(id());
+      if(R == NULL)
+        throw "Rrep::Project::Rrep not in the database";
+
+      for(auto it = R->_Weights.begin(); it != R->_Weights.end(); it++)
       {
-        Weight weight = Weight(Subgroup, Subgroup.Projection()*Weights.GetObject(i));
+        Weight weight = Weight(Subgroup, Subgroup.Projection()*(*it));
         weight.setPositive(true);
         for(int j=0; j<weight.cols()-Subgroup.nabelians(); j++)
         {
           if(weight[j] < 0)
             weight.setPositive(false);
         }
+cout << "weight id = " << weight.id() << endl;
         ProjectedWeights.AddTerm(weight);
       }
     
@@ -526,84 +527,97 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-*/
+
   /* Obtains the decomposition into rreps of a subgroup */
-/*  Sum<Rrep> Rrep::Decompose(SubGroup &Subgroup)
+  Sum<Rrep> Rrep::Decompose(SubGroup &Subgroup)
   {
     try
     {
-      
+cout << *this << endl;
+cout << "Decomposing rep" << endl;
+cout << Weights() << endl;
+cout << Subgroup << endl;
+cout << Subgroup.Projection() << endl;
+
+      Rrep *R = DB<Rrep>().find(id());
+      if(R == NULL)
+        throw "Rrep::Decompose::Rrep not in the database";
+
+      if(R != NULL and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
+        return R->_Subreps.at(Subgroup.id());
+
+      if(!Subgroup.isSubgroupOf(*_Group))
+        throw "Rrep::Decompose::Not a subgroup";
+
       Sum<Rrep> Reps;
       
-      /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+      List<Weight> ProjectedWeights = Project(Subgroup);
+      cout << ProjectedWeights << endl;
+
+      do
       {
-        Reps = DecomposeDataBase.at(std::pair<std::string,std::string>(id(),Subgroup.id()));
-        return Reps;
-      }*/
-      
-/*      if(Subgroup.isSubgroupOf(this->Group()))
-      {
-        List<Weight> ProjectedWeights = this->Project(Subgroup);
-        Subgroup.Order();
-        do
+        Weight HWeight = ProjectedWeights.GetObject(0);
+
+        int highest_dim = 0;
+        for(auto it = ProjectedWeights.begin(); it != ProjectedWeights.end(); it++)
         {
-          
-          Weight HWeight = ProjectedWeights.GetObject(0);
-          //int maximum_sum_of_values = 0;
-          int highest_dim = 0;
-          for(List<Weight>::iterator it_ProjectedWeights = ProjectedWeights.begin(); it_ProjectedWeights != ProjectedWeights.end(); it_ProjectedWeights++)
-          {
-            //int sum_of_values = 0;
-            int group = 0;
-            int acc_rank = Subgroup.GetObject(0).rank();
-            Weight weight = *it_ProjectedWeights;
+          int group = 0;
+          int acc_rank = Subgroup.GetObject(0).rank();
             
-            for(int j=0; j<Subgroup.rank(); j++)
-            {
-              if(j >= acc_rank)
-              {
-                group++;
-                acc_rank += Subgroup.GetObject(group).rank();
-              }
-            }
-            if(weight.positive())
-            {
-              Rrep Rep(Subgroup, weight);
-              if(Rep.dim() > highest_dim)
-              {
-                highest_dim = Rep.dim();
-                HWeight = weight;
-              }
-            }
-          }
-          Rrep Rep(Subgroup, HWeight);
-          List<Weight> SubWeights = Rep.Weights();
-          for(List<Weight>::iterator it_SubWeights = SubWeights.begin(); it_SubWeights != SubWeights.end(); it_SubWeights++)
+          for(int j=0; j<Subgroup.rank(); j++)
           {
-            int n = ProjectedWeights.Index(*it_SubWeights);
-            if(n >= 0)
-              ProjectedWeights.DeleteTerm(n);
+            if(j >= acc_rank)
+            {
+              group++;
+              acc_rank += Subgroup.GetObject(group).rank();
+            }
           }
-          Reps.AddTerm(Rep);
-        
-          
+          if(it->positive())
+          {
+            Rrep *Rep = DB<Rrep>().get(it->id());
+            if(Rep->dim() > highest_dim)
+            {
+              highest_dim = Rep->dim();
+              HWeight = *it;
+            }
+          }
         }
-        while(ProjectedWeights.nterms()>0);
-      
+cout << HWeight << endl;
+        Rrep *Rep = DB<Rrep>().find(HWeight.id());
+        if(Rep == NULL)
+        {
+          Rep = new Rrep(Subgroup, HWeight);
+          DB<Rrep>().set(Rep->id(), Rep);
+        }
+getchar();
+cout << Rep->_Weights << endl;
+        for(auto it = Rep->_Weights.begin(); it != Rep->_Weights.end(); it++)
+        {
+cout << "Is " << it->id() << " == " << ProjectedWeights[-3].id() << "? " << (*it == ProjectedWeights[-3]) << endl;
+          int n = ProjectedWeights.Index(*it);
+          if(n >= 0)
+            ProjectedWeights.DeleteTerm(n);
+        }
+cout << ProjectedWeights << endl;
+cout << ProjectedWeights.nterms() << endl;
+        Reps.AddTerm(*Rep);
       }
-      else
-        throw "Rrep::Decompose::Not a subgroup";
-      
-      /*if(DecomposeDataBase.find(std::pair<std::string,std::string>(id(),Subgroup.id())) != DecomposeDataBase.end())
-        DecomposeDataBase.erase(std::pair<std::string,std::string>(id(),Subgroup.id()));
-      DecomposeDataBase.emplace(std::pair<std::string,std::string>(id(),Subgroup.id()), Reps);
-      */
-/*      return Reps;
+      while(ProjectedWeights.nterms()>0);
+
+      int repsdim = 0;
+      for(auto it = Reps.begin(); it != Reps.end(); it++)
+        repsdim += it->dim();
+      if(repsdim != dim())
+        throw "Rrep::Decompose::Dimension of the result doesn't match the dimension of the rep";
+
+      R->_Subreps.emplace(Subgroup.id(), Reps);
+
+      return R->_Subreps.at(Subgroup.id());
 
     }
     catch (...) { throw; }
   }
-*/
+
   /* Overloaded * operator with Reps */
   Sum<Rrep> Rrep::operator*(Rrep Rep)
   {   

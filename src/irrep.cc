@@ -82,7 +82,7 @@ Si*/
       _real = Rep.real();
       _conjugate = Rep.conjugate();
       _congruency = Rep.congruency();
-      _HWeight = &Rep.HWeight();
+      _HWeight = new Weight(Rep.HWeight());
       _label = Rep.label();
       _Casimir = Rep.Casimir();
       _DynkinIndex = Rep.DynkinIndex();
@@ -129,6 +129,7 @@ Si*/
   /* Destructor */
   Irrep::~Irrep()
   {
+    delete _HWeight;
   }
 
   /* Overloaded = operator */
@@ -201,20 +202,21 @@ Si*/
    
       double a,b;
       int nproots = (int)(0.5*(_Group->dim()-_Group->rank()));
-      List<Root> PRoots(_Group->PRoots("Dual"));
-    
-      for(int i=0; i<nproots; i++)
+      if(nproots)
       {
-        a = 0;
-        b = 0;
-        for(int j=0; j<_Group->rank(); j++)
+        List<Root> PRoots(_Group->PRoots("Dual"));
+        for(int i=0; i<nproots; i++)
         {
-          a += PRoots.GetObject(i)[j]*((*_HWeight)[j]+1);
-          b += PRoots.GetObject(i)[j];
+          a = 0;
+          b = 0;
+          for(int j=0; j<_Group->rank(); j++)
+          {
+            a += PRoots.GetObject(i)[j]*((*_HWeight)[j]+1);
+            b += PRoots.GetObject(i)[j];
+          }
+          aux *= a*1./b;
         }
-        aux *= a*1./b;
       }
-      
       _dim = (int) aux;
       if((aux - _dim) > 0.5)
         _dim++;
@@ -751,47 +753,52 @@ Si*/
   }
 
   /* Projects the weights of a irrep into the weights of irreps of a subgroup */
-/*  List<Weight> Irrep::Project(SubGroup Subgroup)
-  {
-    
-    try {
-      List<Weight> Weights = this->Weights();
+  List<Weight> Irrep::Project(SubGroup &Subgroup)
+  {    
+    try
+    {
       List<Weight> ProjectedWeights;
-      for(int i=0; i<Weights.nterms(); i++) {
-        Weight weight = Weight(Subgroup, Subgroup.Projection()*Weights.GetObject(i));
+      for(auto it = Weights().begin(); it != Weights().end(); it++)
+      {
+        Weight weight = Weight(Subgroup, Subgroup.Projection()*(*it));
         weight.setPositive(true);
-        for(int j=0; j<weight.cols()-Subgroup.nabelians(); j++) {
-          if(weight[j] < 0) {
+        for(int j=0; j<weight.cols()-Subgroup.nabelians(); j++)
+        {
+          if(weight[j] < 0)
             weight.setPositive(false);
-          }
         }
         ProjectedWeights.AddTerm(weight);
       }
     
       return ProjectedWeights;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Obtains the decomposition into irreps of a subgroup */
-/*  Sum<Rrep> Irrep::Decompose(SubGroup Subgroup) {
+  Sum<Rrep> Irrep::Decompose(SubGroup &Subgroup)
+  {   
+    try
+    {   
+      Irrep *R = DB<Irrep>().find(id());
+      if(R == NULL)
+        throw "Irrep::Decompose::Irrep not in database";
+
+      if(R != NULL and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
+        return R->_Subreps.at(Subgroup.id());
+
     
-    try {
-      
+      if(!Subgroup.isSubgroupOf(Group()))
+        throw "Irrep:Decompose:Not a subgroup";
+   
+      List<Weight> ProjectedWeights = Project(Subgroup);
+cout << ProjectedWeights << endl;
+    
       Sum<Rrep> Reps;
-      
-      /*if(DecomposeDataBase.find(pair<string,string>(id(),Subgroup.id())) != DecomposeDataBase.end())
+
+/*        
+      do
       {
-        Reps = DecomposeDataBase.at(pair<string,string>(id(),Subgroup.id()));
-        return Reps;
-      }*/
-    
-/*      if(Subgroup.isSubgroupOf(this->Group())) {
-        List<Weight> ProjectedWeights = this->Project(Subgroup);
-        
-        Subgroup.Order();
-        do {
           Weight HWeight = ProjectedWeights.GetObject(0);
           int maximum_sum_of_values = 0;
           for(int i=0; i<ProjectedWeights.nterms(); i++) {
@@ -828,30 +835,22 @@ Si*/
           Reps.AddTerm(Rep);
         
         } while(ProjectedWeights.nterms()>0);
-      
-      } else {
-        throw "Irrep:Decompose:Not a subgroup";
-      }
-      int dim=0;
-      for(int i=0; i<Reps.nterms(); i++) {
-        dim += Reps.GetObject(i).dim();
-      }
-      if(dim != this->dim()) {
+     */
+ 
+      int repsdim=0;
+      for(auto it = Reps.begin(); it != Reps.end(); it++)
+        repsdim += it->dim();
+      if(repsdim != dim())
         throw "Irrep::Decompose::Dimension of the result doesn't match the dimension of the rep";
-      }
       
-      /*if(DecomposeDataBase.find(pair<string,string>(id(),Subgroup.id())) != DecomposeDataBase.end())
-        DecomposeDataBase.erase(pair<string,string>(id(),Subgroup.id()));
-      DecomposeDataBase.emplace(pair<string,string>(id(),Subgroup.id()), Reps);
-      */
-/*      return Reps;
+      R->_Subreps.emplace(Subgroup.id(), Reps);
 
-    } catch (...) {
-      throw;
+      return R->_Subreps.at(Subgroup.id());
+
     }
-
+    catch (...) { throw; }
   }
-*/
+
   /* Overloaded == operator */
   bool Irrep::operator==(const Irrep R) const
   {

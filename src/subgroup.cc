@@ -267,7 +267,6 @@ namespace Tomb
   {
     try
     {   
-cout << "AAAAA" << endl;
       if(Group != SuperGroup)
         throw "SubGroup::SubGroup::Nothing to do here";
       else
@@ -942,7 +941,6 @@ cout << "AAAAA" << endl;
   {
     try
     {
-cout << "finishing subgroup " << *this << endl;
       // If the subgroup is already in the database, do nothing
       SubGroup *G = DB<SubGroup>().find(id());
       if(G == NULL)
@@ -952,7 +950,6 @@ cout << "finishing subgroup " << *this << endl;
       LieGroup *LG = DB<LieGroup>().find(lg_id());
       if(LG != NULL)
         return ;
-cout << "initing " << *this << endl;
       LieGroup::init();
  
     }
