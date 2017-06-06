@@ -34,6 +34,7 @@ namespace Tomb
     try
     {
       char label = 'A';
+      _SuperGroup = &SuperGroup;
       for(int i=0; i<SuperGroup.nterms(); i++)
       {
         Tree<string> tree(SuperGroup.GetObject(i).id());
@@ -56,6 +57,7 @@ namespace Tomb
   {
     try
     {
+      _SuperGroup = DB<LieGroup>().at(SuperGroup.id());
       Tree<string> tree(SuperGroup.id());
       tree.setLabel("");
       _SuperGroups.AddTerm(tree);
@@ -95,6 +97,8 @@ namespace Tomb
 
       getline(ss, Gstr, '[');
       getline(ss, SGstr, ']');
+
+      _SuperGroup = DB<LieGroup>().get(SGstr);
     
       std::stringstream ss2(Gstr);
       std::string Gstr2;
@@ -251,6 +255,7 @@ namespace Tomb
   {
     try
     {
+      _SuperGroup = DB<LieGroup>().at(Group.SuperGroup().id());
       _SuperGroups = Group.SuperGroups();
       _Projection = Matrix<double>(Group.Projection());
       _labels = Group.labels();
@@ -271,6 +276,7 @@ namespace Tomb
         throw "SubGroup::SubGroup::Nothing to do here";
       else
       {
+        _SuperGroup = &SuperGroup;
         char label = 'A';
         for(int i=0; i<Group.ngroups(); i++)
         {
@@ -314,6 +320,7 @@ namespace Tomb
   {
     try
     {
+      _SuperGroup = DB<LieGroup>().at(SuperGroup.id());
       Tree<string> tree(SuperGroup.id());
       tree.setLabel("A");
       for(int j=0; j<Group.nterms(); j++)
@@ -350,7 +357,8 @@ namespace Tomb
   SubGroup::SubGroup(SimpleGroup &Group, SimpleGroup &SuperGroup) : LieGroup(Group)
   {
     try
-    {   
+    {
+      _SuperGroup = DB<LieGroup>().at(SuperGroup.id());
       Tree<string> tree(SuperGroup.id());
       tree.setLabel("A");
       if(Group != SuperGroup)
@@ -382,6 +390,7 @@ namespace Tomb
   {
     try
     {
+      _SuperGroup = DB<LieGroup>().at(SuperGroup.id());
       if(Group._SuperGroups.nterms() != 1 or Group.SuperGroup() != SuperGroup)
       {
         Tree<string> tree(SuperGroup.id());
@@ -429,7 +438,8 @@ namespace Tomb
   SubGroup::SubGroup(SubGroup &Group, SubGroup &SuperGroup) : LieGroup(Group)
   {
     try
-    {   
+    {
+      _SuperGroup = &SuperGroup;
       _SuperGroups = SuperGroup._SuperGroups;
       _superRank = SuperGroup.rank(); 
       
@@ -530,6 +540,7 @@ namespace Tomb
   /* Move constructor */
   SubGroup::SubGroup(SubGroup &&Group) : 
     LieGroup(std::move(Group)),
+    _SuperGroup(std::move(Group._SuperGroup)),
     _SuperGroups(std::move(Group._SuperGroups)),
     _Projection(std::move(Group._Projection)),
     _labels(std::move(Group._labels)),
@@ -540,6 +551,7 @@ namespace Tomb
   {
     try
     {
+      Group._SuperGroup = NULL;
       Group._SuperGroups.Clear();
       Group._Projection = Matrix<double>();
       Group._labels.Clear();
@@ -567,6 +579,7 @@ namespace Tomb
       
       LieGroup::operator=(Group);
       
+      _SuperGroup = DB<LieGroup>().at(Group.SuperGroup().id());
       _SuperGroups = Group._SuperGroups;
       _Projection = Matrix<double>(Group.Projection());
       _labels = Group.labels();
@@ -591,6 +604,7 @@ namespace Tomb
       
       LieGroup::operator=(std::move(Group));
       
+      _SuperGroup = std::move(Group._SuperGroup);
       _SuperGroups = std::move(Group._SuperGroups);
       _Projection = std::move(Group._Projection);
       _labels = std::move(Group._labels);
@@ -599,7 +613,7 @@ namespace Tomb
       _regular = std::move(Group._regular);
       _special = std::move(Group._special);
       
-      
+      Group._SuperGroup = NULL;
       Group._SuperGroups.Clear();
       Group._Projection = Matrix<double>();
       Group._labels.Clear();
@@ -639,7 +653,7 @@ namespace Tomb
       
       std::string id = ss.str();
           
-      LieGroup *Supergroup = DB<LieGroup>().get(SGstr);
+      _SuperGroup = DB<LieGroup>().get(SGstr);
 //TODO: uncomment
 //        Supergroup.Subgroups();
         //if(FileExists(filepath.str()))
@@ -650,7 +664,7 @@ namespace Tomb
       std::stringstream ss2(Gstr);
       std::string str,label;
           
-      SubGroup Subgroup(*Supergroup);
+      SubGroup Subgroup(*_SuperGroup);
       List<std::string> labels;
           
       while(getline(ss2, str, '('))
@@ -697,19 +711,7 @@ namespace Tomb
   /* Returns the hightest Supergroup */
   LieGroup SubGroup::SuperGroup() const
   {
-    if(_SuperGroups.nterms())
-    {
-      string Supergroup;
-      for(int i=0; i<_SuperGroups.nterms(); i++)
-      {
-        Supergroup.append(_SuperGroups.GetObject(i).Object());
-        Supergroup.append("x");
-      }
-      Supergroup.pop_back();
-      return *DB<LieGroup>().get(Supergroup);
-    }
-    else
-      throw "SubGroup::SuperGroup::No supergroups";
+    return *_SuperGroup;
   }
 
   /* Returns the Supergroup at level i */
@@ -1135,22 +1137,27 @@ namespace Tomb
     {
       if(this->ngroups() != Group.ngroups() or this->rank() != Group.rank())
         return false;
-      
-      if(id() != Group.id()) return false;
-      else return true;
+
+      if(this->lg_id() != Group.lg_id())
+        return false;
       
       if(maximal() != Group.maximal() or regular() != Group.regular() or special() != Group.special())
         return false;
       
-      // Assume that groups are ordered 
-      //this->Order();
-      //Group.Order();
-      
-      if(LieGroup(*this) != LieGroup(Group))
-        return false;
-    
       if(this->Projection() == Group.Projection())
         return true;
+   
+      // FIXME: Not working, but would be better to tell subgroups apart
+      //Rrep GenRep = _SuperGroup->GeneratingRep();
+      //SubGroup sg1(*this);
+      //SubGroup sg2(Group);
+      //if(GenRep.Decompose(sg1) == GenRep.Decompose(sg2))
+      //  return true;
+      //else
+      //  return false;
+ 
+      if(id() != Group.id()) return false;
+      else return true;
       
       if(labels() == Group.labels())
         return true;

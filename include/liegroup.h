@@ -15,6 +15,7 @@
 #ifndef __LIEGROUP_H
 #define __LIEGROUP_H
 
+#include "omp.h"
 #include "linkedlists.h"
 #include "tree.h"
 #include "libjson.h"
@@ -106,14 +107,14 @@ namespace Tomb
       List<Rrep> &CalculateReps(int=50);
       List<SubGroup> &CalculateMaximalSubgroups();
       List<SubGroup> &CalculateSubgroups();
-//      List<SubGroup> Subgroups(int);
-//      List<SubGroup> Subgroups(int, int);
+      List<SubGroup> Subgroups(int);
+      List<SubGroup> Subgroups(int, int);
       List<SubGroup> SplitToSubGroups(int = 0);
       List<SubGroup> SplitToSubGroups(int, int);
-/*      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
+      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
       List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
-      List<Product<Rrep> > Invariants(const List<Rrep> &, const int = 4);
-*/ 
+//      List<Product<Rrep> > Invariants(const List<Rrep> &, const int = 4);
+ 
       bool operator>(const LieGroup &);
       bool operator<(const LieGroup &);
       bool operator>(const SimpleGroup &);

@@ -31,6 +31,7 @@ namespace Tomb
   class SubGroup: public LieGroup {
 
     private:
+      LieGroup *_SuperGroup;
       Matrix<double> _Projection;
       List<std::string> _labels;
       bool _maximal = false;

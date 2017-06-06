@@ -519,7 +519,6 @@ namespace Tomb
           if(weight[j] < 0)
             weight.setPositive(false);
         }
-cout << "weight id = " << weight.id() << endl;
         ProjectedWeights.AddTerm(weight);
       }
     
@@ -533,12 +532,6 @@ cout << "weight id = " << weight.id() << endl;
   {
     try
     {
-cout << *this << endl;
-cout << "Decomposing rep" << endl;
-cout << Weights() << endl;
-cout << Subgroup << endl;
-cout << Subgroup.Projection() << endl;
-
       Rrep *R = DB<Rrep>().find(id());
       if(R == NULL)
         throw "Rrep::Decompose::Rrep not in the database";
@@ -552,9 +545,8 @@ cout << Subgroup.Projection() << endl;
       Sum<Rrep> Reps;
       
       List<Weight> ProjectedWeights = Project(Subgroup);
-      cout << ProjectedWeights << endl;
 
-      do
+     do
       {
         Weight HWeight = ProjectedWeights.GetObject(0);
 
@@ -582,24 +574,18 @@ cout << Subgroup.Projection() << endl;
             }
           }
         }
-cout << HWeight << endl;
         Rrep *Rep = DB<Rrep>().find(HWeight.id());
         if(Rep == NULL)
         {
           Rep = new Rrep(Subgroup, HWeight);
           DB<Rrep>().set(Rep->id(), Rep);
         }
-getchar();
-cout << Rep->_Weights << endl;
         for(auto it = Rep->_Weights.begin(); it != Rep->_Weights.end(); it++)
         {
-cout << "Is " << it->id() << " == " << ProjectedWeights[-3].id() << "? " << (*it == ProjectedWeights[-3]) << endl;
           int n = ProjectedWeights.Index(*it);
           if(n >= 0)
             ProjectedWeights.DeleteTerm(n);
         }
-cout << ProjectedWeights << endl;
-cout << ProjectedWeights.nterms() << endl;
         Reps.AddTerm(*Rep);
       }
       while(ProjectedWeights.nterms()>0);
@@ -619,33 +605,34 @@ cout << ProjectedWeights.nterms() << endl;
   }
 
   /* Overloaded * operator with Reps */
-  Sum<Rrep> Rrep::operator*(Rrep Rep)
+  Sum<Rrep> &Rrep::operator*(const Rrep &Rep)
   {   
     try
     {
       if(nirreps() != Rep.nirreps())
         throw "Rrep::operator*::Reps should belong to the same group";
 
+      Rrep *R = DB<Rrep>().find(id());
+      if(R != NULL and !R->_Products.empty() and R->_Products.find(Rep.id()) != R->_Products.end())
+        return R->_Products.at(Rep.id());
+      if(R == NULL)
+        throw "Rrep::Unknown rrep, cannot continue";
+
       Sum<Rrep> ListofReps;
       Sum<Rrep> ListofReps2;
       
-      /*if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
-      {
-        ListofReps = ProductDataBase.at(std::pair<std::string,std::string>(id(),Rep.id()));
-        return ListofReps;
-      }*/
-
       for(int i=0; i<nirreps(); i++)
       {
         Sum<Irrep> Prod = GetObject(i)*Rep.GetObject(i);
         if(ListofReps.nterms())
         {
-          for(Sum<Rrep>::iterator it_ListofReps = ListofReps.begin(); it_ListofReps != ListofReps.end(); it_ListofReps++)
+          for(auto it = ListofReps.begin(); it != ListofReps.end(); it++)
           {
-            for(Sum<Irrep>::iterator it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
+            for(auto it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
             {
-              Rrep Rep(*it_ListofReps);
+              Rrep Rep(*it);
               Rep.AddIrrep(*it_Prod);
+              Rep.FinishRrep();
               ListofReps2.AddTerm(Rep);
             }
           }
@@ -655,16 +642,17 @@ cout << ProjectedWeights.nterms() << endl;
         }
         else
         {
-          for(Sum<Irrep>::iterator it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
+          for(auto it_Prod = Prod.begin(); it_Prod != Prod.end(); it_Prod++)
             ListofReps.AddTerm(Rrep(*_Group,*it_Prod));
         }
       }
       
-      /*if(ProductDataBase.find(std::pair<std::string,std::string>(id(),Rep.id())) != ProductDataBase.end())
-        ProductDataBase.erase(std::pair<std::string,std::string>(id(),Rep.id()));
-      ProductDataBase.emplace(std::pair<std::string,std::string>(id(),Rep.id()), ListofReps);
-      */
-      return ListofReps;
+      R->_Products.emplace(Rep.id(), ListofReps);
+      Rrep *R2 = DB<Rrep>().find(Rep.id());
+      if(R2 != NULL)
+        R2->_Products.emplace(id(), ListofReps);
+
+      return R->_Products.at(Rep.id());;
 
     }
     catch(...) { throw; }

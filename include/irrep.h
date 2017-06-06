@@ -55,6 +55,7 @@ namespace Tomb
       List<Weight> _Weights;
       List<Weight> _DualWeights;
       map<string, Sum<Rrep> > _Subreps;
+      map<string, Sum<Irrep> > _Products;
 
       Irrep(SimpleGroup&, Weight&);
       Irrep(const string);
@@ -85,7 +86,7 @@ namespace Tomb
       bool isSinglet() const;
       List<Weight> Project(SubGroup &);
       Sum<Rrep> Decompose(SubGroup &);
-      Sum<Irrep> operator*(Irrep);
+      Sum<Irrep> &operator*(const Irrep &);
       static Sum<Irrep> Product(List<Irrep> &);
       bool operator==(const Irrep) const;
       bool operator!=(const Irrep) const;

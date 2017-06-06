@@ -115,18 +115,13 @@ namespace Tomb
     _level = 0;
   }
 
-  /* Constructor 3, with json nodes */
-  template <class TYPE> Tree<TYPE>::Tree(const JSONNode &n) {
-    
-    if(n.as_string() != "")
-    {
-      
-    }
-    else
-      ParseJSON(n);
+  /* Constructor 2, with JSON Nodes */
+  template <class TYPE> Tree<TYPE>::Tree(const JSONNode &jnode)
+  {
+     ParseJSON(jnode);
   }
 
-  /* Copy consctructor */
+  /* Copy constructor */
   template <class TYPE> Tree<TYPE>::Tree(const Tree<TYPE> &aTree)
   {
     try
@@ -142,7 +137,7 @@ namespace Tomb
     catch(...) { throw; }
   }
 
-  /* Move consctructor */
+  /* Move constructor */
   template <class TYPE> Tree<TYPE>::Tree(Tree<TYPE> &&aTree) :
     _Object(std::move(aTree._Object)),
     _label(std::move(aTree._label)),
@@ -976,7 +971,9 @@ namespace Tomb
         tree.set_name(name);
       
       JSONNode node = Branches().json(name);
-      std::string label = _Object;
+      stringstream labelstream;
+      labelstream << _Object;
+      string label = labelstream.str();
       if(this->label() != "")
       {
         label.append("(");

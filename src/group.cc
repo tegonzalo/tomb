@@ -191,19 +191,20 @@ int main(int argc, char *argv[]) {
     }
   
     // Breaking Chains
-/*		LieGroup SMGroup("A2xA1xU1");
-
+    LieGroup SMGroup("A2xA1xU1");
     std::cout << "Breaking chains of " << G << " to " << SMGroup << ":" << std::endl;
     std::cout << G.BreakingChains(SMGroup) << std::endl;
 
 
     // Product of reps
-    for(int i=0; i<Reps.nterms(); i++) {
-      for(int j=i; j<Reps.nterms(); j++) {
-        std::cout << Reps.GetObject(i) << " * " << Reps.GetObject(j) << " = " << Reps.GetObject(i)*Reps.GetObject(j) << std::endl;
+    for(int i=0; i<Reps.nterms(); i++)
+    {
+      for(int j=i; j<Reps.nterms(); j++)
+      {
+        cout << Reps.GetObject(i) << " * " << Reps.GetObject(j) << " = " << Reps.GetObject(i)*Reps.GetObject(j) << endl;
       }
     }
-/*
+
     
 /*		
     // Invariants

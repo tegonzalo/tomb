@@ -27,7 +27,6 @@ CFLAGS = -w -g -std=c++11 -fopenmp
 
 # SOURCE FILES
 SDIR = ./src
-#SOURCES = simplegroup.cc liegroup.cc subgroup.cc irrep.cc rrep.cc root.cc weigth.cc
 SOURCES = $(shell find $(SDIR) -type f -name *.cc)
 
 # OBJECT FILES

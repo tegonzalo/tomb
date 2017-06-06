@@ -50,8 +50,8 @@ namespace Tomb
       TYPE &FirstTerm() const;
       TYPE &GetObject(int) const;
       TYPE &operator[](int) const;
-      void AddTerm(const TYPE &);
-      void AddTermOrdered(const TYPE &, const std::string = "DESC");
+      int AddTerm(const TYPE &);
+      int AddTermOrdered(const TYPE &, const std::string = "DESC");
       void InsertTerm(int, const TYPE &);
       void DeleteTerm(int);
       int DeleteObject(const TYPE &, int = 0);
@@ -276,11 +276,12 @@ namespace Tomb
   }
 
   /* Adds a new term to the List */
-  template <class TYPE> void List<TYPE>::AddTerm(const TYPE &Object)
+  template <class TYPE> int List<TYPE>::AddTerm(const TYPE &Object)
   {
     try
     {
       this->push_back(Object);
+      return nterms()-1;
     }
     catch (...)
     {
@@ -288,16 +289,19 @@ namespace Tomb
     }
   }
 
-  template <class TYPE> void List<TYPE>::AddTermOrdered(const TYPE &Object, const std::string order)
+  template <class TYPE> int List<TYPE>::AddTermOrdered(const TYPE &Object, const std::string order)
   {
     try
     {
+      typename std::vector<TYPE>::iterator where;
       if(!order.compare("DESC"))
-        this->insert(std::upper_bound(this->rbegin(), this->rend(), Object).base(), Object);
+        where = this->insert(std::upper_bound(this->rbegin(), this->rend(), Object).base(), Object);
       else if(!order.compare("ASC")) 
-        this->insert(std::upper_bound(this->begin(), this->end(), Object), Object);
+        where = this->insert(std::upper_bound(this->begin(), this->end(), Object), Object);
       else
         throw "List::Order::Ordering must be ASC or DESC";
+
+      return distance(this->begin(), where);
     }
     catch (...)
     {

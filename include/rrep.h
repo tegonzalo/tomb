@@ -48,6 +48,7 @@ namespace Tomb
     public:
       List<Weight> _Weights;
       map<string, Sum<Rrep> > _Subreps;
+      map<string, Sum<Rrep> > _Products;
 
       Rrep();
       Rrep(LieGroup &, Weight &);
@@ -81,7 +82,7 @@ namespace Tomb
       bool isSinglet(int = -1) const;
       List<Weight> Project(SubGroup &);
       Sum<Rrep> Decompose(SubGroup &);
-      Sum<Rrep> operator*(Rrep);
+      Sum<Rrep> &operator*(const Rrep &);
       static Sum<Rrep> Product(List<Rrep> &);
       bool hasSinglet() const;
       bool operator==(const Rrep &) const;

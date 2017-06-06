@@ -1122,67 +1122,75 @@ namespace Tomb
   }
 
   /* Extract the ith row */
-  template <class TYPE> RVector<TYPE> Matrix<TYPE>::Row(int i) const {
-    
-    try {
-      
-      if(i < 0 or i > rows()-1) {
+  template <class TYPE> RVector<TYPE> Matrix<TYPE>::Row(int i) const
+  {   
+    try
+    {
+      int I = i;
+      if(i < 0) I = rows()+i; 
+      if(I > rows()-1)
         throw "Matrix::Row::Element doesn\'t exist";
-      }
+
       RVector<TYPE> V(this->cols());
-      for(int j=0; j<this->cols(); j++) {
-        V[j] = (*this)[i][j];
-      }
+      for(int j=0; j<this->cols(); j++)
+        V[j] = (*this)[I][j];
+
       return V;
-    } catch (...) {
-      throw;
+
     }
+    catch (...) { throw; }
   }
 
   /* Extract the ith column */
-  template <class TYPE> CVector<TYPE> Matrix<TYPE>::Column(int i) const {
-    
-    try {
-      
-      if(i < 0 or i > cols()-1) {
+  template <class TYPE> CVector<TYPE> Matrix<TYPE>::Column(int i) const
+  {   
+    try
+    {
+      int I = i;
+      if(i < 0) I = cols()+i;
+      if(I > cols()-1)
         throw "Matrix::Column::Element doesn\'t exist";
-      }
+
       CVector<TYPE> V(this->rows());
-      for(int j=0; j<this->rows(); j++) {
-        V[j] = (*this)[j][i];
-      }
+      for(int j=0; j<this->rows(); j++)
+        V[j] = (*this)[j][I];
+
       return V;
-    } catch (...) {
-      throw;
+
     }
+    catch (...) { throw; }
   }
 
   /* Set a row */
-  template <class TYPE> void Matrix<TYPE>::SetRow(int i, RVector<TYPE> V) {
-    
-    if(i < 0 or i > rows()-1) { 
+  template <class TYPE> void Matrix<TYPE>::SetRow(int i, RVector<TYPE> V)
+  {
+    int I = i;
+    if(i < 0) I = rows()+i; 
+    if(I > rows()-1) 
       throw "Matrix::SetRow::Element doesn\'t exist";
-    }
-    if(this->cols() != V.cols()) {
+
+    if(this->cols() != V.cols())
       throw "Matrix::SetRow::Dimensions don\'t match";
-    }
-    for(int j=0; j<this->cols(); j++) {
-      _M[i][j] = V[j];
-    }
+
+    for(int j=0; j<this->cols(); j++)
+      _M[I][j] = V[j];
+
   }
 
   /* Set a column */
-  template <class TYPE> void Matrix<TYPE>::SetColumn(int i, CVector<TYPE> V) {
-    
-    if(i < 0 or i > cols()-1) {
+  template <class TYPE> void Matrix<TYPE>::SetColumn(int i, CVector<TYPE> V)
+  {
+    int I = i;
+    if(i < 0) I = cols()+i;   
+    if(I > cols()-1)
       throw "Matrix::SetColumn::Element doesn\'t exist";
-    }
-    if(this->rows() != V.rows()) {
+
+    if(this->rows() != V.rows())
       throw "Matrix::SetColumn::Dimensions don\'t match";
-    }
-    for(int j=0; j<this->rows(); j++) {
-      _M[j][i] = V[j];
-    }
+
+    for(int j=0; j<this->rows(); j++)
+      _M[j][I] = V[j];
+
   }
 
   /* Change the basis of eigenvectors */

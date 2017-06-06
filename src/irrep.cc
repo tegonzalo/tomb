@@ -199,7 +199,7 @@ Si*/
         throw "Irrep::init::Not enough information to initialise the variables";
       
       double aux = 1;    
-   
+
       double a,b;
       int nproots = (int)(0.5*(_Group->dim()-_Group->rank()));
       if(nproots)
@@ -310,7 +310,6 @@ Si*/
         }
       }
 
-
       _congruency = RVector<int>(1);
       switch(_Group->type())
       {
@@ -388,10 +387,9 @@ Si*/
       DB<Irrep>().set(id(),this);  
 
       // Perhaps do not calculate weights for very large reps
-      if(_dim < 1000)
+      if(_dim < 5000)
         DB<Irrep>().at(id())->CalculateWeights();
 
-      
     } 
     catch (...) { throw; }
   }
@@ -512,7 +510,8 @@ Si*/
       int n = 0;
       
       for(List<Weight>::iterator it_Weights = _Weights.begin(); it_Weights != _Weights.end(); ++ it_Weights) {
-        for(int j=0; j<rank; j++) {
+        for(int j=0; j<rank; j++)
+        {
           n = round((*it_Weights)[j]);
           if(n>0){
             for(int l=1; l<=n; l++) {
@@ -582,35 +581,32 @@ Si*/
   }
 
   /* Direct product of representations */
-  Sum<Irrep> Irrep::operator*(Irrep R)
+  Sum<Irrep> &Irrep::operator*(const Irrep &Rep)
   {
     try
     {
+      Irrep *R = DB<Irrep>().find(id());
+      if(R != NULL and !R->_Products.empty() and R->_Products.find(Rep.id()) != R->_Products.end())
+        return R->_Products.at(Rep.id());
+      if(R == NULL)
+        throw "Irrep::Unknown irrep, cannot continue";
+
       Sum<Irrep> Reps;
       
-      /*if(ProductDataBase.find(pair<string,string>(id(),R.id())) != ProductDataBase.end())
-      {
-        Reps = ProductDataBase.at(pair<string,string>(id(),R.id()));
-        return Reps;
-      }*/
-      
-      int totaldim = this->dim()*R.dim();
+      int totaldim = this->dim()*Rep.dim();
       int nreps = 0;
 
-      List<Weight> R1Weights = this->Weights();
-      List<Weight> R2Weights = R.Weights();
       List<Weight> W;
-
-      for(int i=0;i<totaldim;i++)
+      for(int i=0; i<totaldim; i++)
       {
-        if(_dim <= R.dim())
+        if(_dim <= Rep.dim())
         {
-          Weight w = R1Weights.GetObject(i/R.dim()) + R2Weights.GetObject(i%R.dim());
+          Weight w = R->_Weights.GetObject(i/Rep.dim()) + Rep.Weights().GetObject(i%Rep.dim());
           W.AddTerm(w);
         }
         else
         {
-          Weight w = R2Weights.GetObject(i/this->dim()) + R1Weights.GetObject(i%this->dim());
+          Weight w = Rep.Weights().GetObject(i/_dim) + R->_Weights.GetObject(i%_dim);
           W.AddTerm(w);
         }
       }
@@ -629,19 +625,16 @@ Si*/
         while(!HW.positive() and HW != 0 and count < W.nterms());
 
         HW.setMultiplicity(1);
-        Irrep Rep(*_Group, HW);
-
-        List<Weight> RepWeights = Rep.Weights();
-
-        for(int i=0; i<Rep.dim(); i++)
+        Irrep *rep = DB<Irrep>().get(HW.id());
+        for(int i=0; i<rep->dim(); i++)
         {
-          n = W.Index(RepWeights.GetObject(i));
+          n = W.Index(rep->_Weights.GetObject(i));
           if(n >= 0)
             W.DeleteTerm(n);
         }	
-        totaldim -= Rep.dim();
+        totaldim -= rep->dim();
 
-        Reps.AddTerm(Rep);
+        Reps.AddTerm(*rep);
         nreps++;
         
       } 
@@ -652,11 +645,12 @@ Si*/
 
       Reps.Order();
 
-      /*if(ProductDataBase.find(pair<string,string>(id(),R.id())) != ProductDataBase.end())
-        ProductDataBase.erase(pair<string,string>(id(),R.id()));
-      ProductDataBase.emplace(pair<string,string>(id(),R.id()), Reps);
-      */
-      return Reps;
+      R->_Products.emplace(Rep.id(), Reps);
+      Irrep *R2 = DB<Irrep>().find(Rep.id());
+      if(R2 != NULL)
+        R2->_Products.emplace(id(), Reps);
+
+      return R->_Products.at(Rep.id());
       
     }
     catch (...) { throw; }
@@ -792,50 +786,55 @@ Si*/
         throw "Irrep:Decompose:Not a subgroup";
    
       List<Weight> ProjectedWeights = Project(Subgroup);
-cout << ProjectedWeights << endl;
     
       Sum<Rrep> Reps;
-
-/*        
+        
       do
       {
-          Weight HWeight = ProjectedWeights.GetObject(0);
-          int maximum_sum_of_values = 0;
-          for(int i=0; i<ProjectedWeights.nterms(); i++) {
-            int sum_of_values = 0;
-            int group = 0;
-            int acc_rank = Subgroup.GetObject(0).rank();
-            Weight weight = ProjectedWeights.GetObject(i);
-            for(int j=0; j<Subgroup.rank(); j++) {
-              if(j >= acc_rank) {
-                group++;
-                acc_rank += Subgroup.GetObject(group).rank();
-              }
-              if(!Subgroup.GetObject(group).abelian()) {
-                if(weight[j] >= 0) {
-                  sum_of_values += (int)weight[j];
-                }
-              }
+        Weight HWeight = ProjectedWeights.GetObject(0);
+        int maximum_sum_of_values = 0;
+        for(int i=0; i<ProjectedWeights.nterms(); i++)
+        {
+          int sum_of_values = 0;
+          int group = 0;
+          int acc_rank = Subgroup.GetObject(0).rank();
+          Weight weight = ProjectedWeights.GetObject(i);
+          for(int j=0; j<Subgroup.rank(); j++)
+          {
+            if(j >= acc_rank)
+            {
+              group++;
+              acc_rank += Subgroup.GetObject(group).rank();
             }
-            if(weight.positive()) {
-              if(sum_of_values > maximum_sum_of_values) {
-                maximum_sum_of_values = sum_of_values;
-                HWeight = weight;
-              }
+            if(!Subgroup.GetObject(group).abelian())
+              if(weight[j] >= 0)
+                sum_of_values += (int)weight[j];
+          }
+          if(weight.positive())
+          {
+            if(sum_of_values > maximum_sum_of_values)
+            {
+              maximum_sum_of_values = sum_of_values;
+              HWeight = weight;
             }
           }
-          Rrep Rep(Subgroup, HWeight);
-          List<Weight> SubWeights = Rep.Weights();
-          for(int i=0; i<SubWeights.nterms(); i++) {
-            int n = ProjectedWeights.Index(SubWeights.GetObject(i));
-            if(n >= 0) {
+        }
+        Rrep *Rep = DB<Rrep>().find(HWeight.id());
+        if(Rep == NULL)
+        {
+          Rep = new Rrep(Subgroup, HWeight);
+          DB<Rrep>().set(Rep->id(), Rep);
+        }
+        for(int i=0; i<Rep->_Weights.nterms(); i++)
+        {
+          int n = ProjectedWeights.Index(Rep->_Weights.GetObject(i));
+          if(n >= 0)
               ProjectedWeights.DeleteTerm(n);
-            }
-          }
-          Reps.AddTerm(Rep);
-        
-        } while(ProjectedWeights.nterms()>0);
-     */
+        }
+        Reps.AddTerm(*Rep);
+        }
+        while(ProjectedWeights.nterms()>0);
+     
  
       int repsdim=0;
       for(auto it = Reps.begin(); it != Reps.end(); it++)

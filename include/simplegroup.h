@@ -53,10 +53,12 @@ namespace Tomb
 	
     public:
       List<Root> _PRoots;
+      List<Root> _PRootsDual;
       List<Irrep> _Irreps;
       List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;
 
+      SimpleGroup();
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
       SimpleGroup(const string);
@@ -95,10 +97,10 @@ namespace Tomb
 //      List<SubGroup> SpecialSubgroups()
       List<SubGroup> Subgroups() const;
       List<SubGroup> &CalculateSubgroups();
-//      List<SubGroup> Subgroups(int);
-//      List<SubGroup> Subgroups(int, int);
-//      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
-//      List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
+      List<SubGroup> Subgroups(int);
+      List<SubGroup> Subgroups(int, int);
+      List<List<Tree<SimpleGroup> > > BreakingChains(const SimpleGroup &);
+      List<List<Tree<SimpleGroup> > > BreakingChains(const LieGroup &);
 //      List<Product<Irrep> > Invariants(const List<Irrep> &, const int = 4);
       bool isSubgroupOf(LieGroup) const;
       bool isSubgroupOf(SimpleGroup) const;

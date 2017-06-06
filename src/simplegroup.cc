@@ -23,42 +23,47 @@ namespace Tomb
 {
   // Member functions
 
-  /* Constructor */
-  SimpleGroup::SimpleGroup(int rank, char type) {
+  /* Empty constructor */
+  SimpleGroup::SimpleGroup()
+  {
+  }
 
-    try {
+  /* Constructor */
+  SimpleGroup::SimpleGroup(int rank, char type)
+  {
+    try
+    {
       _rank = rank;
       _type = type;
       init();
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
 
   }
 
   /* Constructor 2 */
-  SimpleGroup::SimpleGroup(int rank, const Matrix<double> &Cartan) {	
-
-    try {
-      
+  SimpleGroup::SimpleGroup(int rank, const Matrix<double> &Cartan)
+  {
+    try
+    {   
       _rank = rank;
       _type = SimpleGroup::GroupIdentify(rank, Cartan);
       init();
-
     
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Constructor 3, with strings */
-  SimpleGroup::SimpleGroup(const string id) {
-    
-    try {
+  SimpleGroup::SimpleGroup(const string id)
+  {   
+    try
+    {
       string label = id;
       label.erase(remove(label.begin(), label.end(), ' '), label.end());
       
-      switch(toupper(label[0])) {
+      switch(toupper(label[0]))
+      {
         case 'A':
           _type = toupper(label[0]);
           _rank = atoi((label.substr(1,label.length()-1)).c_str());
@@ -82,49 +87,48 @@ namespace Tomb
         case 'E':
           _type = toupper(label[0]);
           _rank = atoi((label.substr(1,label.length()-1)).c_str());
-          if(_rank < 6 or _rank > 8) {
+          if(_rank < 6 or _rank > 8)
             throw "SimpleGroup::SimpleGroup::Group does not exist";
-          }
           break;
         
         case 'F':
           _type = toupper(label[0]);
           _rank = atoi((label.substr(1,label.length()-1)).c_str());
-          if(_rank != 4) {
+          if(_rank != 4)
             throw "SimpleGroup::SimpleGroup::Group does not exist";
-          }
           break;
 
         case 'G':
           _type = toupper(label[0]);
           _rank = atoi((label.substr(1,label.length()-1)).c_str());
-          if(_rank != 2) {
+          if(_rank != 2)
             throw "SimpleGroup::SimpleGroup::Group does not exist";
-          }
           break;
         
         case 'S':
-          switch(toupper(label[1])) {
+          switch(toupper(label[1]))
+          {
             case 'U':
               _type = 'A';
-              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{')
                 _order = atoi((label.substr(3,label.length()-4)).c_str());
-              } else {
+              else
                 _order = atoi((label.substr(2,label.length()-2)).c_str());
-              }
               _rank = _order - 1;
               break;
             
             case 'O':
-              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{')
                 _order = atoi((label.substr(3,label.length()-4)).c_str());
-              } else {
+              else
                 _order = atoi((label.substr(2,label.length()-2)).c_str());
-              }
-              if(_order%2) {
+              if(_order%2)
+              {
                 _type = 'B';
                 _rank = (_order-1)/2;
-              } else {
+              }
+              else
+              {
                 _type = 'D';
                 _rank = _order/2;
               }
@@ -132,16 +136,14 @@ namespace Tomb
             
             case 'P':
               _type = 'C';
-              if(label[2] == '(' or label[2] == '[' or label[2] == '{') {
+              if(label[2] == '(' or label[2] == '[' or label[2] == '{')
                 _order = atoi((label.substr(3,label.length()-4)).c_str());
-              } else {
+              else
                 _order = atoi((label.substr(2,label.length()-2)).c_str());
-              }
-              if(_order%2) {
+              if(_order%2)
                 throw "SimpleGroup::SimpleGroup::Group does not exist";
-              } else {
+              else
                 _rank = _order/2;
-              }
               break;
               
             default:
@@ -152,9 +154,8 @@ namespace Tomb
         case 'U':
           _type = toupper(label[0]);
           _rank = atoi((label.substr(1,label.length()-1)).c_str());
-          if(_rank != 1) {
+          if(_rank != 1)
             throw "SimpleGroup::SimpleGroup::This is not a Lie Group";
-          }
           break;
         
         default:
@@ -193,6 +194,7 @@ namespace Tomb
       _Casimir = G.Casimir();
       _repsMaxDim = G.repsMaxDim();
       _PRoots = G._PRoots;
+      _PRootsDual = G._PRootsDual;
 //      _Irreps = G._Irreps;
 //      _MaxSubgroups = G._MaxSubgroups;
 //      _Subgroups = G._Subgroups;
@@ -213,6 +215,7 @@ namespace Tomb
     _Casimir(move(G._Casimir)),
     _repsMaxDim(move(G._repsMaxDim)),
     _PRoots(move(G._PRoots)),
+    _PRootsDual(move(G._PRootsDual)),
     _Irreps(move(G._Irreps)),
     _MaxSubgroups(move(G._MaxSubgroups)),
     _Subgroups(move(G._Subgroups))
@@ -230,6 +233,7 @@ namespace Tomb
       G._Casimir = 0;
       G._repsMaxDim = 0;
       G._PRoots.Clear();
+      G._PRootsDual.Clear();
       G._Irreps.Clear();
       G._MaxSubgroups.Clear();
       G._Subgroups.Clear();
@@ -261,6 +265,7 @@ namespace Tomb
       _Casimir = G.Casimir();
       _repsMaxDim = G.repsMaxDim();
       _PRoots = G._PRoots;
+      _PRootsDual = G._PRootsDual;
 //      _Irreps = G._Irreps;
 //      _MaxSubgroups = G._MaxSubgroups;
 //      _Subgroups = G._Subgroups;
@@ -288,6 +293,7 @@ namespace Tomb
       _Casimir = move(G._Casimir);
       _repsMaxDim = move(G._repsMaxDim);
       _PRoots = move(G._PRoots);
+      _PRootsDual = move(G._PRootsDual);
       _Irreps = move(G._Irreps);
       _MaxSubgroups = move(G._MaxSubgroups);
       _Subgroups = move(G._Subgroups);
@@ -303,6 +309,7 @@ namespace Tomb
       G._Casimir = 0;
       G._repsMaxDim = 0;
       G._PRoots.Clear();
+      G._PRootsDual.Clear();
       G._Irreps.Clear();
       G._MaxSubgroups.Clear();
       G._Subgroups.Clear();
@@ -522,6 +529,7 @@ namespace Tomb
       }
 
       _PRoots = this->PRoots();
+      _PRootsDual = this->PRoots("Dual");
         
       if(abelian()) 
       {
@@ -669,75 +677,74 @@ namespace Tomb
   }
 
   /* Calculates all positive roots */
-  List<Root> SimpleGroup::PRoots(string _basis) {
-
-    try {
-
+  List<Root> SimpleGroup::PRoots(string _basis)
+  {
+    try
+    {
       string basis = _basis;
       
       string::iterator init = basis.begin();
       string::iterator end = basis.end();
 
-      while (init != end) {
+      while (init != end)
+      {
         *init = toupper((unsigned char)*init);
         ++init;
       }
       
-      if(basis.compare("DYNKIN") and basis.compare("DUAL")) {
+      if(basis.compare("DYNKIN") and basis.compare("DUAL"))
         throw "SimpleGroup::PRoots::Basis has to be either Dynkin or Dual";
-      }
   
-      if(!_PRoots.Empty()) {
-        if(basis=="DUAL") {
-          List<Root> DualRoots;
-          for(int i=0; i<_PRoots.nterms(); i++) {
-            DualRoots.AddTerm(_PRoots.GetObject(i).Dual());
-          }
-          return DualRoots;
-        } else {
-          return _PRoots;
-        }
-      }
+      if(!_PRoots.Empty() and basis == "DYNKIN")
+        return _PRoots;
+
+      if(!_PRootsDual.Empty() and basis == "DUAL")
+        return _PRootsDual;
+
+      _PRoots.Clear();
+      _PRootsDual.Clear();
+
       int nproots = (int)(0.5*(this->dim()-this->rank()));
-      List<Root> Roots;
       for(int i=0; i<this->rank(); i++)
       {
-        Roots.AddTerm(this->SRoot(i));
+        _PRoots.AddTerm(this->SRoot(i));
       }
 
       double n = 0;
 
-      for (int i=0; i<nproots; i++) {
-        for(int j=0; j<_rank; j++) {
-          if(i!=j) {
-            n = -Roots.GetObject(i)[j];
-            if(n>0){
-              for(int l=1; l<=n; l++) {
-                Root alpha = Roots.GetObject(i) + this->SRoot(j)*(double)l;
-                if(Roots.Index(alpha) < 0) {
-                  Roots.AddTerm(alpha);
-            }						
+      for (int i=0; i<nproots; i++)
+      {
+        for(int j=0; j<_rank; j++)
+        {
+          if(i!=j)
+          {
+            n = -_PRoots.GetObject(i)[j];
+            if(n>0)
+            {
+              for(int l=1; l<=n; l++)
+              {
+                Root alpha = _PRoots.GetObject(i) + this->SRoot(j)*(double)l;
+                if(_PRoots.Index(alpha) < 0)
+                  _PRoots.AddTerm(alpha);
+              }
             }
           }
         }
       }
-      }
     
-      Roots.Reverse();
+      _PRoots.Reverse();
       
-      if(basis=="DUAL") {
-        List<Root> DualRoots;
-        for(int i=0; i<Roots.nterms(); i++) {
-          DualRoots.AddTerm(Roots.GetObject(i).Dual());
-        }
-        return DualRoots;
+      if(basis=="DUAL")
+      {
+        for(int i=0; i<_PRoots.nterms(); i++)
+          _PRootsDual.AddTerm(_PRoots.GetObject(i).Dual());
+        return _PRootsDual;
       }
 
-      return Roots;
+      return _PRoots;
     
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Calculates all roots */
@@ -869,7 +876,10 @@ namespace Tomb
           HWeight[0] = 1;
           break;
         case 'B':
-          HWeight[0] = 1;
+          if(_rank != 2)
+            HWeight[0] = 1;
+          else
+            HWeight[1] = 1;
           break;
         case 'C':
           HWeight[0] = 1;
@@ -968,30 +978,36 @@ namespace Tomb
 
       // List of labels so avoid repetition
       List<string> labels("1");
-      for(int i = 0; i<HWs.nterms(); i++) {
+      for(int i = 0; i<HWs.nterms(); i++)
+      {
         HW = HWs.GetObject(i);
         
-        for(int k=0; k<_rank; k++) {
+        for(int k=0; k<_rank; k++)
+        {
           HW[k] ++;
-          if(HWs.Index(HW) < 0) {
+          if(HWs.Index(HW) < 0)
+          {
             Irrep Rep(*this, HW);
             dim = Rep.dim();
-            if(dim<=maxdim && dim>0) {
+            if(dim<=maxdim && dim>0)
+            {
               string label = to_string(Rep.dim());
-              do {
+              do
+              {
                 int index = labels.Index(label);
-                if(index >= 0) {
-                  if(Rep.isConjugateOf(_Irreps.GetObject(index))) {
+                if(index >= 0)
+                {
+                  if(Rep.isConjugateOf(_Irreps.GetObject(index)))
                     label.append("*");
-                  } else {
+                  else
                     label.append("'");
-                  }
                 }
-              } while(labels.Index(label) >= 0);
+              }
+              while(labels.Index(label) >= 0);
               Rep.setLabel(label);
-              _Irreps.AddTermOrdered(Rep, "ASC");
+              int where = _Irreps.AddTermOrdered(Rep, "ASC");
               HWs.AddTerm(HW);
-              labels.AddTerm(label);
+              labels.InsertTerm(where,label);
             }	
           }
           HW[k] --;
@@ -1130,6 +1146,10 @@ namespace Tomb
 
       // If the group is abelian return the empty list
       if(abelian()) return _MaxSubgroups;
+
+      // To avoid the issue with B2 and C2, flip the Cartan matrix of C2 to look like B2 
+//      if(_type == 'C' and _rank == 2)
+//        _Cartan = _Cartan.Transpose();
       
       // First, the semisimple groups obtained by removing a dot from the extended Dynkin diagram
       //clock_t time1 = clock();
@@ -1207,10 +1227,6 @@ namespace Tomb
 
          if(Subgroup.nterms())
          {
-
-            // Tell the subgrup that is finished adding terms
-            Subgroup.FinishSubgroup();
-
             // And the projection matrix
             Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
           
@@ -1220,10 +1236,11 @@ namespace Tomb
           
             // Order the projection matrix columns with respect to the rank of the groups
             Subgroup.Order();
-          
-          
-            // Add to the list
-            if(_MaxSubgroups.Index(Subgroup) == -1)
+             // Tell the subgrup that is finished adding terms
+            Subgroup.FinishSubgroup();
+            // Add to the list unless it is the same group
+            if((Subgroup.ngroups() != 1 or Subgroup[0] != *this) and 
+               _MaxSubgroups.Index(Subgroup) == -1)
               _MaxSubgroups.AddTermOrdered(Subgroup, "DESC");
           
         
@@ -1247,7 +1264,11 @@ namespace Tomb
           Superweights.SetColumn(col, Weights.GetObject(col).Transpose());
         
         for(int i=rank()-1; i>=0; i--)
+        //for(int i=0; i<rank(); i++)
         {
+          // Avoid problems with B2 by skipping the first iteration
+          if(_type == 'B' and _rank == 2 and i == 1) continue;
+
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the Cartan matrix
           Matrix<double> SubCartan = Cartan().Adjoint(i,i);
           SubGroup Subgroup(*this);
@@ -1256,16 +1277,13 @@ namespace Tomb
           Subweights = Superweights;
           for(int col=0; col<Superweights.cols(); col++)
             Subweights[i][col] = WeightsDual.GetObject(col)[i];
-          //for(int j=i+1; j<Subweights.rows(); j++) {
-          //	Subweights.MoveRow(Subweights.rows()-1,0);
-          //}
-          Subweights.MoveRow(i, Subweights.rows()-1);
-          if(!((Subweights.rows()-i)%2)) 
-            Subweights *= -1;
-          //for(int j=i; j<Subweights.rows(); j++) {
-          //	Subweights.SetRow(j,Subweights.Row(j)*(-1));
-          //}
-          
+          // TODO: This does not work very well, it does for A groups, but not sure for B, C or D
+          for(int j=i; j<Subweights.rows()-1; j++)
+          {
+            Subweights.MoveRow(Subweights.rows()-1, 0);
+          }
+          Subweights.SetRow(-1, Subweights.Row(-1) * pow(-1, min(i+1,Subweights.rows()-i-1)));
+
           // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
           int from = 0;
           for(int j=0; j<SubCartan.rows(); j++)
@@ -1308,7 +1326,6 @@ namespace Tomb
           Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
           //Projection.SwapRows(i, Projection.rows()-1);
           //Projection.SwapColumns(i, Projection.cols()-1);
-cout << Projection << endl;
           Subgroup.SetProjection(Projection);
           
           // Final changes
@@ -1318,6 +1335,7 @@ cout << Projection << endl;
           
           // Order the projection matrix columns with respect to the rank of the groups
           Subgroup.Order();
+
           // The group is finished, add it to the database
           Subgroup.FinishSubgroup();
 
@@ -1326,7 +1344,6 @@ cout << Projection << endl;
             _MaxSubgroups.AddTermOrdered(Subgroup,"DESC");
         }
       }
-
 
       // Finally, calculate singular subgroups
       //List<SubGroup> SpecialSubgroups = this->SpecialSubgroups();
@@ -1497,57 +1514,61 @@ cout << Projection << endl;
   }
 
   /* Calculates the subgroups with rank greater that specified */
-/*  List<SubGroup> SimpleGroup::Subgroups(int rank) {
-    
-    try {
+  List<SubGroup> SimpleGroup::Subgroups(int rank)
+  {   
+    try
+    {
+      // If the group is abelian, return empty
+      if(abelian()) return List<SubGroup>();
+      
+      // Use LieGroup function
+      LieGroup *G = DB<LieGroup>().get(id());
+      return G->Subgroups(rank);
+      
+    } catch (...) {
+      throw;
+    }
+  }
 
-      // If the group is abelian, return empty
-      if(abelian()) return List<SubGroup>();
-      
-      // Use LieGroup function
-      LieGroup G(*this);
-      return G.Subgroups(rank);
-      
-    } catch (...) {
-      throw;
-    }
-  }
-*/
   /* Calculates the subgroups with ranks between rank1 and rank2 */
-/*  List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2) {
-    try {
-      
+  List<SubGroup> SimpleGroup::Subgroups(int rank1, int rank2)
+  {
+    try
+    {   
       // If the group is abelian, return empty
       if(abelian()) return List<SubGroup>();
       
       // Use LieGroup function
-      LieGroup G(*this);
-      return G.Subgroups(rank1, rank2);
+      LieGroup *G = DB<LieGroup>().get(id());
+      return G->Subgroups(rank1, rank2);
       
     } catch (...) {
       throw;
     }
   }
-*/
+
   /* Returns the breaking chain from a simple group to a simple group */
-/*  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup) {
-    try {
-      return BreakingChains(LieGroup(Subgroup));	
-    } catch (...) {
-      throw;
+  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const SimpleGroup &Subgroup)
+  {
+    try
+    {
+      LieGroup *Group = DB<LieGroup>().get(Subgroup.id());
+      return BreakingChains(*Group);	
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the breaking chain from a simple group to a lie group */
-/*  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup) {
-    try {
-      LieGroup Group(*this);
-      return Group.BreakingChains(Subgroup);
-    } catch (...) {
-      throw;
+  List<List<Tree<SimpleGroup> > > SimpleGroup::BreakingChains(const LieGroup &Subgroup)
+  {
+    try
+    {
+      LieGroup *Group = DB<LieGroup>().get(this->id());
+      return Group->BreakingChains(Subgroup);
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
 /*  List<Product<Irrep> > SimpleGroup::Invariants(const List<Irrep> &irreps, int dim) {
     
@@ -1602,14 +1623,16 @@ cout << Projection << endl;
   }
 
   /* Overloaded == operator */
-  bool SimpleGroup::operator==(const SimpleGroup &OtherSimpleGroup) const {
+  bool SimpleGroup::operator==(const SimpleGroup &otherGroup) const {
 
-    if(this->rank() == OtherSimpleGroup.rank() and this->type() == OtherSimpleGroup.type()) return true;
-
-    if(rank() == 2 and OtherSimpleGroup.rank() == 2 and (type() == 'B' or type() == 'C') and (OtherSimpleGroup.type() == 'B' or OtherSimpleGroup.type() == 'C')) {
+    if(this->rank() == otherGroup.rank() and this->type() == otherGroup.type()) 
       return true;
-    }
-    
+
+    if(rank() == 2 and otherGroup.rank() == 2 and 
+       (type() == 'B' or type() == 'C') and 
+       (otherGroup.type() == 'B' or otherGroup.type() == 'C'))
+        return true;
+      
     return false;
   }
 

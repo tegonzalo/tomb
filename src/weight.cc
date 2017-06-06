@@ -469,12 +469,16 @@ namespace Tomb
   /* Overloaded == operator */
   bool Weight::operator==(const Weight &w) const
   {
+    if(cols() != w.cols()) return false;
+
     if(RVector<double>::operator==(w))
       return true;
-    else if (id() == w.id())
-      return true;
-    else
-      return false;
+
+    // TODO: This is hacky, replace with better comparison
+    for(int i=0; i<cols(); i++)
+      if (fabs((*this)[i] - w[i]) > 1e-3)
+        return false;
+     return true;
   }
 
   /* Overloaded != operator */

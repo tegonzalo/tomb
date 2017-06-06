@@ -96,10 +96,7 @@ namespace Tomb
 //      _MaxSubgroups = Group._MaxSubgroups;
 //      _Subgroups = Group._Subgroups;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   /* Copy constructor 2 */
@@ -794,11 +791,12 @@ namespace Tomb
   {
     try
     {
-      Rrep Rep(*this, GetObject(0).GeneratingRep());
-      for(int i=1; i<ngroups(); i++)
-        Rep.AddIrrep(GetObject(i).GeneratingRep());
-      Rep.FinishRrep();
-      return Rep;
+      Weight w(*this, rank());
+      for(int i=0; i<ngroups(); i++)
+        for(int j=0; j<GetObject(i).rank(); j++)
+          w[i+j] = GetObject(i).GeneratingRep().HWeight()[j];
+      Rrep *Rep = DB<Rrep>().get(w.id());
+      return *Rep;
     }
     catch (...) { throw; }
   }
@@ -1065,27 +1063,27 @@ namespace Tomb
 
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = _Subgroups.nterms();
-      int group = 0;
-      for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
+//      #pragma omp parallel for
+      for(int i=0; i<_MaxSubgroups.nterms(); i++)
       {
-        LieGroup *G = DB<LieGroup>().get(it->lg_id());
+        LieGroup *G = DB<LieGroup>().get(_MaxSubgroups.GetObject(i).lg_id());
         if(G->_Subgroups.nterms())
           G->CalculateSubgroups();
-
-        for(auto it2 = G->_Subgroups.begin(); it2 != G->_Subgroups.end(); it2++)
+//        #pragma omp parallel for
+        for(int j=0; j<G->_Subgroups.nterms(); j++)
         {
-          SubGroup Subgroup(*it2, *it);
-          Subgroup.SetProjection(it2->Projection()*it->Projection());
+          SubGroup Subgroup(G->_Subgroups[j], _MaxSubgroups[i]);
+          Subgroup.SetProjection(G->_Subgroups[j].Projection()*_MaxSubgroups[i].Projection());
           Subgroup.Order();
+          Subgroup.FinishSubgroup();
+//          #pragma omp critical
           if(_Subgroups.Index(Subgroup) == -1)
             _Subgroups.AddTerm(Subgroup);
         }
-        
-        group++;
       }	
+
       // Calculate subgroups by truncating the group
       if(ngroups()>1) _Subgroups.AppendList(SplitToSubGroups());
-      
 
       // Last operations on the groups
       _Subgroups.Order();
@@ -1099,58 +1097,49 @@ namespace Tomb
   }
 
   /* Calculates the subgroups with a given rank of a Lie group */
-/*  List<SubGroup> LieGroup::Subgroups(int rank) {
-    
-    try {
-      
+  List<SubGroup> LieGroup::Subgroups(int rank)
+  {   
+    try
+    {
+     
       // If Subgroups are known, return them
-      if(_Subgroups.nterms()) {
+      LieGroup *G = DB<LieGroup>().find(id());
+      if(G != NULL and G->_Subgroups.nterms())
+      {
         List<SubGroup> Subgroups;
-        for(List<SubGroup>::iterator it_Subgroups = _Subgroups.begin(); it_Subgroups != _Subgroups.end(); it_Subgroups++)
-          if(it_Subgroups->rank() == rank)
-            Subgroups.AddTerm(*it_Subgroups);
+        for(auto it = G->_Subgroups.begin(); it != G->_Subgroups.end(); it++)
+          if(it->rank() == rank)
+            Subgroups.AddTerm(*it);
         return Subgroups;
       }
       
-      // If info is already on the database, pull it			
-      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
-        _Subgroups = DataBase.at(id()).Subgroups();
-        _hasSubgroups = true;
-        List<SubGroup> Subgroups;
-        for(List<SubGroup>::iterator it_Subgroups = _Subgroups.begin(); it_Subgroups != _Subgroups.end(); it_Subgroups++)
-          if(it_Subgroups->rank() == rank)
-            Subgroups.AddTerm(*it_Subgroups);
-        return Subgroups;
-      }*/
 
       // If not, calculate it
       // Calculate the maximal subgroups
-/*      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
       List<SubGroup> Subgroups;
-      Subgroups.AppendList(MaximalSubgroups);
-
+      Subgroups.AppendList(_MaxSubgroups);
 
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = Subgroups.nterms();
       int group = 0;
-      for(List<SubGroup>::iterator it_Subgroups = MaximalSubgroups.begin(); it_Subgroups != MaximalSubgroups.end() and group < nsubgroups; it_Subgroups++) {
-        SubGroup subgroup = *it_Subgroups;
-        List<SubGroup> AuxSubgroups = subgroup.Subgroups(rank);
+      for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
+      {
+        List<SubGroup> AuxSubgroups = it->Subgroups(rank);
 
-        for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++) {
-          SubGroup Subgroup(*it_AuxSubgroups, subgroup);
-          Subgroup.SetProjection(it_AuxSubgroups->Projection()*it_Subgroups->Projection());
+        for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
+        {
+          SubGroup Subgroup(*it2, *it);
+          Subgroup.SetProjection(it2->Projection()*it->Projection());
           Subgroup.Order();
-          if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() == rank) {
+          if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() == rank)
             Subgroups.AddTerm(Subgroup);
-          }
         }
 
         group++;
       }
       
       if(rank != _rank)
-        for(int i=0; i<MaximalSubgroups.nterms(); i++) 
+        for(int i=0; i<_MaxSubgroups.nterms(); i++) 
           Subgroups.DeleteTerm(0);
       
       
@@ -1161,60 +1150,53 @@ namespace Tomb
       
       return Subgroups;
     
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Calculates the subgroups with ranks between rank1 and rank2 */
-/*  List<SubGroup> LieGroup::Subgroups(int r1, int r2) {
-    try {
+  List<SubGroup> LieGroup::Subgroups(int r1, int r2)
+  {
+    try
+    {
       int rank1 = r1, rank2 = r2;
-      if(r1 > r2) {
+      if(r1 > r2)
+      {
         rank1 = r2;
         rank2 = r1;
       }
 
       // If Subgroups are known, return them
-      if(_Subgroups.nterms()) {
+      LieGroup *G = DB<LieGroup>().find(id());
+      if(G != NULL and G->_Subgroups.nterms())
+      {
         List<SubGroup> Subgroups;
-        for(List<SubGroup>::iterator it_Subgroups = _Subgroups.begin(); it_Subgroups != _Subgroups.end(); it_Subgroups++)
-          if(it_Subgroups->rank() >= rank1 and it_Subgroups->rank() <= rank2)
-            Subgroups.AddTerm(*it_Subgroups);
+        for(auto it = G->_Subgroups.begin(); it != G->_Subgroups.end(); it++)
+          if(it->rank() >= rank1 and it->rank() <= rank2)
+            Subgroups.AddTerm(*it);
         return Subgroups;
       }
       
-      // If info is in the database pull it
-      /*if(database_check(id(), "Subgroups") and DataBase.at(id()).hasSubgroups()) {
-        _Subgroups = DataBase.at(id()).Subgroups();
-        _hasSubgroups = true;
-        List<SubGroup> Subgroups;
-        for(List<SubGroup>::iterator it_Subgroups = _Subgroups.begin(); it_Subgroups != _Subgroups.end(); it_Subgroups++)
-          if(it_Subgroups->rank() >= rank1 and it_Subgroups->rank() <= rank2)
-            Subgroups.AddTerm(*it_Subgroups);
-        return Subgroups;
-      }*/
-
       // If not, calculate it
       // Calculate the maximal subgroups
-/*      List<SubGroup> MaximalSubgroups = this->MaximalSubgroups();
       List<SubGroup> Subgroups;
-      Subgroups.AppendList(MaximalSubgroups);
+      Subgroups.AppendList(_MaxSubgroups);
 
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = Subgroups.nterms();
       int group = 0;
 
-      for(List<SubGroup>::iterator it_Subgroups = MaximalSubgroups.begin(); it_Subgroups != MaximalSubgroups.end() and group < nsubgroups; it_Subgroups++) {	
-        SubGroup subgroup = *it_Subgroups;
-        List<SubGroup> AuxSubgroups = subgroup.Subgroups(rank1, rank2);
-        for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++) {	
-          SubGroup Subgroup(*it_AuxSubgroups, subgroup);
-          Subgroup.SetProjection(it_AuxSubgroups->Projection()*it_Subgroups->Projection());
+      for(auto it = _MaxSubgroups.begin(); it != _MaxSubgroups.end() and group < nsubgroups; it++)
+      {	
+        List<SubGroup> AuxSubgroups = it->Subgroups(rank1, rank2);
+        for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
+        {	
+          SubGroup Subgroup(*it2, *it);
+          Subgroup.SetProjection(it2->Projection()*it->Projection());
           Subgroup.Order();
-          if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() >= rank1 and Subgroup.rank() <= rank2) {
+          if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() >= rank1 and 
+             Subgroup.rank() <= rank2)
             Subgroups.AddTerm(Subgroup);
-          }
         }
 
         group++;
@@ -1227,12 +1209,11 @@ namespace Tomb
 
       return Subgroups;
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
       
   }
-*/
+
   /* Splits the group into subgroups */
   List<SubGroup> LieGroup::SplitToSubGroups(int rank)
   {
@@ -1245,7 +1226,6 @@ namespace Tomb
         // Make a copy of this liegroup as a subgroup and delete one of the abelians
         SubGroup Subgroup(*this,*this);
         Subgroup.DeleteTerm(ngroups()-j-1);
-
          // If is not on the list add it and split it as well
         if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1)
         {
@@ -1258,6 +1238,7 @@ namespace Tomb
             SubGroup subgroup(*it, Subgroup);
             subgroup.SetProjection(it->Projection()*Subgroup.Projection());
             subgroup.Order();
+            subgroup.FinishSubgroup();
             if(Subgroups.Index(subgroup) == -1 and (!rank or subgroup.rank() == rank))
               Subgroups.AddTerm(subgroup);
           }
@@ -1271,73 +1252,82 @@ namespace Tomb
   }
 
   /* Splits the group into subgroups between two ranks */
-/*  List<SubGroup> LieGroup::SplitToSubGroups(int r1, int r2) {
-    try {
-      
+  List<SubGroup> LieGroup::SplitToSubGroups(int r1, int r2)
+  {
+    try
+    {   
       List<SubGroup> Subgroups;
       
       int rank1 = r1, rank2 = r2;
-      if(r1 > r2) {
+      if(r1 > r2)
+      {
         rank1 = r2;
         rank2 = r1;
       }
-      
-      for(int j=0; j<ngroups(); j++) {
+
+      for(int j=0; j<ngroups(); j++)
+      {
         SubGroup Subgroup(SubGroup(*this,*this));
         Subgroup.DeleteTerm(j);
-        if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1) {
+        if(Subgroup.nterms() and Subgroups.Index(Subgroup) == -1)
+        {
           Subgroups.AddTerm(Subgroup);
           List<SubGroup> AuxSubgroups = Subgroup.SplitToSubGroups();
-          for(List<SubGroup>::iterator it_AuxSubgroups = AuxSubgroups.begin(); it_AuxSubgroups != AuxSubgroups.end(); it_AuxSubgroups++) {	
-            SubGroup subgroup(*it_AuxSubgroups, Subgroup);
-            subgroup.SetProjection(it_AuxSubgroups->Projection()*Subgroup.Projection());
+          for(auto it = AuxSubgroups.begin(); it != AuxSubgroups.end(); it++)
+          {
+            SubGroup subgroup(*it, Subgroup);
+            subgroup.SetProjection(it->Projection()*Subgroup.Projection());
             subgroup.Order();
-            if(Subgroups.Index(subgroup) == -1 and subgroup.rank() >= rank1 and subgroup.rank() <= rank2) {
+            if(Subgroups.Index(subgroup) == -1 and subgroup.rank() >= rank1 and 
+               subgroup.rank() <= rank2)
               Subgroups.AddTerm(subgroup);
-            }
           }
         }
       }
       
       return Subgroups;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the breaking chain from a liegroup to a simple group */
-/*  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const SimpleGroup &Subgroup) {
-    try {
-      return BreakingChains(LieGroup(Subgroup));	
-    } catch (...) {
-      throw;
+  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const SimpleGroup &Subgroup)
+  {
+    try
+    {
+      LieGroup *Group = DB<LieGroup>().get(Subgroup.id());
+      return BreakingChains(*Group);	
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the breaking chain from a liegroup to a subgroup */
-/*  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const LieGroup &Subgroup) {
-    try {
-      
+  List<List<Tree<SimpleGroup> > > LieGroup::BreakingChains(const LieGroup &Subgroup)
+  {
+    try
+    {   
       List<List<Tree<SimpleGroup> > > BrChains;
-      
-      if(!Subgroup.isSubgroupOf(*this)) {
+ 
+      if(!Subgroup.isSubgroupOf(*this))
         return BrChains;
-      }
       
       List<SubGroup> Subgroups = this->Subgroups(Subgroup.rank(), rank());		
       
-    
-      for(List<SubGroup>::iterator it_Subgroups = Subgroups.begin(); it_Subgroups != Subgroups.end(); it_Subgroups++) {
-        if(LieGroup(*it_Subgroups) == Subgroup) {
+      for(auto it = Subgroups.begin(); it != Subgroups.end(); it++)
+      {
+        if(LieGroup(*it) == Subgroup)
+        {
           List<Tree<SimpleGroup> > Chain;
           for(int i=0; i<nterms(); i++) {
             Tree<SimpleGroup> tree(GetObject(i));
             char label = 'A' + i;
-            for(int j=0; j<it_Subgroups->nterms(); j++) {
-              if(nterms() == 1 or (nterms() > 1 and it_Subgroups->labels().GetObject(j)[0] == label)) {
-                Tree<SimpleGroup> branch(it_Subgroups->GetObject(j));
-                branch.setLabel(it_Subgroups->labels().GetObject(j));
+            for(int j=0; j<it->nterms(); j++)
+            {
+              if(nterms() == 1 or (nterms() > 1 and it->labels().GetObject(j)[0] == label))
+              {
+                Tree<SimpleGroup> branch(it->GetObject(j));
+                branch.setLabel(it->labels().GetObject(j));
                 tree.AddBranch(branch);
               }
             }
@@ -1345,18 +1335,23 @@ namespace Tomb
             Chain.AddTerm(tree);	
           }
           BrChains.AddTerm(Chain);
-        } else if(Subgroup.isSubgroupOf(*it_Subgroups)) {
-          List<List<Tree<SimpleGroup> > > BrChains2 = it_Subgroups->BreakingChains(Subgroup);
-          for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains2 = BrChains2.begin(); it_BrChains2 != BrChains2.end(); it_BrChains2++) {
+        }
+        else if(Subgroup.isSubgroupOf(*it))
+        {
+          List<List<Tree<SimpleGroup> > > BrChains2 = it->BreakingChains(Subgroup);
+          for(auto it2 = BrChains2.begin(); it2 != BrChains2.end(); it2++)
+          {
             List<Tree<SimpleGroup> > Chain;
-            for(int i=0; i<nterms(); i++) {
+            for(int i=0; i<nterms(); i++)
+            {
               Tree<SimpleGroup> tree(GetObject(i));
               char label = 'A' + i;
-              for(int j=0; j<it_BrChains2->nterms(); j++) {
-                if(nterms() == 1 or (nterms() > 1 and it_Subgroups->labels().GetObject(j)[0] == label)) {
-                  Tree<SimpleGroup> branch(it_BrChains2->GetObject(j));
-                  //branch.setLabel(it_BrChains2->GetObject(j).label());
-                  branch.setLabel(it_Subgroups->labels().GetObject(j));
+              for(int j=0; j<it2->nterms(); j++)
+              {
+                if(nterms() == 1 or (nterms() > 1 and it->labels().GetObject(j)[0] == label))
+                {
+                  Tree<SimpleGroup> branch(it2->GetObject(j));
+                  branch.setLabel(it->labels().GetObject(j));
                   tree.AddBranch(branch);
                 }
               }
@@ -1365,7 +1360,7 @@ namespace Tomb
             }
             
             BrChains.AddTerm(Chain);
-            }
+          }
             
         }
       }
@@ -1375,29 +1370,33 @@ namespace Tomb
       List<string> Labels;
       List<List<Tree<SimpleGroup> > > SemisimpleParts;
       
-      for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains = BrChains.begin(); it_BrChains != BrChains.end(); it_BrChains++) {
-        List<Tree<SimpleGroup> > Chain = *it_BrChains;
+      for(auto it = BrChains.begin(); it != BrChains.end(); it++)
+      {
+        List<Tree<SimpleGroup> > Chain = *it;
           
         LieGroup Supergroup = Chain.GetObject(0).Level(0);
         LieGroup Group = Chain.GetObject(0).Level(1);
-        for(int i=1; i<Chain.nterms(); i++) {
+        for(int i=1; i<Chain.nterms(); i++)
+        {
           Supergroup.AddTerm(Chain.GetObject(i).Level(0));
-          if(Chain.GetObject(i).depth() > 1) {
+          if(Chain.GetObject(i).depth() > 1)
             Group.AddTerm(Chain.GetObject(i).Level(1));
-          }
         }
             
         
         // Check whether there is rank reduction and, if so get the labels of the abelians
-        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0) {
-          
+        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
+        {   
           string label;
           
-          for(int i=0; i<Chain.nterms(); i++) {
+          for(int i=0; i<Chain.nterms(); i++)
+          {
             Tree<SimpleGroup> SubChain = Chain.GetObject(i);
             bool changed = false;
-            for(int j=0; j<SubChain.nbranches(); j++) {
-              if(SubChain.Branch(j).Object().abelian()) {
+            for(int j=0; j<SubChain.nbranches(); j++)
+            {
+              if(SubChain.Branch(j).Object().abelian())
+              {
                 label.append(SubChain.Branch(j).label());
                 label.push_back('+');
                 // delete it so that we can compare the semisimple bits
@@ -1416,11 +1415,15 @@ namespace Tomb
           
           // Compare the semisimple bits and store the labels where they belong
           int n;
-          if((n = SemisimpleParts.Index(Chain)) == -1) {
+          if((n = SemisimpleParts.Index(Chain)) == -1)
+          {
             SemisimpleParts.AddTerm(Chain);
             Labels.AddTerm(label);
-          } else {
-            if(Labels.GetObject(n).find(label) == string::npos) {
+          }
+          else
+          {
+            if(Labels.GetObject(n).find(label) == string::npos)
+            {
               label.append(Labels.GetObject(n));
               Labels.DeleteTerm(n);
               Labels.InsertTerm(n, label);
@@ -1429,35 +1432,35 @@ namespace Tomb
         }			
       }
       
-      
-      
       // Iterate again over the chains, now to change the label of the abelians
       int count = 0;
-      for(List<List<Tree<SimpleGroup> > >::iterator it_BrChains = BrChains.begin(); it_BrChains != BrChains.end(); it_BrChains++) {
-        List<Tree<SimpleGroup> > Chain = *it_BrChains;
+      for(auto it = BrChains.begin(); it != BrChains.end(); it++)
+      {
+        List<Tree<SimpleGroup> > Chain = *it;
           
         LieGroup Supergroup = Chain.GetObject(0).Level(0);
         LieGroup Group = Chain.GetObject(0).Level(1);
-        for(int i=1; i<Chain.nterms(); i++) {
+        for(int i=1; i<Chain.nterms(); i++)
+        {
           Supergroup.AddTerm(Chain.GetObject(i).Level(0));
-          if(Chain.GetObject(i).depth() > 1) {
+          if(Chain.GetObject(i).depth() > 1)
             Group.AddTerm(Chain.GetObject(i).Level(1));
-          }
         }
             
         
         // Check whether there is rank reduction and, if so, mix the abelians
         bool change = false;
-        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0) {
-          
+        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
+        {   
           // Get the semisimple reference first
           List<Tree<SimpleGroup> > SemisimpleChain = Chain;
-          for(int i=0; i<SemisimpleChain.nterms(); i++) {
+          for(int i=0; i<SemisimpleChain.nterms(); i++)
+          {
             Tree<SimpleGroup> SubChain = SemisimpleChain.GetObject(i);
-            for(int j=0; j<SubChain.nbranches(); j++) {
-              if(SubChain.Branch(j).Object().abelian()) {
+            for(int j=0; j<SubChain.nbranches(); j++)
+            {
+              if(SubChain.Branch(j).Object().abelian())
                 SubChain.DeleteBranch(j);
-              }
             }
             SemisimpleChain.DeleteTerm(i);
             SemisimpleChain.InsertTerm(i,SubChain);
@@ -1466,11 +1469,14 @@ namespace Tomb
           string label = Labels.GetObject(SemisimpleParts.Index(SemisimpleChain));
           label.pop_back();
           
-          for(int i=0; i<Chain.nterms(); i++) {
+          for(int i=0; i<Chain.nterms(); i++)
+          {
             Tree<SimpleGroup> SubChain = Chain.GetObject(i);
             // If there is an abelian, change it's label
-            for(int j=0; j<SubChain.nbranches(); j++) {
-              if(SubChain.Branch(j).Object().abelian()) {
+            for(int j=0; j<SubChain.nbranches(); j++)
+            {
+              if(SubChain.Branch(j).Object().abelian())
+              {
                 Tree<SimpleGroup> AbelianTree(SubChain.Branch(j));
                 AbelianTree.setLabel(label);
                 SubChain.DeleteBranch(j);
@@ -1478,7 +1484,9 @@ namespace Tomb
               }
             }
             // If there is no branches or there is a branch missing, add it
-            if(SubChain.nbranches() == 0 or SubChain.Object().rank() > LieGroup(SubChain.Level(1)).rank()) {
+            if(SubChain.nbranches() == 0 or 
+               SubChain.Object().rank() > LieGroup(SubChain.Level(1)).rank())
+            {
               Tree<SimpleGroup> AbelianTree(SimpleGroup("U1"));
               AbelianTree.setLabel(label);
               SubChain.AddBranch(AbelianTree);
@@ -1490,10 +1498,10 @@ namespace Tomb
           
           change = true;
         }
-        
               
         // If there was any change, replace the chain
-        if(change) {
+        if(change)
+        {
           BrChains.DeleteTerm(count);
           BrChains.InsertTerm(count, Chain);
         }
@@ -1505,11 +1513,10 @@ namespace Tomb
       
       return BrChains;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
-*/
+
   /* Returns the list of possible invariant products of the representations of the group at up dimension operator dim */
 /*  List<Product<Rrep> > LieGroup::Invariants(const List<Rrep> &reps, const int dim) {
     try {
@@ -1613,9 +1620,6 @@ namespace Tomb
       if(this->ngroups() != Group.ngroups()) {
         return false;
       }
-      this->Order();
-      // Assume Group is ordered
-      //Group.Order();
 
       //if(Product<SimpleGroup>(*this) == Group) {
       //  return true;
