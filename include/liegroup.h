@@ -56,6 +56,7 @@ namespace Tomb
       List<Rrep> _Reps;
       List<SubGroup> _MaxSubgroups;
       List<SubGroup> _Subgroups;
+      List<List<Tree<SimpleGroup> > > _BrChains;
       
       LieGroup();
       LieGroup(const string);

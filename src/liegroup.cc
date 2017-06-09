@@ -1307,15 +1307,27 @@ namespace Tomb
   {
     try
     {   
-      List<List<Tree<SimpleGroup> > > BrChains;
- 
       if(!Subgroup.isSubgroupOf(*this))
-        return BrChains;
+        return _BrChains;
       
-      List<SubGroup> Subgroups = this->Subgroups(Subgroup.rank(), rank());		
-      
-      for(auto it = Subgroups.begin(); it != Subgroups.end(); it++)
+      LieGroup *G = DB<LieGroup>().find(id()); 
+      if(G == NULL)
+        throw "LieGroup::BreakingChains::LieGroup does not exist";
+
+      // If the DB has already the Breaking Chains return them
+      if(G->_BrChains.nterms())
+        return G->_BrChains;
+
+cout << "Calculating breaking chains of " << *this << endl;
+
+      for(auto it = G->_Subgroups.begin(); it != G->_Subgroups.end(); it++)
       {
+        if(it->rank() > _rank or it->rank() < Subgroup.rank() or
+           it->dim() > _dim or it->dim() < Subgroup.dim())
+          continue;
+
+       cout << "Subgroup of " << *this << " is " << *it << endl;
+
         if(LieGroup(*it) == Subgroup)
         {
           List<Tree<SimpleGroup> > Chain;
@@ -1334,7 +1346,7 @@ namespace Tomb
             tree.setLabel(string(1,label));
             Chain.AddTerm(tree);	
           }
-          BrChains.AddTerm(Chain);
+          G->_BrChains.AddTerm(Chain);
         }
         else if(Subgroup.isSubgroupOf(*it))
         {
@@ -1358,40 +1370,51 @@ namespace Tomb
               tree.setLabel(string(1,label));
               Chain.AddTerm(tree);	
             }
-            
-            BrChains.AddTerm(Chain);
+            G->_BrChains.AddTerm(Chain);
           }
             
         }
       }
-      
+     cout << "Breaking chains of " << *this << " calculated" <<endl; 
       /// U(1) breaking
       // Iterate over the chains to obtain the label
       List<string> Labels;
       List<List<Tree<SimpleGroup> > > SemisimpleParts;
       
-      for(auto it = BrChains.begin(); it != BrChains.end(); it++)
+      for(auto it = G->_BrChains.begin(); it != G->_BrChains.end(); it++)
       {
-        List<Tree<SimpleGroup> > Chain = *it;
-          
-        LieGroup Supergroup = Chain.GetObject(0).Level(0);
-        LieGroup Group = Chain.GetObject(0).Level(1);
-        for(int i=1; i<Chain.nterms(); i++)
+        stringstream SGr, Gr;
+        for(int i=0; i<it->nterms(); i++)
         {
-          Supergroup.AddTerm(Chain.GetObject(i).Level(0));
-          if(Chain.GetObject(i).depth() > 1)
-            Group.AddTerm(Chain.GetObject(i).Level(1));
+          for(int j=0; j<it->GetObject(i).Level(0).nterms();j++)
+            SGr << it->GetObject(i).Level(0)[j].id() << "x";
+          if(it->GetObject(i).depth() > 1)
+          {
+            for(int j=0; j<it->GetObject(i).Level(1).nterms();j++)
+              Gr << it->GetObject(i).Level(1)[j].id() << "x";
+          }
         }
-            
+/*        LieGroup Supergroup = it->GetObject(0).Level(0);
+        LieGroup Group = it->GetObject(0).Level(1);
+        for(int i=1; i<it->nterms(); i++)
+        {
+          Supergroup.AddTerm(it->GetObject(i).Level(0));
+          if(it->GetObject(i).depth() > 1)
+            Group.AddTerm(it->GetObject(i).Level(1));
+        }
+*/
+        LieGroup Supergroup(SGr.str().erase(SGr.str().length()-1));
+        LieGroup Group(Gr.str().erase(Gr.str().length()-1));
+        cout << "Obtained group is " << Group << endl;
         
         // Check whether there is rank reduction and, if so get the labels of the abelians
         if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
         {   
           string label;
           
-          for(int i=0; i<Chain.nterms(); i++)
+          for(int i=0; i<it->nterms(); i++)
           {
-            Tree<SimpleGroup> SubChain = Chain.GetObject(i);
+            Tree<SimpleGroup> SubChain = it->GetObject(i);
             bool changed = false;
             for(int j=0; j<SubChain.nbranches(); j++)
             {
@@ -1407,17 +1430,17 @@ namespace Tomb
             }
             if(changed)
             {
-              Chain.DeleteTerm(i);
-              Chain.InsertTerm(i,SubChain);
+              it->DeleteTerm(i);
+              it->InsertTerm(i,SubChain);
             }
           }
           
           
           // Compare the semisimple bits and store the labels where they belong
           int n;
-          if((n = SemisimpleParts.Index(Chain)) == -1)
+          if((n = SemisimpleParts.Index(*it)) == -1)
           {
-            SemisimpleParts.AddTerm(Chain);
+            SemisimpleParts.AddTerm(*it);
             Labels.AddTerm(label);
           }
           else
@@ -1431,29 +1454,42 @@ namespace Tomb
           }
         }			
       }
+
+      cout << "Labels are " << Labels << endl;
       
       // Iterate again over the chains, now to change the label of the abelians
       int count = 0;
-      for(auto it = BrChains.begin(); it != BrChains.end(); it++)
+      for(auto it = G->_BrChains.begin(); it != G->_BrChains.end(); it++)
       {
-        List<Tree<SimpleGroup> > Chain = *it;
-          
-        LieGroup Supergroup = Chain.GetObject(0).Level(0);
-        LieGroup Group = Chain.GetObject(0).Level(1);
-        for(int i=1; i<Chain.nterms(); i++)
+        stringstream SGr, Gr;
+        for(int i=0; i<it->nterms(); i++)
         {
-          Supergroup.AddTerm(Chain.GetObject(i).Level(0));
-          if(Chain.GetObject(i).depth() > 1)
-            Group.AddTerm(Chain.GetObject(i).Level(1));
+          for(int j=0; j<it->GetObject(i).Level(0).nterms();j++)
+            SGr << it->GetObject(i).Level(0)[j].id() << "x";
+          if(it->GetObject(i).depth() > 1)
+          {
+            for(int j=0; j<it->GetObject(i).Level(1).nterms();j++)
+              Gr << it->GetObject(i).Level(1)[j].id() << "x";
+          }
         }
-            
+/*        LieGroup Supergroup = it->GetObject(0).Level(0);
+        LieGroup Group = it->GetObject(0).Level(1);
+        for(int i=1; i<it->nterms(); i++)
+        {
+          Supergroup.AddTerm(it->GetObject(i).Level(0));
+          if(it->GetObject(i).depth() > 1)
+            Group.AddTerm(it->GetObject(i).Level(1));
+        }
+*/
+        LieGroup Supergroup(SGr.str().erase(SGr.str().length()-1));
+        LieGroup Group(Gr.str().erase(Gr.str().length()-1));
         
         // Check whether there is rank reduction and, if so, mix the abelians
         bool change = false;
         if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
         {   
           // Get the semisimple reference first
-          List<Tree<SimpleGroup> > SemisimpleChain = Chain;
+          List<Tree<SimpleGroup> > SemisimpleChain = *it;
           for(int i=0; i<SemisimpleChain.nterms(); i++)
           {
             Tree<SimpleGroup> SubChain = SemisimpleChain.GetObject(i);
@@ -1469,9 +1505,9 @@ namespace Tomb
           string label = Labels.GetObject(SemisimpleParts.Index(SemisimpleChain));
           label.pop_back();
           
-          for(int i=0; i<Chain.nterms(); i++)
+          for(int i=0; i<it->nterms(); i++)
           {
-            Tree<SimpleGroup> SubChain = Chain.GetObject(i);
+            Tree<SimpleGroup> SubChain = it->GetObject(i);
             // If there is an abelian, change it's label
             for(int j=0; j<SubChain.nbranches(); j++)
             {
@@ -1492,26 +1528,26 @@ namespace Tomb
               SubChain.AddBranch(AbelianTree);
             }
             
-            Chain.DeleteTerm(i);
-            Chain.InsertTerm(i,SubChain);
+            it->DeleteTerm(i);
+            it->InsertTerm(i,SubChain);
           }
           
           change = true;
         }
               
         // If there was any change, replace the chain
-        if(change)
+/*        if(change)
         {
-          BrChains.DeleteTerm(count);
-          BrChains.InsertTerm(count, Chain);
-        }
+          G->_BrChains.DeleteTerm(count);
+          G->_BrChains.InsertTerm(count, Chain);
+        }*/
         count ++;
         
       }
-      BrChains.EliminateRepeated();
+      G->_BrChains.EliminateRepeated();
       
-      
-      return BrChains;
+ cout << "Breaking chains of " << *this << " COMPLETELY calculated" << endl; 
+     return G->_BrChains;
       
     }
     catch (...) { throw; }

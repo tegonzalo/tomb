@@ -114,6 +114,7 @@ namespace Tomb
 //      void ParseJSON(const JSONNode &n, string = "");
       static bool GroupExists(int, char);
       static char GroupIdentify(int, const Matrix<double> &);
+      static void RestructureCartan(Matrix<double> &);
 
     };	
 

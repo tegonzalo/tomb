@@ -580,12 +580,18 @@ namespace Tomb
           Rep = new Rrep(Subgroup, HWeight);
           DB<Rrep>().set(Rep->id(), Rep);
         }
+        int deleted =0;
         for(auto it = Rep->_Weights.begin(); it != Rep->_Weights.end(); it++)
         {
           int n = ProjectedWeights.Index(*it);
           if(n >= 0)
+          {
             ProjectedWeights.DeleteTerm(n);
+            deleted++;
+          }
         }
+        if(deleted != Rep->dim())
+          throw "Rrep::Decompose::Error deleting terms from the projected weights";
         Reps.AddTerm(*Rep);
       }
       while(ProjectedWeights.nterms()>0);

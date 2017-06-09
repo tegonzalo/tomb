@@ -1118,8 +1118,11 @@ namespace Tomb
           ExtCartan[1][0] = -1;
           break;
       }
-      ExtCartan.MoveRow(this->rank(),0);
-      ExtCartan.MoveColumn(this->rank(),0);
+      if(_type != 'E' or _rank == 7)
+      {
+        ExtCartan.MoveRow(this->rank(),0);
+        ExtCartan.MoveColumn(this->rank(),0);
+      }
       return ExtCartan;
         
     }
@@ -1147,26 +1150,21 @@ namespace Tomb
       // If the group is abelian return the empty list
       if(abelian()) return _MaxSubgroups;
 
-      // To avoid the issue with B2 and C2, flip the Cartan matrix of C2 to look like B2 
-//      if(_type == 'C' and _rank == 2)
-//        _Cartan = _Cartan.Transpose();
-      
       // First, the semisimple groups obtained by removing a dot from the extended Dynkin diagram
-      //clock_t time1 = clock();
       if(this->type() != 'A' and this->type() != 'U' and this->rank() >= 1)
       {   
         // Create the extended root
         Root ExtendedRoot(_PRoots.GetObject(0)*-1);
+
         
         // Calculate the projection matrix for this subgroup, first get the weights of the generating representation of the group
         List<Weight> Weights = GeneratingRep().Weights();
         Matrix<double> Superweights(this->rank(), Weights.nterms());
         Matrix<double> Subweights(this->rank(), Weights.nterms());
         int col = 0;
-        //for(int col=0; col<Superweights.cols(); col++) {
-        for(List<Weight>::iterator it_Weights = Weights.begin(); it_Weights != Weights.end(); it_Weights++)
+        for(List<Weight>::iterator it = Weights.begin(); it != Weights.end(); it++)
         {
-          Superweights.SetColumn(col,it_Weights->Transpose());
+          Superweights.SetColumn(col,it->Transpose());
           col++;
         }
 
@@ -1179,14 +1177,15 @@ namespace Tomb
         {
           // Create the SubCartan matrix by eliminating the row and column of the eliminated root from the extended Cartan matrix
           Matrix<double> SubCartan(this->ExtendedCartan().Adjoint(i,i));
+          SimpleGroup::RestructureCartan(SubCartan);
           SubGroup Subgroup(*this);
           Subweights = Superweights;
           // Insert the extended weight and delete the row of the subweights corresponding with the deleted root
           Subweights.InsertRow(0, ExtendedWeight);
+          // Hack for E6
+          if(_type == 'E' and _rank == 6)
+            Subweights.MoveRow(0, Subweights.rows()-1);
           Subweights.DeleteRow(i);
-          //if(i) {
-          //	Subweights.MoveRow(0,i-1);
-          //}
 
           // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
           int from = 0;
@@ -1230,14 +1229,17 @@ namespace Tomb
             // And the projection matrix
             Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
           
+
             // Final changes
             Subgroup.setMaximal(true);
             Subgroup.setRegular(true);
           
             // Order the projection matrix columns with respect to the rank of the groups
             Subgroup.Order();
+
              // Tell the subgrup that is finished adding terms
             Subgroup.FinishSubgroup();
+
             // Add to the list unless it is the same group
             if((Subgroup.ngroups() != 1 or Subgroup[0] != *this) and 
                _MaxSubgroups.Index(Subgroup) == -1)
@@ -1277,11 +1279,12 @@ namespace Tomb
           Subweights = Superweights;
           for(int col=0; col<Superweights.cols(); col++)
             Subweights[i][col] = WeightsDual.GetObject(col)[i];
-          // TODO: This does not work very well, it does for A groups, but not sure for B, C or D
-          for(int j=i; j<Subweights.rows()-1; j++)
-          {
-            Subweights.MoveRow(Subweights.rows()-1, 0);
-          }
+          // TODO: This does not work very well, it doesn't seem useful, remove if rest works 
+//          for(int j=i; j<Subweights.rows()-1; j++)
+//          {
+//            Subweights.MoveRow(Subweights.rows()-1, 0);
+//          }
+          Subweights.MoveRow(i,Subweights.rows()-1);
           Subweights.SetRow(-1, Subweights.Row(-1) * pow(-1, min(i+1,Subweights.rows()-i-1)));
 
           // Identify within the SubCartan matrix the Cartan matrices of Simple Groups
@@ -1870,7 +1873,8 @@ namespace Tomb
                 for(int j=0;j<rank;j++)
                   if(Cartan[i][j] == -1 and j!=junction)
                     hasotherconnections = true;
-                numberofbrancheswithonlyonedot--;
+                if(hasotherconnections)
+                  numberofbrancheswithonlyonedot--;
               }
             }
             if(numberofbrancheswithonlyonedot == 1)
@@ -1888,6 +1892,37 @@ namespace Tomb
 
       return type;
 
+    }
+    catch (...) { throw; }
+  }
+
+  void SimpleGroup::RestructureCartan(Matrix<double> &Cartan)
+  {
+    try
+    {
+      for(int i=1; i<Cartan.rows()-1; i++)
+      {
+        bool isCandidate = true;
+        for(int j=0; j<Cartan.cols(); j++)
+          if(i!=j and fabs(Cartan[i][j]) > 1e-3)
+            isCandidate = false;
+
+        if(!isCandidate) continue;
+
+        for(int j=0; j<Cartan.rows(); j++)
+          if(i!=j and fabs(Cartan[j][i]) > 1e-3)
+            return ;
+
+        if(isCandidate)
+        {
+          Matrix<double> Piece(Cartan.ExtractMatrix(0,i-1,i+1,Cartan.cols()-1));
+          if(Piece != 0)
+          {
+            Cartan.MoveRow(i, Cartan.rows()-1);
+            Cartan.MoveColumn(i, Cartan.cols()-1);
+          }
+        } 
+      }
     }
     catch (...) { throw; }
   }

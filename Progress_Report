@@ -33,3 +33,9 @@ Invariants: works but gives incomplete result for A5, B5, C5, D5, F4, G2
 ---------
 06/07/16
 Parallelized model generation
+---------
+07/06/17
+Sped up considerably all the group calculations
+Implemented databases for relevant classes
+Works for A1-5, B1-5, C1-5, D1-6, G2 and F4
+Fails for E6

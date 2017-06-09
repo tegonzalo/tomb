@@ -251,7 +251,6 @@ Si*/
           }
           else
             _real = true;
-           
           break;
 
         case 'E':
