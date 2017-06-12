@@ -916,7 +916,7 @@ Si*/
   }
 
   /* Returns the json string */
-  JSONNode Irrep::json(string name) const
+/*  JSONNode Irrep::json(string name) const
   {
     if(name == "id") {
       return JSONNode("", id());
@@ -939,7 +939,7 @@ Si*/
     
     return json;
   }
-
+*/
   /* Parses a json object into the attributes of the class */
 /*  void Irrep::ParseJSON(const JSONNode &n, string what) {
     JSONNode::const_iterator i = n.begin();

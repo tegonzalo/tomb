@@ -753,7 +753,7 @@ namespace Tomb
   }
 
   /* Returns the json string */
-  JSONNode Rrep::json(std::string name) const
+/*  JSONNode Rrep::json(std::string name) const
   {   
     if(name == "id")
     {
@@ -788,7 +788,7 @@ namespace Tomb
     
     return json;
   }
-
+*/
   /* Parses a json object into the attributes of the class */
 /*  void Rrep::ParseJSON(const JSONNode & n, std::string what)
   {

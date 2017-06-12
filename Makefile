@@ -35,19 +35,19 @@ OBJECTS := $(patsubst $(SDIR)/%,$(ODIR)/%,$(SOURCES:.cc=.o))
 OBJS = $(filter-out $(patsubst %,$(ODIR)/%.o, $(MAINS)),$(OBJECTS))
 
 # JSON
-JSONDIR = ./libjson/_internal/Source
+JSONDIR = ./external/libjson/_internal/Source
 JSONOBJECTS  = internalJSONNode.o JSONAllocator.o JSONChildren.o \
                  JSONDebug.o JSONIterators.o JSONMemory.o JSONNode.o \
                  JSONNode_Mutex.o JSONPreparse.o JSONStream.o JSONValidator.o \
                  JSONWorker.o JSONWriter.o libjson.o
 JSOBJ = $(patsubst %,$(JSONDIR)/%,$(JSONOBJECTS))
 CFLAGS := -DNDEBUG $(CFLAGS)
-INCS := $(INCS) -I./libjson
+INCS := $(INCS) -I./external/libjson
 
 # MATHLINK
 MLDIR = ./mlink/
-MATHINCS = $(INCS) -I./mathlink-linux/
-MATHLIBS = $(LIBS) -L./mathlink-linux/ -lML64i4 -lm -lpthread -lrt -lstdc++ -ldl -luuid
+MATHINCS = $(INCS) -I./external/mathlink-linux/
+MATHLIBS = $(LIBS) -L./external/mathlink-linux/ -lML64i4 -lm -lpthread -lrt -lstdc++ -ldl -luuid
 #-lMLi3 -lstdc++.6 -framework Foundation
 MPREP = ./mathlink-linux/mprep
 MCC = mcc

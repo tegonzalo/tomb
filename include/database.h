@@ -37,7 +37,7 @@ namespace Tomb
     protected:
       std::stringstream  _outdir ;
       std::map<std::string, int> _flags;
-      std::map<std::string, std::string> _json;
+//      std::map<std::string, std::string> _json;
       std::map<std::string, TYPE*> _content;
       std::map<std::string, std::string> _files;
 
@@ -239,7 +239,7 @@ namespace Tomb
     {
       std::stringstream file;
       file << _outdir.str() << "/" << it->first;
-      Files::WriteFileString(file.str(), it->second->json().write_formatted());
+//      Files::WriteFileString(file.str(), it->second->json().write_formatted());
     }
   }
 }

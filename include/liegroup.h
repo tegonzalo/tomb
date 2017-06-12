@@ -18,7 +18,7 @@
 #include "omp.h"
 #include "linkedlists.h"
 #include "tree.h"
-#include "libjson.h"
+//#include "libjson.h"
 #include "helper_functions.h"
 #include "database.h"
 #include "simplegroup.h"

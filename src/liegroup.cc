@@ -792,9 +792,15 @@ namespace Tomb
     try
     {
       Weight w(*this, rank());
+      int k = 0;
       for(int i=0; i<ngroups(); i++)
+      {
         for(int j=0; j<GetObject(i).rank(); j++)
-          w[i+j] = GetObject(i).GeneratingRep().HWeight()[j];
+        {
+          w[k] = GetObject(i).GeneratingRep().HWeight()[j];
+          k++;
+        }
+      }
       Rrep *Rep = DB<Rrep>().get(w.id());
       return *Rep;
     }
@@ -872,7 +878,8 @@ namespace Tomb
       // If it is a simple group, calculate irreps
       if(ngroups() == 1)
       {
-        if(!DB<SimpleGroup>().at(id())->_Irreps.nterms())
+        SimpleGroup *G = DB<SimpleGroup>().at(id());
+        if(!G->_Irreps.nterms() or G->repsMaxDim() < maxdim)
           DB<SimpleGroup>().at(id())->CalculateIrreps(maxdim);
         _Reps = Irreps2Reps(DB<SimpleGroup>().at(id())->_Irreps);
         _repsMaxDim = maxdim;
@@ -881,7 +888,7 @@ namespace Tomb
       }
 
       // If not, calculate it
-
+      _Reps.Clear();
       List<List<Rrep> > ListofReps;
 
       stringstream bigGroupId, smallGroupId;
@@ -894,12 +901,12 @@ namespace Tomb
 
       LieGroup *bigGroup = DB<LieGroup>().get(bigGroupId.str());
       if(!bigGroup->_Reps.nterms())
-        bigGroup->CalculateReps();
+        bigGroup->CalculateReps(maxdim);
       ListofReps.AddTerm(bigGroup->_Reps);
 
       LieGroup *smallGroup = DB<LieGroup>().get(smallGroupId.str());
       if(!smallGroup->_Reps.nterms())
-        smallGroup->CalculateReps();
+        smallGroup->CalculateReps(maxdim);
       ListofReps.AddTerm(smallGroup->_Reps);
 
       int nirreps = ListofReps.GetObject(0).nterms()*ListofReps.GetObject(1).nterms();
@@ -1073,12 +1080,12 @@ namespace Tomb
         for(int j=0; j<G->_Subgroups.nterms(); j++)
         {
           SubGroup Subgroup(G->_Subgroups[j], _MaxSubgroups[i]);
-          Subgroup.SetProjection(G->_Subgroups[j].Projection()*_MaxSubgroups[i].Projection());
+          Subgroup.setProjection(G->_Subgroups[j].Projection()*_MaxSubgroups[i].Projection());
           Subgroup.Order();
           Subgroup.FinishSubgroup();
 //          #pragma omp critical
           if(_Subgroups.Index(Subgroup) == -1)
-            _Subgroups.AddTerm(Subgroup);
+            _Subgroups.AddTermOrdered(Subgroup, "DESC");
         }
       }	
 
@@ -1129,7 +1136,7 @@ namespace Tomb
         for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
         {
           SubGroup Subgroup(*it2, *it);
-          Subgroup.SetProjection(it2->Projection()*it->Projection());
+          Subgroup.setProjection(it2->Projection()*it->Projection());
           Subgroup.Order();
           if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() == rank)
             Subgroups.AddTerm(Subgroup);
@@ -1192,7 +1199,7 @@ namespace Tomb
         for(auto it2 = AuxSubgroups.begin(); it2 != AuxSubgroups.end(); it2++)
         {	
           SubGroup Subgroup(*it2, *it);
-          Subgroup.SetProjection(it2->Projection()*it->Projection());
+          Subgroup.setProjection(it2->Projection()*it->Projection());
           Subgroup.Order();
           if(Subgroups.Index(Subgroup) == -1 and Subgroup.rank() >= rank1 and 
              Subgroup.rank() <= rank2)
@@ -1236,7 +1243,7 @@ namespace Tomb
           for(auto it = AuxSubgroups.begin(); it != AuxSubgroups.end(); it++)
           {	
             SubGroup subgroup(*it, Subgroup);
-            subgroup.SetProjection(it->Projection()*Subgroup.Projection());
+            subgroup.setProjection(it->Projection()*Subgroup.Projection());
             subgroup.Order();
             subgroup.FinishSubgroup();
             if(Subgroups.Index(subgroup) == -1 and (!rank or subgroup.rank() == rank))
@@ -1276,7 +1283,7 @@ namespace Tomb
           for(auto it = AuxSubgroups.begin(); it != AuxSubgroups.end(); it++)
           {
             SubGroup subgroup(*it, Subgroup);
-            subgroup.SetProjection(it->Projection()*Subgroup.Projection());
+            subgroup.setProjection(it->Projection()*Subgroup.Projection());
             subgroup.Order();
             if(Subgroups.Index(subgroup) == -1 and subgroup.rank() >= rank1 and 
                subgroup.rank() <= rank2)
@@ -1318,15 +1325,12 @@ namespace Tomb
       if(G->_BrChains.nterms())
         return G->_BrChains;
 
-cout << "Calculating breaking chains of " << *this << endl;
 
       for(auto it = G->_Subgroups.begin(); it != G->_Subgroups.end(); it++)
       {
         if(it->rank() > _rank or it->rank() < Subgroup.rank() or
            it->dim() > _dim or it->dim() < Subgroup.dim())
           continue;
-
-       cout << "Subgroup of " << *this << " is " << *it << endl;
 
         if(LieGroup(*it) == Subgroup)
         {
@@ -1375,7 +1379,7 @@ cout << "Calculating breaking chains of " << *this << endl;
             
         }
       }
-     cout << "Breaking chains of " << *this << " calculated" <<endl; 
+
       /// U(1) breaking
       // Iterate over the chains to obtain the label
       List<string> Labels;
@@ -1394,21 +1398,12 @@ cout << "Calculating breaking chains of " << *this << endl;
               Gr << it->GetObject(i).Level(1)[j].id() << "x";
           }
         }
-/*        LieGroup Supergroup = it->GetObject(0).Level(0);
-        LieGroup Group = it->GetObject(0).Level(1);
-        for(int i=1; i<it->nterms(); i++)
-        {
-          Supergroup.AddTerm(it->GetObject(i).Level(0));
-          if(it->GetObject(i).depth() > 1)
-            Group.AddTerm(it->GetObject(i).Level(1));
-        }
-*/
-        LieGroup Supergroup(SGr.str().erase(SGr.str().length()-1));
-        LieGroup Group(Gr.str().erase(Gr.str().length()-1));
-        cout << "Obtained group is " << Group << endl;
+
+        LieGroup *Supergroup = DB<LieGroup>().get(SGr.str().erase(SGr.str().length()-1));
+        LieGroup *Group = DB<LieGroup>().get(Gr.str().erase(Gr.str().length()-1));
         
         // Check whether there is rank reduction and, if so get the labels of the abelians
-        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
+        if(Supergroup->rank() > Group->rank() and Group->nabelians() > 0)
         {   
           string label;
           
@@ -1455,8 +1450,6 @@ cout << "Calculating breaking chains of " << *this << endl;
         }			
       }
 
-      cout << "Labels are " << Labels << endl;
-      
       // Iterate again over the chains, now to change the label of the abelians
       int count = 0;
       for(auto it = G->_BrChains.begin(); it != G->_BrChains.end(); it++)
@@ -1472,21 +1465,13 @@ cout << "Calculating breaking chains of " << *this << endl;
               Gr << it->GetObject(i).Level(1)[j].id() << "x";
           }
         }
-/*        LieGroup Supergroup = it->GetObject(0).Level(0);
-        LieGroup Group = it->GetObject(0).Level(1);
-        for(int i=1; i<it->nterms(); i++)
-        {
-          Supergroup.AddTerm(it->GetObject(i).Level(0));
-          if(it->GetObject(i).depth() > 1)
-            Group.AddTerm(it->GetObject(i).Level(1));
-        }
-*/
-        LieGroup Supergroup(SGr.str().erase(SGr.str().length()-1));
-        LieGroup Group(Gr.str().erase(Gr.str().length()-1));
+
+        LieGroup *Supergroup = DB<LieGroup>().get(SGr.str().erase(SGr.str().length()-1));
+        LieGroup *Group = DB<LieGroup>().get(Gr.str().erase(Gr.str().length()-1));
         
         // Check whether there is rank reduction and, if so, mix the abelians
         bool change = false;
-        if(Supergroup.rank() > Group.rank() and Group.nabelians() > 0)
+        if(Supergroup->rank() > Group->rank() and Group->nabelians() > 0)
         {   
           // Get the semisimple reference first
           List<Tree<SimpleGroup> > SemisimpleChain = *it;
@@ -1546,7 +1531,6 @@ cout << "Calculating breaking chains of " << *this << endl;
       }
       G->_BrChains.EliminateRepeated();
       
- cout << "Breaking chains of " << *this << " COMPLETELY calculated" << endl; 
      return G->_BrChains;
       
     }
@@ -1602,64 +1586,52 @@ cout << "Calculating breaking chains of " << *this << endl;
 */
     
   /* Overloaded > operator with LieGroups */
-  bool LieGroup::operator>(const LieGroup &Group) {
-    if(this->rank() > Group.rank()) {
+  bool LieGroup::operator>(const LieGroup &Group)
+  {
+    if(this->rank() > Group.rank())
       return true;
-    } else if(this->rank() == Group.rank()) {
-      if(this->dim() > Group.dim()) {
-        return true;
-      }
-    }
+    else if(this->rank() == Group.rank() and this->dim() > Group.dim())
+      return true;
     return false;
   }
 
   /* Overloaded > operator with SimpleGroups */
-  bool LieGroup::operator>(const SimpleGroup &Group) {
-    if(this->rank() > Group.rank()) {
+  bool LieGroup::operator>(const SimpleGroup &Group)
+  {
+    if(this->rank() > Group.rank())
       return true;
-    } else if(this->rank() == Group.rank()) {
-      if(this->dim() > Group.dim()) {
-        return true;
-      }
-    }
+    else if(this->rank() == Group.rank() and this->dim() > Group.dim())
+      return true;
     return false;
   }
 
   /* Overloaded < operator with LieGroups */
-  bool LieGroup::operator<(const LieGroup &Group) {
-    if(this->rank() < Group.rank()) {
+  bool LieGroup::operator<(const LieGroup &Group)
+  {
+    if(this->rank() < Group.rank())
       return true;
-    } else if(this->rank() == Group.rank()) {
-      if(this->dim() < Group.dim()) {
-        return true;
-      }
-    }
+    else if(this->rank() == Group.rank() and this->dim() < Group.dim())
+      return true;
     return false;
   }
 
   /* Overloaded < operator with SimpleGroups */
-  bool LieGroup::operator<(const SimpleGroup &Group) {
-    if(this->rank() < Group.rank()) {
+  bool LieGroup::operator<(const SimpleGroup &Group)
+  {
+    if(this->rank() < Group.rank())
       return true;
-    } else if(this->rank() == Group.rank()) {
-      if(this->dim() < Group.dim()) {
-        return true;
-      }
-    }
+    else if(this->rank() == Group.rank() and this->dim() < Group.dim())
+      return true;
     return false;
   }
 
   /* Overloaded == operator with LieGroups*/
-  bool LieGroup::operator==(const LieGroup &Group) {
-    try {
-
-      if(this->ngroups() != Group.ngroups()) {
+  bool LieGroup::operator==(const LieGroup &Group)
+  {
+    try
+    {
+      if(this->ngroups() != Group.ngroups())
         return false;
-      }
-
-      //if(Product<SimpleGroup>(*this) == Group) {
-      //  return true;
-      //}
 
       LieGroup::iterator it_1 = this->begin();
       for(LieGroup::const_iterator it_2 = Group.begin(); it_1 != this->end() and it_2 != Group.end(); it_2++)
@@ -1668,73 +1640,67 @@ cout << "Calculating breaking chains of " << *this << endl;
           return false;
         *it_1++;
       }
-      /*for(int i=0; i<this->ngroups(); i++) {
-        if(this->GetObject(i) != Group.GetObject(i)) {
-          return false;
-        }
-      }*/
-    
-      //return false;
       return true;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Overloaded == operator with SimpleGroups */
-  bool LieGroup::operator==(const SimpleGroup &Group) {
-    try {
-      if(this->ngroups() != 1) {
+  bool LieGroup::operator==(const SimpleGroup &Group)
+  {
+    try
+    {
+      if(this->ngroups() != 1)
         return false;
-      }
     
-      if(this->GetObject(0) != Group) {
+      if(this->GetObject(0) != Group)
         return false;
-      }
     
       return true;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Overloaded != operator with Liegroups */
-  bool LieGroup::operator!=(const LieGroup &Group) {
-    try {
+  bool LieGroup::operator!=(const LieGroup &Group)
+  {
+    try 
+    {
       return !((*this)==Group);
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Overloaded != operator with SimpleGroup */
-  bool LieGroup::operator!=(const SimpleGroup &Group) {
-    try {
+  bool LieGroup::operator!=(const SimpleGroup &Group)
+  {
+    try
+    {
       return !((*this)==Group);
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Order the elements of the group by rank */
-  void LieGroup::Order() {
-    
-    try {
+  void LieGroup::Order()
+  {   
+    try
+    {
       Product<SimpleGroup>::Order();
       
       _Casimir.Clear();
       _label = "";
 
-      for(LieGroup::iterator it = this->begin(); it != this->end(); it++) {
+      for(LieGroup::iterator it = this->begin(); it != this->end(); it++)
+      {
         _Casimir.AddTerm(it->Casimir());
         _label.append(it->label());
         if(next(it) != this->end())
           _label.append("x");
       }
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Returns the json string */

@@ -946,7 +946,7 @@ namespace Tomb
   {
     try 
     {
-      // If the reps are calculated already
+     // If the reps are calculated already
       if(_Irreps.nterms() and _repsMaxDim >= maxdim)
       {
         int i = _Irreps.nterms()-1;
@@ -958,7 +958,7 @@ namespace Tomb
         _repsMaxDim = maxdim;
         return _Irreps;
       }
-      
+
       // If the group is abelian just return {0.0}
       if(abelian())
       {
@@ -970,6 +970,7 @@ namespace Tomb
       }
 
       // If not, calculate it
+      _Irreps.Clear();
       Weight HW(*this, this->rank());
       List<Weight> HWs(HW);
       Irrep Rep(*this, HW);
@@ -1227,7 +1228,7 @@ namespace Tomb
          if(Subgroup.nterms())
          {
             // And the projection matrix
-            Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
+            Subgroup.setProjection(Subweights*Superweights.PseudoInverse());
           
 
             // Final changes
@@ -1325,11 +1326,11 @@ namespace Tomb
           Subgroup.AddTerm(SimpleGroup(1,'U'));
 
           // And the projection matrix
-          //Subgroup.SetProjection(Subweights*Superweights.PseudoInverse());
+          //Subgroup.setProjection(Subweights*Superweights.PseudoInverse());
           Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
           //Projection.SwapRows(i, Projection.rows()-1);
           //Projection.SwapColumns(i, Projection.cols()-1);
-          Subgroup.SetProjection(Projection);
+          Subgroup.setProjection(Projection);
           
           // Final changes
           Subgroup.setMaximal(true);
@@ -1434,7 +1435,7 @@ namespace Tomb
               Subweights.SetColumn(col, it_ListofReps->Weights().GetObject(col).Transpose());
             }
             Matrix<double> Projection = Subweights*Superweights.PseudoInverse();
-            Subgroup.SetProjection(Projection);
+            Subgroup.setProjection(Projection);
             Subgroup.setMaximal(true);
             Subgroup.setRegular(false);
             Subgroup.setSpecial(true);
@@ -1500,14 +1501,15 @@ namespace Tomb
         for(auto it2 = G->_Subgroups.begin(); it2 != G->_Subgroups.end(); it2++)
         {
           SubGroup Subgroup(*it2, *it);
-          Subgroup.SetProjection(it2->Projection()*it->Projection());
+          Subgroup.setProjection(it2->Projection()*it->Projection());
+          Subgroup.Order();
+          Subgroup.FinishSubgroup();
           if(_Subgroups.Index(Subgroup) == -1)
-            _Subgroups.AddTerm(Subgroup);
+            _Subgroups.AddTermOrdered(Subgroup, "DESC");
         }
 
         group++;
       }
-
 
       return _Subgroups;
       
@@ -1670,7 +1672,7 @@ namespace Tomb
   }
 
   /* Returns the json string */
-  JSONNode SimpleGroup::json(string name) const
+/*  JSONNode SimpleGroup::json(string name) const
   {
     if(name == "id") {
       return JSONNode("", id());
@@ -1694,7 +1696,7 @@ namespace Tomb
     
     return json;
   }
-
+*/
   /* Parses a json object into the attributes of the class */
 /*  void SimpleGroup::ParseJSON(const JSONNode & n, string what) {
     

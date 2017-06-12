@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
         cout << Reps.GetObject(Reps.nterms()-1-j) << "(" << G << ") -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << endl;
       }
     }
-  
+ 
     // Breaking Chains
     LieGroup SMGroup("A2xA1xU1");
     std::cout << "Breaking chains of " << G << " to " << SMGroup << ":" << std::endl;

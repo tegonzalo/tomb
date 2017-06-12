@@ -17,7 +17,7 @@
 
 #include "matrix.h"
 #include "linkedlists.h"
-#include "libjson.h"
+//#include "libjson.h"
 #include "helper_functions.h"
 #include "liegroup.h"
 #include "simplegroup.h"
@@ -64,7 +64,7 @@ namespace Tomb
       LieGroup SuperGroup() const;
       LieGroup SuperGroup(int) const;
       Matrix<double> Projection() const;
-      Matrix<double> SetProjection(Matrix<double>);
+      Matrix<double> setProjection(Matrix<double>);
       List<string> labels() const;
       void setLabels(const List<std::string>);
 
@@ -75,8 +75,8 @@ namespace Tomb
       void FinishSubgroup();
 
       void Order();
-/*      bool isSubgroupOf(LieGroup) const;
-      bool isSubgroupOf(SimpleGroup) const;*/
+      bool isSubgroupOf(LieGroup) const;
+      bool isSubgroupOf(SimpleGroup) const;
       int superRank() const;
       bool maximal() const;
       bool setMaximal(bool);
@@ -88,7 +88,7 @@ namespace Tomb
       std::string lg_id() const;
       bool operator==(const SubGroup &) const;
       bool operator!=(const SubGroup &) const;
-      JSONNode json(std::string = "") const;
+      //JSONNode json(std::string = "") const;
 //      void ParseJSON(const JSONNode &, std::string = "");
   };	
   

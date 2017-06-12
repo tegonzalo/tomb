@@ -439,7 +439,7 @@ namespace Tomb
   {
     try
     {
-      _SuperGroup = &SuperGroup;
+      _SuperGroup = DB<LieGroup>().at(SuperGroup.SuperGroup().id());
       _SuperGroups = SuperGroup._SuperGroups;
       _superRank = SuperGroup.rank(); 
       
@@ -654,13 +654,6 @@ namespace Tomb
       std::string id = ss.str();
           
       _SuperGroup = DB<LieGroup>().get(SGstr);
-//TODO: uncomment
-//        Supergroup.Subgroups();
-        //if(FileExists(filepath.str()))
-        // {
-        //	JSONNode json = libjson::parse(ReadFileString(filepath.str()));
-        //	ParseJSON(json);
-        //}
       std::stringstream ss2(Gstr);
       std::string str,label;
           
@@ -745,7 +738,7 @@ namespace Tomb
   }
 
   /* Sets the projection matrix of a subgroup */
-  Matrix<double> SubGroup::SetProjection(Matrix<double> Proj)
+  Matrix<double> SubGroup::setProjection(Matrix<double> Proj)
   {
     _Projection = Proj;
     return _Projection;
@@ -1018,17 +1011,17 @@ namespace Tomb
   }
 
   /* Returns whether the subgroup is a subgroup of another Lie Group */
-/*  bool SubGroup::isSubgroupOf(LieGroup Group) consti
+  bool SubGroup::isSubgroupOf(LieGroup Group) const
   {
     try
     {
-      if(this->abelian())
-        return true;
-
       if(this->rank() > Group.rank() or this->dim() > Group.dim())
         return false;
       else
       {
+        if(this->abelian())
+          return true;       
+
         if(SuperGroup() == Group && this->Projection() != 0)
           return true;
         
@@ -1036,19 +1029,24 @@ namespace Tomb
           return true;
         
         //This makes calculating subgroups recursive
-        List<SubGroup> Subgroups = Group.Subgroups(rank(), Group.rank());
-        if(Subgroups.Index(*this) == -1)
-          return false;
+        LieGroup *G = DB<LieGroup>().find(Group.id());
+        if(G != NULL and G->_Subgroups.nterms())
+        {
+          if(G->_Subgroups.Index(*this) == -1)
+            return false;
+          else
+            return true;
+        }
         else
-          return true;
+          throw "Subgroup::isSubgroupOf::Unknown Lie group";
       }
       return false;
     }
     catch (...) { throw; }
   }
-*/
+
   /* Returns whether the subgroup is a subgroup of another Lie Group */
-/*  bool SubGroup::isSubgroupOf(SimpleGroup Group) const
+  bool SubGroup::isSubgroupOf(SimpleGroup Group) const
   {
     try
     {
@@ -1056,7 +1054,6 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-*/
 
   /* Returns the rank of the supergroup */
   int SubGroup::superRank() const
@@ -1147,15 +1144,18 @@ namespace Tomb
       if(this->Projection() == Group.Projection())
         return true;
    
-      // FIXME: Not working, but would be better to tell subgroups apart
-      //Rrep GenRep = _SuperGroup->GeneratingRep();
-      //SubGroup sg1(*this);
-      //SubGroup sg2(Group);
-      //if(GenRep.Decompose(sg1) == GenRep.Decompose(sg2))
-      //  return true;
-      //else
-      //  return false;
- 
+      if(_SuperGroup->ngroups() == _ngroups)
+      {
+        // FIXME: Not working, but would be better to tell subgroups apart
+        Rrep GenRep = _SuperGroup->GeneratingRep();
+        SubGroup sg1(*this);
+        SubGroup sg2(Group);
+        if(GenRep.Decompose(sg1) == GenRep.Decompose(sg2))
+          return true;
+        else
+          return false;
+      }
+
       if(id() != Group.id()) return false;
       else return true;
       
@@ -1167,10 +1167,7 @@ namespace Tomb
       if(SuperGroups() == Group.SuperGroups())
         return true;
       
-      // Speed things up a bit
       return false;
-          
-      
     }
     catch (...) { throw; }
   }
@@ -1186,7 +1183,7 @@ namespace Tomb
   }
   
   /* Returns the json string */
-  JSONNode SubGroup::json(std::string name) const
+/*  JSONNode SubGroup::json(std::string name) const
   {   
     try
     {
@@ -1215,7 +1212,7 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-
+*/
   /* Parses a json object into the attributes of the class */
 /*  void SubGroup::ParseJSON(const JSONNode & n, std::string what)
    {
