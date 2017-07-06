@@ -17,8 +17,9 @@
 
 #include <map>
 #include <typeinfo>
+#include "cmake_variables.h"
 #include "files.h"
-//#include "libjson.h"
+#include "libjson.h"
 
 #define DB_NOT_FOUND 0
 #define DB_FOUND 1
@@ -35,9 +36,9 @@ namespace Tomb
   {
 
     protected:
-      std::stringstream  _outdir ;
+      std::string _basedir;
+      std::string _outdir;
       std::map<std::string, int> _flags;
-//      std::map<std::string, std::string> _json;
       std::map<std::string, TYPE*> _content;
       std::map<std::string, std::string> _files;
 
@@ -46,7 +47,6 @@ namespace Tomb
       ~DataBase();
 
       int check(std::string);
-   //   JSONNode json(std::string);
       typename std::map<std::string,TYPE*>::iterator begin();
       typename std::map<std::string,TYPE*>::iterator end();
       TYPE* at(std::string);
@@ -70,14 +70,22 @@ namespace Tomb
   /* Constructor */
   template <class TYPE> DataBase<TYPE>::DataBase()
   {
-    _outdir << "./out/" << typeid(TYPE).name() << "/";
-    //fill();
+    std::string name = typeid(TYPE).name();
+    name.pop_back();
+    name.erase(0,6);
+    std::size_t found = name.find_first_not_of("12345678");
+    if(found != std::string::npos) name.erase(0,found);
+
+    std::stringstream dir;
+    dir  << TOMB_DIR << "/database/";
+    _basedir = dir.str();
+    dir << name << "/";
+    _outdir = dir.str();
   }
 
   /* Destructor */
   template <class TYPE> DataBase<TYPE>::~DataBase()
   {
-    //flush();
   }
 
   /* Check whether the key is in the database */
@@ -128,20 +136,16 @@ namespace Tomb
   {
     if(int flag = check(key))
     {
+      // If it is in the database as an object return it
       if(flag == DB_FOUND)
         return _content.at(key);
-  /*    if(flag == DB_FOUND_JSON)
-      {
-        _content.emplace(key,TYPE(libjson::parse(_json.at(key))));
-        _flags[key] = DB_FOUND_CONTENT;
-        return _content.at(key);
-      }
-      std::string imp = import(key);
-      _json.emplace(key,imp);
+      // If it is only in the file database, import it
+      // TODO: Uncomment this and fix every class' ParseJSON
+/*      std::string imp = import(key);
       _content.emplace(key,TYPE(libjson::parse(imp)));
-      _flags[key] = DB_FOUND_CONTENT;
-      return _content.at(key);
- */   }
+      _flags[key] = DB_FOUND;
+      return _content.at(key);*/
+    }
     else
       throw "DataBase::Could not find key on the database";
   }
@@ -190,21 +194,7 @@ namespace Tomb
       {
         if(flag == DB_FOUND and replace)
           _content[key] = new TYPE(*Object);
-/*        if(flag == DB_FOUND_JSON)
-        {
-          if(replace)
-            _content.emplace(key, Object);
-          else
-            _content.emplace(key, TYPE(libjson::parse(_json.at(key))));
-        }
-        if(flag == DB_FOUND)
-        {
-          if(replace)
-            _content.emplace(key, Object);
-          else
-            _content.emplace(key, TYPE(libjson::parse(import(key))));
-        }
-*/      }
+      }
       else
         _content.emplace(key, new TYPE(*Object));
       _flags[key] = DB_FOUND;
@@ -218,12 +208,14 @@ namespace Tomb
   /* Fills the information about the databases */
   template <class TYPE> void DataBase<TYPE>::fill()
   {
-    std::vector<std::string> content = Files::GetDirectoryContents(_outdir.str());
+    std::cout << "Filling database from " << _outdir << std::endl;
+
+   std::vector<std::string> content = Files::GetDirectoryContents(_outdir);
 
     for(auto it = content.begin(); it != content.end(); it++)
     {
       std::stringstream file;
-      file << _outdir.str() << *it;
+      file << _outdir << *it;
       _files.emplace(*it,file.str());
       _flags.emplace(*it, DB_FOUND_FILE);
     }
@@ -232,41 +224,82 @@ namespace Tomb
   /* Flush the database to file */
   template <class TYPE> void DataBase<TYPE>::flush()
   {
-    if(!Files::IsDirectory(_outdir.str()))
-      Files::CreateDirectory(_outdir.str());
+    std::cout << "Flushing database to " << _outdir << std::endl;
+
+    if(!Files::IsDirectory(_basedir))
+      Files::CreateDirectory(_basedir);
+    if(!Files::IsDirectory(_outdir))
+      Files::CreateDirectory(_outdir);
 
     for(auto it = _content.begin(); it != _content.end(); it++)
     {
       std::stringstream file;
-      file << _outdir.str() << "/" << it->first;
-//      Files::WriteFileString(file.str(), it->second->json().write_formatted());
-    }
+      file << _outdir << "/" << it->first;
+      if(Files::FileExists(file.str()))
+        Files::ReplaceFileString(file.str(), it->second->json().write_formatted());
+      else  
+        Files::WriteFileString(file.str(), it->second->json().write_formatted());
+    
+   }
   }
 }
 
 
-/******************************************/
-/* Database helper functions declarations */
-/******************************************/
+/******************************/
+/* Database helper functions  */
+/******************************/
 
 namespace Tomb
 {
 
   // Singleton Database
-  template <typename TYPE> DataBase<TYPE>& DB_Singleton();
+  template <typename TYPE> DataBase<TYPE>& DB()
+  {
+    static DataBase<TYPE> database;
+    return database;
+  }
 
-  // Fills the database of type TYPE with info from files
-  template <typename TYPE> void database_fill();
+  // Dummy type list to make void function variadic	
+  template<typename...> struct dummy_type_list{};
 
-  // Fills the databases of variadic types with info from the files
-  template <typename TYPE, typename ...Args> void database_fill();
-	
+  // Fills the database from files, helper empty function
+  template <typename...> void database_fill(dummy_type_list<>) {};
+
+  // Fills the database from files, helper variadic function
+  template <typename TYPE, typename ...Args> void database_fill(dummy_type_list<TYPE, Args...> var)
+  {
+    DB<TYPE>().fill();
+    database_fill(dummy_type_list<Args...>());
+  }
+
+  // Fills the database from files
+  template <typename ...Args> void database_fill()
+  {
+    database_fill(dummy_type_list<Args...>());
+  }
+
+  // Flushes the database to files, helper empty function
+  template<typename...> void database_flush(dummy_type_list<>) {};
+
+  // Flushes the database to files, helper variadic function
+  template <typename TYPE, typename ...Args> void database_flush(dummy_type_list<TYPE, Args...> var)
+  {
+    DB<TYPE>().flush();
+    database_flush(dummy_type_list<Args...>());
+  }
+
+  // Flushes the database to files
+  template <typename ...Args> void database_flush()
+  {
+    database_flush(dummy_type_list<Args...>());
+  }
+
 }
 
 /*****************************************/
 /* Database helper functions definitions */
 /*****************************************/
-
+/*
 namespace Tomb
 {
 
@@ -274,6 +307,8 @@ namespace Tomb
   template <typename TYPE> DataBase<TYPE>& DB()
   {
     static DataBase<TYPE> database;
+    static std::vector<void *> DataBases;
+    DataBases.push_back(&database);
     return database;
   }
 
@@ -284,10 +319,7 @@ namespace Tomb
     {
       DB<TYPE>().fill();
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   // Fills the databases of variadic types with info from the files
@@ -298,11 +330,28 @@ namespace Tomb
       database_fill<TYPE>();
       database_fill<Args...>();
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
-}
 
+  // Flushes the database of type TYPE with info to files
+  void database_flush(dummy_type_list<>)
+  {
+
+  }
+
+  // Flushes the databases of variadic types with info to files
+  template <typename TYPE, typename ...Args> void database_flush(dummy_type_list<TYPE, Args..>)
+  {
+    DB<TYPE>().flush();
+    database_flush(dummy_type_list<Args...>());
+  }
+
+  // Flushes the databases of variadic types with info to files
+  template <typename ...Args> void database_flush()
+  {
+    database_flush(dummy_type_list<Args...>());
+  }
+
+}
+*/
 #endif /* __DATABASE_H */

@@ -52,15 +52,22 @@ set(TOMB_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/tomb)
 set(GROUP_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/group)
 set(UTILS_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/utils)
 
+# Set variables for compiler
+configure_file("${PROJECT_SOURCE_DIR}/include/cmake_variables.h.in" "${UTILS_INCLUDE_DIR}/cmake_variables.h" )
+
 # Externals
 set(TOMB_EXTERNAL_DIR ${PROJECT_SOURCE_DIR}/external)
 set(LIBJSON_SOURCE_DIR ${TOMB_EXTERNAL_DIR}/libjson/_internal/Source)
+set(LIBJSON_INCLUDE_DIR ${TOMB_EXTERNAL_DIR}/libjson)
 file(GLOB libjson_sources "${LIBJSON_SOURCE_DIR}/[a-zA-Z]*.cpp")
-file(GLOB libjson_headers "${LIBJSON_SOURCE_DIR}/[a-zA-Z]*.h")
+file(GLOB libjson_external_headers "${LIBJSON_INCLUDE_DIR}/[a-zA-Z]*.h")
+file(GLOB_RECURSE libjson_internal_headers "${LIBJSON_SOURCE_DIR}/[a-zA-Z]*.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
-add_library(libjson STATIC ${libjson_sources} ${libjson_headers})
-set_target_properties(libjson PROPERTIES LINKER_LANGUAGE CXX)
-include_directories("${TOMB_EXTERNAL_DIR}/libjson")
+add_library(libjson OBJECT ${libjson_sources} ${libjson_external_headers} ${libjson_internal_headers})
+#add_library(libjson STATIC ${libjson_sources} ${libjson_external_headers} ${libsjon_internal_headers})
+include_directories(${LIBJSON_INCLUDE_DIR} ${LIBJSON_SOURCE_DIR})
+#set_target_properties(libjson PROPERTIES LINKER_LANGUAGE CXX)
+#set_target_properties(libjson PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${LIBJSON_INCLUDE_DIR})
 
 # Utils
 file(GLOB utils_sources "${UTILS_SOURCE_DIR}/[a-zA-Z]*.cc")
@@ -72,8 +79,11 @@ include_directories(${UTILS_INCLUDE_DIR})
 # Group
 file(GLOB group_sources "${GROUP_SOURCE_DIR}/[a-zA-Z]*.cc")
 file(GLOB group_headers "${GROUP_INCLUDE_DIR}/[a-zA-Z]*.h")
-set(group_objects $<TARGET_OBJECTS:utils>)
+set(group_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson>)
+#set(group_objects $<TARGET_OBJECTS:utils>)
 add_executable(group ${group_sources} ${group_objects} ${group_headers})
-add_dependencies(group utils)
-target_link_libraries(group libjson)
+#add_dependencies(group utils)
+add_dependencies(group utils libjson)
+#target_link_libraries(group libjson)
 include_directories(${GROUP_INCLUDE_DIR})
+

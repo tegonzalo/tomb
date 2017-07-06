@@ -600,7 +600,6 @@ namespace Tomb
     
     try
     {
-      
       JSONNode JSONList(JSON_ARRAY);
       if(name != "") {
         JSONList.set_name(name);
