@@ -221,24 +221,6 @@ namespace Tomb
     return _Object;
   }
 
-  /* Returns the parent */
-  /*template <class TYPE> Tree<TYPE> Tree<TYPE>::Parent() const
-  {
-    return *_Parent;
-  }*/
-
-  /* Returns the parent's address */
-  /*template <class TYPE> Tree<TYPE> *Tree<TYPE>::pParent() const
-  {
-    return _Parent;
-  }*/
-
-  /* Sets the parent */
-  /*template <class TYPE> Tree<TYPE> Tree<TYPE>::setParent(Tree<TYPE> *ptree)
-  {
-    _Parent = ptree;
-  }*/
-
   /* Returns the label of the object */
   template <class TYPE> std::string Tree<TYPE>::label() const
   {
@@ -249,22 +231,6 @@ namespace Tomb
   template<class TYPE> std::string Tree<TYPE>::setLabel(std::string label)
   {
     _label = label;
-    /*for(int i=0; i<nbranches(); i++)
-    {
-      Tree<TYPE> branch = Branch(i);
-      std::string lab = std::string(1,label[0]);
-      if(nbranches() == 1) lab = label;
-      if(nbranches() > 1)
-      {
-        if(branch.label().length() == label.length())
-          lab.append(branch.label());
-        else
-          lab = branch.label();
-      }
-      branch.setLabel(lab);
-      _Branches.DeleteTerm(i);
-      _Branches.InsertTerm(i,branch);
-    }*/
     return _label;
   }
 

@@ -37,8 +37,8 @@ using namespace std;
 
 namespace Tomb
 {
-  class Irrep {
-
+  class Irrep
+  {
     private:
       SimpleGroup* _Group = NULL;
       int _nirreps = 1;
@@ -59,7 +59,7 @@ namespace Tomb
 
       Irrep(SimpleGroup&, Weight&);
       Irrep(const string);
-//      Irrep(const JSONNode &);
+      Irrep(const JSONNode &, const void * = NULL);
       Irrep(const Irrep &);
       Irrep(Irrep &&);
       ~Irrep();
@@ -95,7 +95,7 @@ namespace Tomb
       string Print() const;
       string Table() const;
       JSONNode json(string = "") const;
-//      void ParseJSON(const JSONNode &n, string = "");
+      void ParseJSON(const JSONNode &n, const void * = NULL);
   
   };
   

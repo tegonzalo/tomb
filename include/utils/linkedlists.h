@@ -40,6 +40,7 @@ namespace Tomb
       List(const List<TYPE> &);
       List(const std::vector<TYPE> &);
       List(const JSONNode &);
+      List(const JSONNode &, const void *);
       List(List<TYPE> &&);
 
       ~List();
@@ -73,6 +74,7 @@ namespace Tomb
       
       JSONNode json(std::string = "") const;
       void ParseJSON(const JSONNode &);
+      void ParseJSON(const JSONNode &, const void *);
   };
 
   template <class TYPE> std::ostream &operator<<(std::ostream &, const List<TYPE> &);
@@ -165,14 +167,30 @@ namespace Tomb
 
   }
   
-  /* Copy constructor 2 */
+  /* Copy constructor 2.0 */
   template <class TYPE> List<TYPE>::List(const JSONNode &json)
   {
     if(std::is_same<TYPE, std::string>::value)
       for(auto i=json.begin(); i!=json.end(); i++)
         AddTerm(TYPE(i->as_string()));
-    //else
-    //	ParseJSON(json);
+    else
+      ParseJSON(json);
+  }
+
+
+  /* Copy constructor 2 */
+  template <class TYPE> List<TYPE>::List(const JSONNode &json, const void *pointer)
+  {
+    if(std::is_same<TYPE, std::string>::value)
+      for(auto i=json.begin(); i!=json.end(); i++)
+        AddTerm(TYPE(i->as_string()));
+    else
+    {
+      if(pointer == NULL)
+        ParseJSON(json);
+      else
+    	ParseJSON(json, pointer);
+    }
   }
 
   /* Move constructor */
@@ -620,8 +638,7 @@ namespace Tomb
 
   /* Parses a json object into the attributes of the class */
   template <class TYPE> void List<TYPE>::ParseJSON(const JSONNode & n)
-  {
-    
+  { 
     try
     {
       if(this->nterms())
@@ -640,6 +657,47 @@ namespace Tomb
         {
           TYPE Object(*it);
           this->AddTerm(Object);
+        }
+        ++it;
+        
+      }
+      
+      
+    } catch (...) {
+      throw;
+    }
+  }
+
+
+  /* Parses a json object into the attributes of the class */
+  template <class TYPE> void List<TYPE>::ParseJSON(const JSONNode & n, const void *pointer)
+  { 
+    try
+    {
+      if(this->nterms())
+        this->Clear();
+      
+      JSONNode::const_iterator it = n.begin();
+
+      while(it != n.end())
+      {
+        if(it->as_string() != "" or std::is_same<TYPE, std::string>::value)
+        {
+          TYPE Object(it->as_string());
+          this->AddTerm(Object);
+        } 
+        else
+        {
+          if(pointer == NULL)
+          {
+            TYPE Object(*it);
+            this->AddTerm(Object);
+          }
+          else
+          {
+            TYPE Object(*it, pointer);
+            this->AddTerm(Object);
+          }
         }
         ++it;
         

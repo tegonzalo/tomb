@@ -169,15 +169,14 @@ namespace Tomb
   }
 
   /* Constructor 4, with json nodes */
-/*  SimpleGroup::SimpleGroup(const JSONNode &n) {
-    
-    if(n.as_string() != "") {
+  SimpleGroup::SimpleGroup(const JSONNode &n)
+  {   
+    if(n.as_string() != "")
       SimpleGroup(n.as_string());
-    } else {
+    else
       ParseJSON(n);
-    }
   }
-*/
+
   /* Copy constructor */
   SimpleGroup::SimpleGroup(const SimpleGroup &G) 
   {
@@ -1697,59 +1696,49 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-/*  void SimpleGroup::ParseJSON(const JSONNode & n, string what) {
-    
+  void SimpleGroup::ParseJSON(const JSONNode & n)
+  {
+      
     JSONNode::const_iterator i = n.begin();
       
-    while (i != n.end()){
-    
+    while (i != n.end())
+    {
       // get the node name and value as a string
       string node_name = i -> name();
 
       // find out where to store the values
-      if(node_name == "rank") {
+      if(node_name == "rank")
         _rank = i->as_int();
-      } else if(node_name =="type") {
+      else if(node_name =="type")
         _type = (i->as_string())[0];
-      } else if(node_name == "dim") {
+      else if(node_name == "dim")
         _dim = i->as_int();
-      } else if(node_name == "order") {
+      else if(node_name == "order")
         _order = i->as_int();
-      } else if(node_name == "label") {
+      else if(node_name == "label")
         _label = i->as_string();
-      } else if(node_name == "abelian") {
+      else if(node_name == "abelian")
         _abelian = i->as_bool();
-      } else if(node_name == "Cartan") {
+      else if(node_name == "Cartan")
         _Cartan.ParseJSON(*i);
-      } else if(node_name == "G") {
+      else if(node_name == "G")
         _G.ParseJSON(*i);
-      } else if(node_name == "Casimir") {
+      else if(node_name == "Casimir") 
         _Casimir = i->as_float();
-      } else if(node_name == "repsMaxDim") {
+      else if(node_name == "repsMaxDim")
         _repsMaxDim = i->as_int();
-      } else if(node_name == "hasReps" and (what == "Reps")) {
-        _hasReps = i->as_bool();
-      } else if(node_name == "hasSubgroups" and what == "Subgroups") {
-        _hasSubgroups = i->as_bool();
-      } else if(node_name == "Irreps" and (what == "Reps")) {
-        _Irreps.ParseJSON(*i);
-        if(_Irreps.nterms())
-          _hasReps = true;
-        else
-          _hasReps = false;
-      } else if(node_name == "Subgroups" and (what == "Subgroups")) {
+      else if(node_name == "Irreps")
+        _Irreps.ParseJSON(*i, this);
+      else if(node_name == "MaxSubgroups", this)
+        _MaxSubgroups.ParseJSON(*i);
+      else if(node_name == "Subgroups", this)
         _Subgroups.ParseJSON(*i);
-        if(_Subgroups.nterms())
-          _hasSubgroups = true;
-        else
-          _hasSubgroups = false;
-      }
-        
+              
       //increment the iterator
       ++i;
     }
   }
-*/
+
   /* Checks whether the group exists or not */
   bool SimpleGroup::GroupExists(int rank, char type) {
     try {

@@ -17,14 +17,14 @@
 
 #include <map>
 #include <typeinfo>
+#include <omp.h>
 #include "cmake_variables.h"
 #include "files.h"
 #include "libjson.h"
 
 #define DB_NOT_FOUND 0
 #define DB_FOUND 1
-#define DB_FOUND_JSON 2
-#define DB_FOUND_FILE 3
+#define DB_FOUND_FILE 2
 
 /*******************************/
 /* Class DataBase declarations */
@@ -41,6 +41,7 @@ namespace Tomb
       std::map<std::string, int> _flags;
       std::map<std::string, TYPE*> _content;
       std::map<std::string, std::string> _files;
+      omp_lock_t _lock;
 
     public:
       DataBase();
@@ -70,6 +71,7 @@ namespace Tomb
   /* Constructor */
   template <class TYPE> DataBase<TYPE>::DataBase()
   {
+    // Get human readable class types
     std::string name = typeid(TYPE).name();
     name.pop_back();
     name.erase(0,6);
@@ -81,11 +83,16 @@ namespace Tomb
     _basedir = dir.str();
     dir << name << "/";
     _outdir = dir.str();
+
+    // Initializes the lock
+    omp_init_lock(&_lock);
   }
 
   /* Destructor */
   template <class TYPE> DataBase<TYPE>::~DataBase()
   {
+    // Destroy the lock
+    omp_destroy_lock(&_lock);
   }
 
   /* Check whether the key is in the database */
@@ -139,12 +146,14 @@ namespace Tomb
       // If it is in the database as an object return it
       if(flag == DB_FOUND)
         return _content.at(key);
+
       // If it is only in the file database, import it
-      // TODO: Uncomment this and fix every class' ParseJSON
-/*      std::string imp = import(key);
-      _content.emplace(key,TYPE(libjson::parse(imp)));
+      omp_set_lock(&_lock);
+      std::string imp = import(key);
+      omp_unset_lock(&_lock);
+      _content.emplace(key, new TYPE(libjson::parse(imp)));
       _flags[key] = DB_FOUND;
-      return _content.at(key);*/
+     return _content.at(key);
     }
     else
       throw "DataBase::Could not find key on the database";
@@ -155,7 +164,7 @@ namespace Tomb
   {
     try
     {
-      if(check(key) == DB_FOUND)
+      if(check(key))
         return at(key);
       else
         return NULL;
@@ -191,12 +200,9 @@ namespace Tomb
     try
     {
       if(int flag = check(key))
-      {
-        if(flag == DB_FOUND and replace)
-          _content[key] = new TYPE(*Object);
-      }
-      else
-        _content.emplace(key, new TYPE(*Object));
+        if(flag == DB_FOUND and !replace)
+          return ;
+      _content[key] =  new TYPE(*Object);
       _flags[key] = DB_FOUND;
     }
     catch (...)
@@ -210,14 +216,16 @@ namespace Tomb
   {
     std::cout << "Filling database from " << _outdir << std::endl;
 
-   std::vector<std::string> content = Files::GetDirectoryContents(_outdir);
+    omp_set_lock(&_lock);
+    std::vector<std::string> content = Files::GetDirectoryContents(_outdir);
+    omp_unset_lock(&_lock);
 
     for(auto it = content.begin(); it != content.end(); it++)
     {
       std::stringstream file;
       file << _outdir << *it;
-      _files.emplace(*it,file.str());
-      _flags.emplace(*it, DB_FOUND_FILE);
+      _files[*it] = file.str();
+      _flags[*it] = DB_FOUND_FILE;
     }
   }
 
@@ -226,19 +234,24 @@ namespace Tomb
   {
     std::cout << "Flushing database to " << _outdir << std::endl;
 
+    omp_set_lock(&_lock);
     if(!Files::IsDirectory(_basedir))
       Files::CreateDirectory(_basedir);
     if(!Files::IsDirectory(_outdir))
       Files::CreateDirectory(_outdir);
+    omp_unset_lock(&_lock);
 
     for(auto it = _content.begin(); it != _content.end(); it++)
     {
       std::stringstream file;
       file << _outdir << "/" << it->first;
+
+      omp_set_lock(&_lock);
       if(Files::FileExists(file.str()))
         Files::ReplaceFileString(file.str(), it->second->json().write_formatted());
       else  
         Files::WriteFileString(file.str(), it->second->json().write_formatted());
+      omp_unset_lock(&_lock);
     
    }
   }

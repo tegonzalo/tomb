@@ -54,24 +54,14 @@ namespace Tomb
   }
 
   /* Constructor 3, with json nodes */
-/*  Irrep::Irrep(const JSONNode &n)
+  Irrep::Irrep(const JSONNode &n, const void *Group)
   {
     if(n.as_string() != "")
-    {
-      _HWeight = new Weight(n.as_string());
-      //_Group = new SimpleGroup(HWeight().Group().GetObject(0));
-      //_Group = new SimpleGroup(HWeight().Group());
-      _Group = HWeight().GroupId();
-      
-      init();
-      
-    } 
+      Irrep(n.as_string());
     else
-    {
-      ParseJSON(n);
-    }
+      ParseJSON(n, Group);
   }
-Si*/
+
   /* Copy constructor */
   Irrep::Irrep(const Irrep &Rep)
   {  
@@ -926,7 +916,7 @@ Si*/
       
     json.push_back(JSONNode("id", id()));
     json.push_back(JSONNode("Group", _Group->id()));
-    json.push_back(_HWeight->json("HWeight"));
+    json.push_back(JSONNode("HWeight", _HWeight->id()));
     json.push_back(JSONNode("nirreps", _nirreps));
     json.push_back(JSONNode("dim", dim()));
     json.push_back(JSONNode("real", real()));
@@ -954,50 +944,54 @@ Si*/
   }
 
   /* Parses a json object into the attributes of the class */
-/*  void Irrep::ParseJSON(const JSONNode &n, string what) {
+  void Irrep::ParseJSON(const JSONNode &n, const void *Group)
+  {
+ 
     JSONNode::const_iterator i = n.begin();
-    while (i != n.end()){
-  
+    while (i != n.end())
+    {
       // get the node name and value as a string
       string node_name = i -> name();
       
       // find out where to store the values
-      if(node_name == "Group") {
-        //_Group = new SimpleGroup(i->as_string());
-        _Group = i->as_string();
-      } else if(node_name == "Group->rank()") {
-        _Group->rank() = i->as_int();
-      } else if(node_name =="HWeight") {
-        //_HWeight = new Weight(*_Group, _Group->rank());
-        _HWeight = new Weight(_Group, _Group->rank());
-        _HWeight->ParseJSON(*i);
-      } else if(node_name == "nirreps") {
-        _nirreps = i->as_int();
-      } else if(node_name == "dim") {
-        _dim = i->as_int();
-      } else if(node_name == "real") {
-        _real = i->as_bool();
-      } else if(node_name == "label") {
-        _label = i->as_string();
-      } else if(node_name == "Casimir") {
-        _Casimir = i->as_float();
-      } else if(node_name == "DynkinIndex") {
-        _DynkinIndex = i->as_float();
-      } else if(node_name == "conjugate") {
-        _conjugate = i->as_bool();
-      } else if(node_name == "congruency") {
-        _congruency.ParseJSON(*i);
-      } else if(node_name == "hasWeights" and what == "Weights") {
-        _hasWeights = i->as_bool();
-      } else if(node_name == "Weights" and what == "Weights") {
-        _Weights.ParseJSON(*i);
+      if(node_name == "Group")
+      {
+        if(DB<SimpleGroup>().check(i->as_string()) == DB_FOUND)
+          _Group = DB<SimpleGroup>().at(i->as_string());
+        else if(Group != NULL)
+          _Group = (SimpleGroup *)Group;
+        else
+          throw "Irrep::ParseJSON::Need a reference to a SimpleGroup";
       }
+      else if(node_name =="HWeight")
+      {
+        _HWeight = new Weight(*_Group, _Group->rank());
+        _HWeight->ParseJSON(*i);
+      }
+      else if(node_name == "nirreps")
+        _nirreps = i->as_int();
+      else if(node_name == "dim")
+        _dim = i->as_int();
+      else if(node_name == "real")
+        _real = i->as_bool();
+      else if(node_name == "label")
+        _label = i->as_string();
+      else if(node_name == "Casimir")
+        _Casimir = i->as_float();
+      else if(node_name == "DynkinIndex")
+        _DynkinIndex = i->as_float();
+      else if(node_name == "conjugate")
+        _conjugate = i->as_bool();
+      else if(node_name == "congruency")
+        _congruency.ParseJSON(*i);
+      else if(node_name == "Weights")
+        _Weights.ParseJSON(*i);
   
       //increment the iterator
       ++i;
     }
   }
-*/
+
 
   /* Overloaded << operator with irreps on the right */
   ostream &operator<<(ostream &stream, const Irrep &i)

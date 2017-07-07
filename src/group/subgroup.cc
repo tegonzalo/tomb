@@ -235,21 +235,19 @@ namespace Tomb
   }
 
   /* Constructor 4, with json nodes */
-/*  SubGroup::SubGroup(const JSONNode &n)
+  SubGroup::SubGroup(const JSONNode &n, const void *SuperGroup)
   {
     try
     {
       if(n.as_string() != "")
-      {
-        init(n.as_string());
-      } else {
-        ParseJSON(n);
-      }
+        SubGroup(n.as_string());
+      else
+        ParseJSON(n, SuperGroup);
     } catch (...) {
       throw;
     }
   }
-*/
+
   /* Copy constructor 0 */
   SubGroup::SubGroup(const SubGroup &Group) : LieGroup(Group)
   {
@@ -1220,8 +1218,8 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-/*  void SubGroup::ParseJSON(const JSONNode & n, std::string what)
-   {
+  void SubGroup::ParseJSON(const JSONNode & n, const void *SuperGroup)
+  {
     try
     {   
       JSONNode json = n;
@@ -1237,8 +1235,7 @@ namespace Tomb
       getline(ss2,id,'[');
       json.insert(json.begin(),JSONNode("id",id));
       
-      
-      LieGroup::ParseJSON(json,what);
+      LieGroup::ParseJSON(json);
       JSONNode::const_iterator i = json.begin();
       while (i != json.end())
       {
@@ -1246,10 +1243,17 @@ namespace Tomb
         std::string node_name = i -> name();
 
         // find out where to store the values
-        if(node_name == "SuperGroups")
+        if(node_name == "SuperGroup")
         {
-            _SuperGroups.ParseJSON(*i);
+          if(DB<LieGroup>().check(i->as_string()) == DB_FOUND)
+            _SuperGroup = DB<LieGroup>().at(i->as_string());
+          else if(SuperGroup != NULL)
+            _SuperGroup = (LieGroup *)SuperGroup;
+          else
+            throw "SubGroup::ParseJSON::Needs a pointer to the supergroup";
         }
+        else if(node_name == "SuperGroups")
+            _SuperGroups.ParseJSON(*i);
         else if(node_name == "Projection")
           _Projection.ParseJSON(*i);
         else if(node_name == "labels" and !_labels.nterms())
@@ -1276,6 +1280,5 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-*/
 
 }

@@ -35,13 +35,16 @@ using namespace std;
 
 namespace Tomb
 {
-  class Weight : public RVector<double> {
+  class Weight : public RVector<double>
+  {
     private:
-      LieGroup *_Group = NULL;
+//      LieGroup *_Group = NULL;
       bool _positive = false;
       int _multiplicity = 0;
       int _level = 0;
     public:
+      string _Group = "";
+
       Weight();
       Weight(LieGroup &, int);
       Weight(LieGroup &, const RVector<double> &);
@@ -50,7 +53,7 @@ namespace Tomb
       Weight(const string &, int);
       Weight(const string &, const RVector<double> &);
       Weight(const string);
-//      Weight(const JSONNode &);
+      Weight(const JSONNode &);
       Weight(const SimpleGroup &, const double);
       Weight(const Weight &);
       Weight(Weight &&);
@@ -83,7 +86,7 @@ namespace Tomb
       bool operator==(const double&) const;
       bool operator!=(const double&) const;
       Weight Append(Weight);
-//      JSONNode json(string = "") const;
+      JSONNode json(string = "") const;
   };
 
   Weight operator*(Weight, double);

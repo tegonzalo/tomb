@@ -34,7 +34,8 @@ namespace Tomb
   {
     try
     {
-      _Group = &G;
+//      _Group = &G;
+      _Group = G.id();
       _positive = true;
       _multiplicity = 1;
       _level = 0;
@@ -47,7 +48,8 @@ namespace Tomb
   {
     try
     {
-      _Group = &G;
+//      _Group = &G;
+      _Group = G.id();
       _positive = true;
       for(int i=0; i<V.cols(); i++)
       {
@@ -64,7 +66,8 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G);
+//      _Group = LieGroup::get(G);
+      _Group = G.id();
       _positive = true;
       _multiplicity = 1;
       _level = 0;
@@ -77,7 +80,8 @@ namespace Tomb
   {
     try
     {
-      _Group = LieGroup::get(G); 
+//      _Group = LieGroup::get(G); 
+      _Group = G.id();
       _positive = true;
       for(int i=0; i<V.cols(); i++) 
       {
@@ -94,7 +98,8 @@ namespace Tomb
   {
     try
     {
-      _Group = DB<LieGroup>().get(G);
+//      _Group = DB<LieGroup>().get(G);
+      _Group = G;
       _positive = true;
       _multiplicity = 1;
       _level = 0;
@@ -107,7 +112,8 @@ namespace Tomb
   {
     try
     {
-      _Group = DB<LieGroup>().get(G);
+//      _Group = DB<LieGroup>().get(G);
+      _Group = G;
       _positive = true;
       for(int i=0; i<V.cols(); i++)
       {
@@ -131,8 +137,12 @@ namespace Tomb
       getline(ss, W, ')');
       string G;
       getline(ss, G, '\0');
-            
-      _Group = DB<LieGroup>().get(G);
+
+//      if(Group == NULL)
+//        _Group = DB<LieGroup>().get(G);
+//      else
+//        _Group = Group;
+      _Group = G;
 
       *this = Weight(Group(),Group().rank());
   
@@ -156,21 +166,23 @@ namespace Tomb
   }
 
   /* Constructor 6, with json nodes */
-/*  Weight::Weight(const JSONNode &n) {
-    
-    if(n.as_string() != "") {
+  Weight::Weight(const JSONNode &n)
+  {   
+    if(n.as_string() != "")
       Weight(n.as_string());
-    } else {
+    else
+    {
       ParseJSON(n);
     }
   }
-*/
+
   /* Constructor 7, with doubles */
   Weight::Weight(const SimpleGroup &G, const double value) : RVector<double>(1)
   {
     try
     {
-      _Group = DB<LieGroup>().get(G.id());
+//      _Group = DB<LieGroup>().get(G.id());
+      _Group = G.id();
       (*this)[0] = value;
       _positive = true;
       _multiplicity = 1;
@@ -184,7 +196,8 @@ namespace Tomb
   {
     try
     {
-      _Group = &w.Group();
+//      _Group = &w.Group();
+      _Group = w._Group;
       _positive = w.positive();
       _multiplicity = w.multiplicity();
       _level = w.level();
@@ -202,7 +215,8 @@ namespace Tomb
   {
     try
     {
-      w._Group = NULL;
+//      w._Group = NULL;
+      w._Group = "";
       w._positive = false;
       w._multiplicity = 0;
       w._level = 0;
@@ -222,7 +236,8 @@ namespace Tomb
     {
       if(this == &w) return *this;
       RVector<double>::operator=(w);
-      _Group = &w.Group();
+//      _Group = &w.Group();
+      _Group = w._Group;
       _positive = w.positive();
       _multiplicity = w.multiplicity();
       _level = w.level();
@@ -243,7 +258,8 @@ namespace Tomb
       _multiplicity = move(w._multiplicity);
       _level = move(w._level);
       
-      w._Group = NULL;
+//      w._Group = NULL;
+      w._Group = "";
       w._positive = false;
       w._multiplicity = 0;
       w._level = 0;
@@ -266,14 +282,16 @@ namespace Tomb
       s << ",";
     }
     s << (*this)[cols()-1] << ')';
-    s << _Group->id();
+//    s << _Group->id();
+    s << _Group;
     return s.str();
   }
 
   /* Returns the Lie Group */
   LieGroup &Weight::Group() const 
   {
-    return *_Group;
+//    return *_Group;
+    return *DB<LieGroup>().get(_Group);
   }
   
   /* Returns the positiveness of the weight */
@@ -317,9 +335,11 @@ namespace Tomb
   {
     try
     {
-      if(_Group->nterms() == 1)
+//      if(_Group->nterms() == 1)
+        if(Group().nterms() == 1)
       {
-        Weight w = (*this)*_Group->GetObject(0).G().Transpose();
+//        Weight w = (*this)*_Group->GetObject(0).G().Transpose();
+        Weight w = (*this)*Group().GetObject(0).G().Transpose();
         return w;
       } 
       return *this;
@@ -444,7 +464,7 @@ namespace Tomb
   {
     try
     {
-      Weight w(*_Group, RVector<double>(*this)*M);
+      Weight w(Group(), RVector<double>(*this)*M);
       return w;
     }
     catch (...) { throw; }
@@ -505,10 +525,11 @@ namespace Tomb
     try
     {
       RVector<double>::Append(w);
-      string G(_Group->id());
-      G.push_back('x');
-      G.append(w.Group().id());
-      _Group = DB<LieGroup>().get(G);
+//      string G(_Group->id());
+//      G.push_back('x');
+//      G.append(w.Group().id());
+//      _Group = DB<LieGroup>().get(G);
+      _Group.append(w._Group);
       
       if(positive() and w.positive())
         setPositive(true);
@@ -520,7 +541,7 @@ namespace Tomb
   }
 
   /* Print to json format */
-/*  JSONNode Weight::json(string name) const
+  JSONNode Weight::json(string name) const
   {
     try
     {
@@ -531,7 +552,6 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-*/
 
   /* Overloaded * operator with scalars on the right */
   Weight operator*(Weight w, double n)

@@ -24,7 +24,8 @@ namespace Tomb
   // Member functions
 
   /* Constructor */
-  LieGroup::LieGroup() : Product<SimpleGroup>() {
+  LieGroup::LieGroup() : Product<SimpleGroup>()
+  {
     _ngroups = 0;
     _rank = 0;
     _dim = 0;
@@ -40,9 +41,10 @@ namespace Tomb
   }
 
   /* Constructor 2, with strings */
-  LieGroup::LieGroup(const string id) : Product<SimpleGroup>() {
-    
-    try {
+  LieGroup::LieGroup(const string id) : Product<SimpleGroup>()
+  {   
+    try
+    {
       _ngroups = 0;
       _rank = 0;
       _dim = 0;
@@ -63,21 +65,19 @@ namespace Tomb
       
       init();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Constructor 3, with json nodes */
-/*  LieGroup::LieGroup(const JSONNode &n) {
-    
-    if(n.as_string() != "") {
+  LieGroup::LieGroup(const JSONNode &n)
+  {
+    if(n.as_string() != "")
       LieGroup(n.as_string());
-    } else {
+    else
       ParseJSON(n);
-    }
   }
-*/  
+  
   /* Copy constructor 1 */
   LieGroup::LieGroup(const LieGroup &Group) : Product<SimpleGroup>(Group)
   {  
@@ -1747,67 +1747,69 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-/*  void LieGroup::ParseJSON(const JSONNode & n, string what) {
+  void LieGroup::ParseJSON(const JSONNode & n)
+  {
     JSONNode::const_iterator i = n.begin();
 
-    while (i != n.end()){
+    while (i != n.end())
+    {
       // get the node name and value as a string
       string node_name = i -> name();
       
       // find out where to store the values
-      if (node_name == "id") {
+      if (node_name == "id")
+      {
         string id = i->as_string();
         stringstream ss(id);
-        if(!this->nterms()) {
-          while(getline(ss, id, 'x')) {
+        if(!this->nterms())
+        {
+          while(getline(ss, id, 'x'))
             AddTerm(SimpleGroup(id));
-          }
-          if(nterms() == 1) {
+          if(nterms() == 1)
+          {
             SimpleGroup G(id);
-            G.ParseJSON(n,what);
-            //this->~LieGroup();
+            G.ParseJSON(n);
             DeleteTerm(0);
             AddTerm(G);
-
-            //return ;
           }
         }
-      } else if(node_name == "rank" and !_rank) {
+      }
+       else if(node_name == "rank" and !_rank)
         _rank = i->as_int();
-      } else if(node_name == "dim" and !_dim) {
+      else if(node_name == "dim" and !_dim)
         _dim = i->as_int();
-      } else if(node_name == "label" and _label == "") {
+      else if(node_name == "label" and _label == "")
         _label = i->as_string();
-      } else if(node_name == "simple") {
+      else if(node_name == "simple")
         _simple = i->as_bool();
-      } else if(node_name == "semisimple") {
+      else if(node_name == "semisimple")
         _semisimple = i->as_bool();
-      } else if(node_name == "ngroups") {
+      else if(node_name == "ngroups")
         _ngroups = i->as_int();
-      } else if(node_name == "nabelians") {
+      else if(node_name == "nabelians")
         _nabelians = i->as_int();
-      } else if(node_name == "Casimir" and !_Casimir.nterms()) {	
+      else if(node_name == "Casimir" and !_Casimir.nterms())
+      {
         _Casimir.Clear();
         JSONNode::const_iterator it = i->begin();
-        while(it != i->end()) {
+        while(it != i->end())
+        {
           _Casimir.AddTerm(it->as_float());
           ++it;
         }
-      } else if(node_name == "repsMaxDim") {
+      }
+      else if(node_name == "repsMaxDim")
         _repsMaxDim = i->as_int();
-      } else if(node_name == "hasReps" and what == "Reps") {
-        _hasReps = i->as_bool();
-      } else if(node_name == "hasSubgroups" and what == "Subgroups") {
-        _hasSubgroups = i->as_bool();
-      } else if(node_name == "Reps" and (what == "Reps")) {
+      else if(node_name == "Reps")
         _Reps.ParseJSON(*i);
-      } else if(node_name == "Irreps" and (what == "Reps")) {
+      else if(node_name == "Irreps")
+      {
         List<Irrep> Irreps;
         Irreps.ParseJSON(*i);
         _Reps = Irreps2Reps(Irreps);
-      } else if(node_name == "Subgroups" and (what == "Subgroups")) {
-        _Subgroups.ParseJSON(*i);
       }
+      else if(node_name == "Subgroups")
+        _Subgroups.ParseJSON(*i);
     
       //increment the iterator
       ++i;
@@ -1817,7 +1819,7 @@ namespace Tomb
     return ;
 
   }
-*/
+
 
   /* Static function to get a liegroup from the Database or create it otherwise */
   LieGroup* LieGroup::get(const SimpleGroup& Group)

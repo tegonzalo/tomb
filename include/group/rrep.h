@@ -33,8 +33,8 @@ namespace Tomb
 
 namespace Tomb
 {
-  class Rrep: public List<Irrep> {
-
+  class Rrep: public List<Irrep>
+  {
     private:
       LieGroup *_Group = NULL;
       int _dim = 0;
@@ -55,7 +55,7 @@ namespace Tomb
       Rrep(SubGroup &, Weight &);
       Rrep(LieGroup &, const Irrep &);
       Rrep(const std::string);
-//      Rrep(const JSONNode &);
+      Rrep(const JSONNode &, const void * = NULL);
       Rrep(const Rrep &);
       Rrep(Rrep &&);
       ~Rrep();
@@ -90,7 +90,7 @@ namespace Tomb
       bool operator>(const Rrep &) const;
       bool operator<(const Rrep &) const;
       JSONNode json(std::string = "") const;
-//      void ParseJSON(const JSONNode &n, std::string ="");
+      void ParseJSON(const JSONNode &n, const void * = NULL);
     
   };
 }

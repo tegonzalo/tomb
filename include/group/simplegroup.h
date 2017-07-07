@@ -39,7 +39,6 @@ namespace Tomb
 
   class SimpleGroup
   {
-
     protected:
       int _rank = 0;
       char _type = '\0';
@@ -63,7 +62,7 @@ namespace Tomb
       SimpleGroup(int,char);
       SimpleGroup(int, const Matrix<double> &);
       SimpleGroup(const string);
-//      SimpleGroup(const JSONNode &);
+      SimpleGroup(const JSONNode &);
       SimpleGroup(const SimpleGroup &);
       SimpleGroup(SimpleGroup &&);
       ~SimpleGroup();
@@ -112,7 +111,7 @@ namespace Tomb
       string Print() const;
       string Table() const;
       JSONNode json(string = "") const;
-//      void ParseJSON(const JSONNode &n, string = "");
+      void ParseJSON(const JSONNode &n);
       static bool GroupExists(int, char);
       static char GroupIdentify(int, const Matrix<double> &);
       static void RestructureCartan(Matrix<double> &);

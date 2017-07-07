@@ -104,22 +104,14 @@ namespace Tomb
   }
 
   /* Constructor 5, with JSON Nodes */
-/*  Rrep::Rrep(const JSONNode &n)
-    {
+  Rrep::Rrep(const JSONNode &n, const void *Group)
+  {
     if(n.as_string() != "")
-    {
-      _HWeight = new Weight(n.as_string());
-      //_Group = new LieGroup(HWeight().Group());
-      _Group = HWeight().GroupId();
-      
-      init();
-    }
+      Rrep(n.as_string());
     else
-    {
-      ParseJSON(n);
-    }
+      ParseJSON(n, Group);
   }
-*/
+
   /* Copy constructor */
   Rrep::Rrep(const Rrep &Rep) : List<Irrep>(Rep)
   {
@@ -770,7 +762,7 @@ namespace Tomb
       
     json.push_back(JSONNode("id", id()));
     json.push_back(JSONNode("Group", _Group->id()));
-    json.push_back(_HWeight->json("HWeight"));
+    json.push_back(JSONNode("HWeight", _HWeight->id()));
     json.push_back(JSONNode("dim", _dim));
     json.push_back(JSONNode("real",_real));
     json.push_back(JSONNode("label",_label));
@@ -806,65 +798,71 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-/*  void Rrep::ParseJSON(const JSONNode & n, std::string what)
+  void Rrep::ParseJSON(const JSONNode & n, const void *Group)
   {
     JSONNode::const_iterator i = n.begin();
-    while (i != n.end()){
-  
+    while (i != n.end())
+    {
       // get the node name and value as a string
       std::string node_name = i -> name();
 
       // find out where to store the values
-      if (node_name == "id") {
+      if (node_name == "id")
           std::string id = i->as_string();
-        } else if(node_name == "Group") {
-          //_Group = new LieGroup(i->as_string());
-          _Group = i->as_string();
-        } else if(node_name == "GroupRank") {
-          _GroupRank = i->as_int();
-        } else if(node_name =="HWeight") {
-          //_HWeight = new Weight(*_Group, _Group->rank());
-          _HWeight = new Weight(_Group, _GroupRank);
-          _HWeight->ParseJSON(*i);
-        } else if(node_name == "dim") {
-          _dim = i->as_int();
-        } else if(node_name == "real") {
-          _real = i->as_bool();
-        } else if(node_name == "nirreps") {
-          _nirreps = i->as_int();
-        } else if(node_name == "label") {
-          _label = i->as_string();
-        } else if(node_name == "Casimir") {
-          if(_nirreps == 1)
-            _Casimir = i->as_float();
-          else
+      else if(node_name == "Group")
+      {
+        if(DB<LieGroup>().check(i->as_string()) == DB_FOUND)
+          _Group = DB<LieGroup>().at(i->as_string());
+        else if(Group != NULL)
+          _Group = (LieGroup *)Group;
+        else
+          throw "Rrep::ParseJSON::Need a reference to a LieGroup";
+      }
+      else if(node_name =="HWeight")
+      {
+        _HWeight = new Weight(*_Group, _Group->rank());
+        _HWeight->ParseJSON(*i);
+      }
+      else if(node_name == "dim")
+        _dim = i->as_int();
+      else if(node_name == "real")
+        _real = i->as_bool();
+      else if(node_name == "nirreps")
+        _nirreps = i->as_int();
+      else if(node_name == "label")
+        _label = i->as_string();
+      else if(node_name == "Casimir")
+      {
+        if(_nirreps == 1)
+          _Casimir = i->as_float();
+        else
+        {
+          JSONNode::const_iterator it = i->begin();
+          _Casimir.Clear();
+          while(it != i->end())
           {
-            JSONNode::const_iterator it = i->begin();
-            _Casimir.Clear();
-            while(it != i->end())
-            {
-              _Casimir.AddTerm(it->as_float());
-              ++it;
-            }
+            _Casimir.AddTerm(it->as_float());
+            ++it;
           }
-        } else if(node_name == "DynkinIndex") {
-          if(_nirreps == 1)
-            _DynkinIndex = i->as_float();
-          else
-          {
-            JSONNode::const_iterator it = i->begin();
-            _DynkinIndex.Clear();
-            while(it != i->end())
-            {
-              _DynkinIndex.AddTerm(it->as_float());
-              ++it;
-            }
-          }
-        } else if(node_name == "hasWeights" and what == "Weights") {
-          _hasWeights = i->as_bool();
-        } else if(node_name == "Weights" and what == "Weights") {
-          _Weights.ParseJSON(*i);
         }
+      }
+      else if(node_name == "DynkinIndex")
+      {
+        if(_nirreps == 1)
+          _DynkinIndex = i->as_float();
+        else
+        {
+          JSONNode::const_iterator it = i->begin();
+          _DynkinIndex.Clear();
+          while(it != i->end())
+          {
+            _DynkinIndex.AddTerm(it->as_float());
+            ++it;
+          }
+        }
+      }
+      else if(node_name == "Weights")
+        _Weights.ParseJSON(*i);
     
       //increment the iterator
       ++i;
@@ -872,23 +870,19 @@ namespace Tomb
     
     if(!nterms())
     {
-      LieGroup Group(_Group);
       int accumulated_rank = 0;
       _nirreps = 0;
-      for(int i=0; i<Group.ngroups(); i++)
+      for(int i=0; i<_Group->ngroups(); i++)
       {
-        RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + Group.GetObject(i).rank()-1).Row(0);
-        Weight HW(Group.GetObject(i), R);
-        Irrep aRep(Group.GetObject(i), HW);
+        RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
+        Weight HW(_Group->GetObject(i), R);
+        Irrep aRep(_Group->GetObject(i), HW);
         this->AddTerm(aRep);
         _nirreps ++;
-        accumulated_rank += Group.GetObject(i).rank();
+        accumulated_rank += _Group->GetObject(i).rank();
       }
     }
     
-
   }
-*/
-
 
 }

@@ -40,7 +40,6 @@ namespace Tomb
 {
   class LieGroup: public Product<SimpleGroup>
   {
-
     protected:
       int _rank = 0;
       int _dim = 0;
@@ -60,7 +59,7 @@ namespace Tomb
       
       LieGroup();
       LieGroup(const string);
-//      LieGroup(const JSONNode &);
+      LieGroup(const JSONNode &);
       LieGroup(const LieGroup &);
       LieGroup(const SimpleGroup &);
       LieGroup(const List<SimpleGroup> &);
@@ -126,7 +125,7 @@ namespace Tomb
       bool operator!=(const LieGroup &);
       bool operator!=(const SimpleGroup &);
       JSONNode json(string = "") const;
-//      void ParseJSON(const JSONNode &n, string = "");
+      void ParseJSON(const JSONNode &n);
       static LieGroup* get(const SimpleGroup&);
 
   };
