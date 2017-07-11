@@ -59,7 +59,7 @@ namespace Tomb
 
       Irrep(SimpleGroup&, Weight&);
       Irrep(const string);
-      Irrep(const JSONNode &, const void * = NULL);
+      Irrep(const JSONNode &);
       Irrep(const Irrep &);
       Irrep(Irrep &&);
       ~Irrep();
@@ -95,7 +95,7 @@ namespace Tomb
       string Print() const;
       string Table() const;
       JSONNode json(string = "") const;
-      void ParseJSON(const JSONNode &n, const void * = NULL);
+      void ParseJSON(const JSONNode &n);
   
   };
   

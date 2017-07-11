@@ -34,7 +34,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = &G;
       _Group = G.id();
       _positive = true;
       _multiplicity = 1;
@@ -48,7 +47,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = &G;
       _Group = G.id();
       _positive = true;
       for(int i=0; i<V.cols(); i++)
@@ -66,7 +64,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = LieGroup::get(G);
       _Group = G.id();
       _positive = true;
       _multiplicity = 1;
@@ -80,7 +77,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = LieGroup::get(G); 
       _Group = G.id();
       _positive = true;
       for(int i=0; i<V.cols(); i++) 
@@ -98,7 +94,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = DB<LieGroup>().get(G);
       _Group = G;
       _positive = true;
       _multiplicity = 1;
@@ -112,7 +107,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = DB<LieGroup>().get(G);
       _Group = G;
       _positive = true;
       for(int i=0; i<V.cols(); i++)
@@ -126,7 +120,7 @@ namespace Tomb
   }
 
   /* Constructor 5, with strings */
-  Weight::Weight(const string id) : RVector<double>()
+  Weight::Weight(const string id) : RVector<double>(Weight::WeightSizeFromString(id))
   {
     try
     {
@@ -138,14 +132,8 @@ namespace Tomb
       string G;
       getline(ss, G, '\0');
 
-//      if(Group == NULL)
-//        _Group = DB<LieGroup>().get(G);
-//      else
-//        _Group = Group;
       _Group = G;
 
-      *this = Weight(Group(),Group().rank());
-  
       stringstream Ws(W);
       string s;
       for(int i=0; i<this->cols()-1; i++)
@@ -181,7 +169,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = DB<LieGroup>().get(G.id());
       _Group = G.id();
       (*this)[0] = value;
       _positive = true;
@@ -196,7 +183,6 @@ namespace Tomb
   {
     try
     {
-//      _Group = &w.Group();
       _Group = w._Group;
       _positive = w.positive();
       _multiplicity = w.multiplicity();
@@ -215,7 +201,6 @@ namespace Tomb
   {
     try
     {
-//      w._Group = NULL;
       w._Group = "";
       w._positive = false;
       w._multiplicity = 0;
@@ -236,7 +221,6 @@ namespace Tomb
     {
       if(this == &w) return *this;
       RVector<double>::operator=(w);
-//      _Group = &w.Group();
       _Group = w._Group;
       _positive = w.positive();
       _multiplicity = w.multiplicity();
@@ -258,7 +242,6 @@ namespace Tomb
       _multiplicity = move(w._multiplicity);
       _level = move(w._level);
       
-//      w._Group = NULL;
       w._Group = "";
       w._positive = false;
       w._multiplicity = 0;
@@ -282,7 +265,6 @@ namespace Tomb
       s << ",";
     }
     s << (*this)[cols()-1] << ')';
-//    s << _Group->id();
     s << _Group;
     return s.str();
   }
@@ -290,8 +272,13 @@ namespace Tomb
   /* Returns the Lie Group */
   LieGroup &Weight::Group() const 
   {
-//    return *_Group;
     return *DB<LieGroup>().get(_Group);
+  }
+
+  /* Returns the id of the LieGroup */
+  string Weight::GroupId() const
+  {
+    return _Group;
   }
   
   /* Returns the positiveness of the weight */
@@ -335,10 +322,8 @@ namespace Tomb
   {
     try
     {
-//      if(_Group->nterms() == 1)
         if(Group().nterms() == 1)
       {
-//        Weight w = (*this)*_Group->GetObject(0).G().Transpose();
         Weight w = (*this)*Group().GetObject(0).G().Transpose();
         return w;
       } 
@@ -525,10 +510,6 @@ namespace Tomb
     try
     {
       RVector<double>::Append(w);
-//      string G(_Group->id());
-//      G.push_back('x');
-//      G.append(w.Group().id());
-//      _Group = DB<LieGroup>().get(G);
       _Group.append(w._Group);
       
       if(positive() and w.positive())
@@ -551,6 +532,23 @@ namespace Tomb
         return RVector<double>::json(name);
     }
     catch (...) { throw; }
+  }
+
+  /* Calculates the size of the weight from a string */
+  int Weight::WeightSizeFromString(const string id)
+  {
+    stringstream ss(id);
+
+    string W;
+    getline(ss, W, '(');
+    getline(ss, W, ')');
+
+    stringstream Ws(W);
+    string s;
+    int size = 0;
+    while(getline(Ws,s,','))
+      size++;
+    return size;
   }
 
   /* Overloaded * operator with scalars on the right */

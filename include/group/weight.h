@@ -38,7 +38,6 @@ namespace Tomb
   class Weight : public RVector<double>
   {
     private:
-//      LieGroup *_Group = NULL;
       bool _positive = false;
       int _multiplicity = 0;
       int _level = 0;
@@ -63,6 +62,7 @@ namespace Tomb
       
       string id() const;
       LieGroup &Group() const;
+      string GroupId() const;
       bool positive() const;
       int multiplicity() const;
       int level() const;
@@ -87,6 +87,8 @@ namespace Tomb
       bool operator!=(const double&) const;
       Weight Append(Weight);
       JSONNode json(string = "") const;
+
+      static int WeightSizeFromString(const string);
   };
 
   Weight operator*(Weight, double);

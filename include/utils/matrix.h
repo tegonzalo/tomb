@@ -1697,7 +1697,6 @@ namespace Tomb
       } else {
         _square = false;
       }
-      
     } catch (...) {
       throw;
     }

@@ -235,14 +235,14 @@ namespace Tomb
   }
 
   /* Constructor 4, with json nodes */
-  SubGroup::SubGroup(const JSONNode &n, const void *SuperGroup)
+  SubGroup::SubGroup(const JSONNode &n)
   {
     try
     {
       if(n.as_string() != "")
         SubGroup(n.as_string());
       else
-        ParseJSON(n, SuperGroup);
+        ParseJSON(n);
     } catch (...) {
       throw;
     }
@@ -644,29 +644,45 @@ namespace Tomb
       {
         ss.str("");
         ss << Strings::split_string(Id,'+').GetObject(0) << ")[" << SGstr << "]";
+        getline(ss, Gstr, '[');
+        getline(ss, SGstr, ']');
       }
       
-      getline(ss, Gstr, '[');
-      getline(ss, SGstr, ']');
-      
       std::string id = ss.str();
-          
       _SuperGroup = DB<LieGroup>().get(SGstr);
       std::stringstream ss2(Gstr);
       std::string str,label;
           
-      SubGroup Subgroup(*_SuperGroup);
+//      SubGroup Subgroup(*_SuperGroup);
+
+      char clabel = 'A';
+      for(int i=0; i<_SuperGroup->nterms(); i++)
+      {
+        Tree<string> tree(_SuperGroup->GetObject(i).id());
+        tree.setLabel(string(1,clabel));
+        clabel++;
+        _SuperGroups.AddTerm(tree);
+
+      }
+
+      _superRank = _SuperGroup->rank();
+
+      _maximal = false;
+      _regular = false;
+      _special = false;
+
+
       List<std::string> labels;
           
       while(getline(ss2, str, '('))
       {
-        Subgroup.AddTerm(*DB<SimpleGroup>().get(str));
+        AddTerm(*DB<SimpleGroup>().get(str));
         getline(ss2, label, ')');
         labels.AddTerm(label);
         getline(ss2, str, 'x');
       }
-      Subgroup.setLabels(labels);
-      Subgroup.Order();
+      setLabels(labels);
+      Order();
         
       if(Strings::split_string(Id,'+').nterms() > 1)
       {
@@ -677,7 +693,6 @@ namespace Tomb
         oldlabels.AddTerm(label);
         setLabels(oldlabels);
       }
-
       // If the subgroup is already in the database, do nothing
       SubGroup *G = DB<SubGroup>().find(Id);
       if(G != NULL)
@@ -1218,7 +1233,7 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-  void SubGroup::ParseJSON(const JSONNode & n, const void *SuperGroup)
+  void SubGroup::ParseJSON(const JSONNode & n)
   {
     try
     {   
@@ -1233,6 +1248,7 @@ namespace Tomb
         getline(ss, id, ')');
       }
       getline(ss2,id,'[');
+      json.pop_back("id");
       json.insert(json.begin(),JSONNode("id",id));
       
       LieGroup::ParseJSON(json);
@@ -1244,14 +1260,7 @@ namespace Tomb
 
         // find out where to store the values
         if(node_name == "SuperGroup")
-        {
-          if(DB<LieGroup>().check(i->as_string()) == DB_FOUND)
-            _SuperGroup = DB<LieGroup>().at(i->as_string());
-          else if(SuperGroup != NULL)
-            _SuperGroup = (LieGroup *)SuperGroup;
-          else
-            throw "SubGroup::ParseJSON::Needs a pointer to the supergroup";
-        }
+          _SuperGroup = DB<LieGroup>().at(i->as_string());
         else if(node_name == "SuperGroups")
             _SuperGroups.ParseJSON(*i);
         else if(node_name == "Projection")
@@ -1276,7 +1285,6 @@ namespace Tomb
         //increment the iterator
         ++i;
       }
-      
     }
     catch (...) { throw; }
   }

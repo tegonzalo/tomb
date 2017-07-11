@@ -47,7 +47,7 @@ namespace Tomb
       SubGroup(SimpleGroup &);
       SubGroup(const string);
       SubGroup(const string, Matrix<double>);
-      SubGroup(const JSONNode &, const void * = NULL);
+      SubGroup(const JSONNode &);
       SubGroup(const SubGroup &);
       SubGroup(LieGroup &, LieGroup &);
       SubGroup(LieGroup &, SimpleGroup &);
@@ -89,7 +89,7 @@ namespace Tomb
       bool operator==(const SubGroup &) const;
       bool operator!=(const SubGroup &) const;
       JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &, const void * = NULL);
+      void ParseJSON(const JSONNode &);
   };	
   
 }

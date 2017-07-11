@@ -53,7 +53,7 @@ namespace Tomb
       TYPE* at(std::string);
       TYPE* find(std::string);
       TYPE* get(std::string);
-      void set(std::string, TYPE*, bool = false);
+      TYPE* set(std::string, TYPE*, bool = false);
       std::string import(std::string);
       void fill();
       void flush();
@@ -195,15 +195,16 @@ namespace Tomb
   }
 
   /* Stores the object in the database */
-  template <class TYPE> void DataBase<TYPE>::set(std::string key, TYPE *Object, bool replace)
+  template <class TYPE> TYPE *DataBase<TYPE>::set(std::string key, TYPE *Object, bool replace)
   {
     try
     {
       if(int flag = check(key))
         if(flag == DB_FOUND and !replace)
-          return ;
+          return at(key);
       _content[key] =  new TYPE(*Object);
       _flags[key] = DB_FOUND;
+      return at(key);
     }
     catch (...)
     {
@@ -216,8 +217,11 @@ namespace Tomb
   {
     std::cout << "Filling database from " << _outdir << std::endl;
 
+    std::vector<std::string> content;
+
     omp_set_lock(&_lock);
-    std::vector<std::string> content = Files::GetDirectoryContents(_outdir);
+    if(Files::IsDirectory(_outdir))
+      content = Files::GetDirectoryContents(_outdir);
     omp_unset_lock(&_lock);
 
     for(auto it = content.begin(); it != content.end(); it++)

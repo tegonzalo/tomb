@@ -45,7 +45,7 @@ namespace Tomb
     try
     {
       _HWeight = new Weight(id);
-      _Group = DB<SimpleGroup>().get(_HWeight->Group().id());
+      _Group = DB<SimpleGroup>().get(_HWeight->GroupId());
       
       init();
       
@@ -54,12 +54,12 @@ namespace Tomb
   }
 
   /* Constructor 3, with json nodes */
-  Irrep::Irrep(const JSONNode &n, const void *Group)
+  Irrep::Irrep(const JSONNode &n)
   {
     if(n.as_string() != "")
       Irrep(n.as_string());
     else
-      ParseJSON(n, Group);
+      ParseJSON(n);
   }
 
   /* Copy constructor */
@@ -916,7 +916,7 @@ namespace Tomb
       
     json.push_back(JSONNode("id", id()));
     json.push_back(JSONNode("Group", _Group->id()));
-    json.push_back(JSONNode("HWeight", _HWeight->id()));
+    json.push_back(_HWeight->json("HWeight"));
     json.push_back(JSONNode("nirreps", _nirreps));
     json.push_back(JSONNode("dim", dim()));
     json.push_back(JSONNode("real", real()));
@@ -944,9 +944,8 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-  void Irrep::ParseJSON(const JSONNode &n, const void *Group)
+  void Irrep::ParseJSON(const JSONNode &n)
   {
- 
     JSONNode::const_iterator i = n.begin();
     while (i != n.end())
     {
@@ -955,14 +954,7 @@ namespace Tomb
       
       // find out where to store the values
       if(node_name == "Group")
-      {
-        if(DB<SimpleGroup>().check(i->as_string()) == DB_FOUND)
-          _Group = DB<SimpleGroup>().at(i->as_string());
-        else if(Group != NULL)
-          _Group = (SimpleGroup *)Group;
-        else
-          throw "Irrep::ParseJSON::Need a reference to a SimpleGroup";
-      }
+        _Group = DB<SimpleGroup>().at(i->as_string());
       else if(node_name =="HWeight")
       {
         _HWeight = new Weight(*_Group, _Group->rank());

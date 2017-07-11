@@ -96,7 +96,7 @@ namespace Tomb
     try
     {
       _HWeight = new Weight(id);
-      _Group = DB<LieGroup>().get(_HWeight->Group().id());
+      _Group = DB<LieGroup>().get(_HWeight->GroupId());
       init();
 
     }
@@ -104,12 +104,12 @@ namespace Tomb
   }
 
   /* Constructor 5, with JSON Nodes */
-  Rrep::Rrep(const JSONNode &n, const void *Group)
+  Rrep::Rrep(const JSONNode &n)
   {
     if(n.as_string() != "")
       Rrep(n.as_string());
     else
-      ParseJSON(n, Group);
+      ParseJSON(n);
   }
 
   /* Copy constructor */
@@ -762,7 +762,7 @@ namespace Tomb
       
     json.push_back(JSONNode("id", id()));
     json.push_back(JSONNode("Group", _Group->id()));
-    json.push_back(JSONNode("HWeight", _HWeight->id()));
+    json.push_back(_HWeight->json("HWeight"));
     json.push_back(JSONNode("dim", _dim));
     json.push_back(JSONNode("real",_real));
     json.push_back(JSONNode("label",_label));
@@ -798,7 +798,7 @@ namespace Tomb
   }
 
   /* Parses a json object into the attributes of the class */
-  void Rrep::ParseJSON(const JSONNode & n, const void *Group)
+  void Rrep::ParseJSON(const JSONNode & n)
   {
     JSONNode::const_iterator i = n.begin();
     while (i != n.end())
@@ -808,16 +808,9 @@ namespace Tomb
 
       // find out where to store the values
       if (node_name == "id")
-          std::string id = i->as_string();
+        std::string id = i->as_string();
       else if(node_name == "Group")
-      {
-        if(DB<LieGroup>().check(i->as_string()) == DB_FOUND)
-          _Group = DB<LieGroup>().at(i->as_string());
-        else if(Group != NULL)
-          _Group = (LieGroup *)Group;
-        else
-          throw "Rrep::ParseJSON::Need a reference to a LieGroup";
-      }
+        _Group = DB<LieGroup>().at(i->as_string());
       else if(node_name =="HWeight")
       {
         _HWeight = new Weight(*_Group, _Group->rank());
@@ -867,20 +860,30 @@ namespace Tomb
       //increment the iterator
       ++i;
     }
-    
+
     if(!nterms())
     {
       int accumulated_rank = 0;
       _nirreps = 0;
       for(int i=0; i<_Group->ngroups(); i++)
       {
-        RVector<double> R = HWeight().ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
+        RVector<double> R = _HWeight->ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
         Weight HW(_Group->GetObject(i), R);
-        Irrep aRep(_Group->GetObject(i), HW);
-        this->AddTerm(aRep);
-        _nirreps ++;
+        if(DB<Irrep>().check(HW.id()))
+        {
+          AddTerm(*DB<Irrep>().at(HW.id()));
+          _dim *= DB<Irrep>().at(HW.id())->dim();
+        }
+        else
+       {
+          Irrep aRep = Irrep(_Group->GetObject(i),HW);
+          AddTerm(aRep);
+          _dim *= aRep.dim();
+        }
+        _nirreps++;
         accumulated_rank += _Group->GetObject(i).rank();
       }
+
     }
     
   }

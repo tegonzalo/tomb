@@ -55,7 +55,7 @@ namespace Tomb
       Rrep(SubGroup &, Weight &);
       Rrep(LieGroup &, const Irrep &);
       Rrep(const std::string);
-      Rrep(const JSONNode &, const void * = NULL);
+      Rrep(const JSONNode &);
       Rrep(const Rrep &);
       Rrep(Rrep &&);
       ~Rrep();
@@ -90,7 +90,7 @@ namespace Tomb
       bool operator>(const Rrep &) const;
       bool operator<(const Rrep &) const;
       JSONNode json(std::string = "") const;
-      void ParseJSON(const JSONNode &n, const void * = NULL);
+      void ParseJSON(const JSONNode &);
     
   };
 }

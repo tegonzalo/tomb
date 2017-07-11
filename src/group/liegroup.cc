@@ -1749,13 +1749,12 @@ namespace Tomb
   /* Parses a json object into the attributes of the class */
   void LieGroup::ParseJSON(const JSONNode & n)
   {
-    JSONNode::const_iterator i = n.begin();
+   JSONNode::const_iterator i = n.begin();
 
     while (i != n.end())
     {
       // get the node name and value as a string
       string node_name = i -> name();
-      
       // find out where to store the values
       if (node_name == "id")
       {
@@ -1764,15 +1763,17 @@ namespace Tomb
         if(!this->nterms())
         {
           while(getline(ss, id, 'x'))
-            AddTerm(SimpleGroup(id));
-          if(nterms() == 1)
           {
-            SimpleGroup G(id);
-            G.ParseJSON(n);
-            DeleteTerm(0);
-            AddTerm(G);
+            AddTerm(*DB<SimpleGroup>().get(id));
           }
-        }
+/*          if(nterms() == 1)
+          {
+            SimpleGroup *G = DB<SimpleGroup>().get(id);
+            G->ParseJSON(n);
+            DeleteTerm(0);
+            AddTerm(*G);
+          }
+*/        }
       }
        else if(node_name == "rank" and !_rank)
         _rank = i->as_int();
@@ -1801,21 +1802,30 @@ namespace Tomb
       else if(node_name == "repsMaxDim")
         _repsMaxDim = i->as_int();
       else if(node_name == "Reps")
-        _Reps.ParseJSON(*i);
+      {
+         LieGroup *G = DB<LieGroup>().set(id(), this);
+         G->_Reps.ParseJSON(*i);
+      }
       else if(node_name == "Irreps")
       {
-        List<Irrep> Irreps;
-        Irreps.ParseJSON(*i);
-        _Reps = Irreps2Reps(Irreps);
+        LieGroup *G = DB<LieGroup>().set(id(), this);
+        SimpleGroup *G2 = DB<SimpleGroup>().at(id());
+        G->_Reps = Irreps2Reps(G2->_Irreps);
+      }
+      else if(node_name == "MaxSubgroups")
+      {
+        LieGroup *G = DB<LieGroup>().set(id(), this);
+        G->_MaxSubgroups.ParseJSON(*i);
       }
       else if(node_name == "Subgroups")
-        _Subgroups.ParseJSON(*i);
+      {
+        LieGroup *G = DB<LieGroup>().set(id(), this);
+        G->_Subgroups.ParseJSON(*i);
+     }
     
       //increment the iterator
       ++i;
     }
-    
-
     return ;
 
   }

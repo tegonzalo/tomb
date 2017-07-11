@@ -544,7 +544,6 @@ namespace Tomb
         //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
         //_Casimir = Adjoint.DynkinIndex();
       }
-
       // If the group is in the database, do nothing
       if(DB<SimpleGroup>().find(id()) != NULL)
         return ;
@@ -1698,7 +1697,7 @@ namespace Tomb
   /* Parses a json object into the attributes of the class */
   void SimpleGroup::ParseJSON(const JSONNode & n)
   {
-      
+
     JSONNode::const_iterator i = n.begin();
       
     while (i != n.end())
@@ -1728,12 +1727,20 @@ namespace Tomb
       else if(node_name == "repsMaxDim")
         _repsMaxDim = i->as_int();
       else if(node_name == "Irreps")
-        _Irreps.ParseJSON(*i, this);
-      else if(node_name == "MaxSubgroups", this)
-        _MaxSubgroups.ParseJSON(*i);
-      else if(node_name == "Subgroups", this)
-        _Subgroups.ParseJSON(*i);
-              
+      {
+        SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
+        G->_Irreps.ParseJSON(*i);
+      }
+      else if(node_name == "MaxSubgroups")
+      {
+        SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
+        G->_MaxSubgroups.ParseJSON(*i);
+      }
+      else if(node_name == "Subgroups")
+      {
+        SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
+        G->_Subgroups.ParseJSON(*i);
+      }
       //increment the iterator
       ++i;
     }
