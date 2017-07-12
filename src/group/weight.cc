@@ -510,6 +510,7 @@ namespace Tomb
     try
     {
       RVector<double>::Append(w);
+      _Group.append("x");
       _Group.append(w._Group);
       
       if(positive() and w.positive())

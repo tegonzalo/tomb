@@ -977,7 +977,10 @@ namespace Tomb
       else if(node_name == "congruency")
         _congruency.ParseJSON(*i);
       else if(node_name == "Weights")
-        _Weights.ParseJSON(*i);
+      {
+        Irrep *R = DB<Irrep>().set(id(), this);
+        R->_Weights.ParseJSON(*i);
+      }
   
       //increment the iterator
       ++i;

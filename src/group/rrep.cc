@@ -756,7 +756,7 @@ namespace Tomb
       return JSONNode("", id());
     }
     
-    if(nirreps() == 1) return GetObject(0).json();
+    if(nirreps() == 1) return DB<Irrep>().at(GetObject(0).id())->json();
     
     JSONNode json;
       
@@ -855,7 +855,10 @@ namespace Tomb
         }
       }
       else if(node_name == "Weights")
-        _Weights.ParseJSON(*i);
+      {
+        Rrep *R = DB<Rrep>().set(id(), this);
+        R->_Weights.ParseJSON(*i);
+      }
     
       //increment the iterator
       ++i;

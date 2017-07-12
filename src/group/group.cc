@@ -30,16 +30,21 @@ int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, i
 {
   try
   {
-    switch(argc) {
+    switch(argc)
+    {
       case 2:
-        if(!strcmp(argv[1],"clean")) {
-          Files::EmptyDirectory("./out");
-          return 1;
-        } else {
+        if(!strcmp(argv[1],"clean"))
+        {
+          Files::EmptyDirectory("./database");
+          return 0;
+        }
+        else
+        {
           string s(argv[1]);
-          if(s.find('x') != string::npos) {
+          if(s.find('x') != string::npos)
             id = s;
-          } else {
+          else
+          {
             type = argv[1][0];
             char *auxstring = strndup(argv[1]+1, strlen(argv[1])-1);
             rank = atoi(auxstring);
@@ -51,14 +56,15 @@ int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, i
       case 3:
         if(!strcmp(argv[1],"clean")) 
         {
-          string dir = "./out/";
+          string dir = "./database/";
           dir.append(argv[2]);
-          if(Files::IsDirectory(dir)) {
+          if(Files::IsDirectory(dir))
+          {
             Files::DeleteDirectory(dir);
-            return 1;
-          } else {
-            throw "Directory does not exits";
+            return 0;
           }
+          else
+            throw "Directory does not exits";
         } 
         else
         {
@@ -85,21 +91,23 @@ int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, i
         break;
         
       case 4:
-        if(!strcmp(argv[1],"clean")) {
+        if(!strcmp(argv[1],"clean"))
+        {
           string dir = "./out/";
           dir.append(argv[2]);
           dir.append("/Reps/");
           dir.append(argv[3]);
           dir.append(".out");
-          if(Files::FileExists(dir)) {
+          if(Files::FileExists(dir))
+          {
             Files::DeleteFile(dir);
-            return 1;
-          } else {
-            throw "File does not exits";
+            return 0;
           }
-        } else {
-          throw "Wrong syntax, see manual for further information";
+          else
+            throw "File does not exits";
         }
+        else
+          throw "Wrong syntax, see manual for further information";
         break;
         
       default:
@@ -107,35 +115,31 @@ int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, i
 
       }
 
-    if(id.empty()) {
-      if(type != 'U' and type != 'A' and type != 'B' and type != 'C' and type != 'D' and type != 'E' and type != 'F' and type != 'G') {
+    if(id.empty())
+    {
+      if(type != 'U' and type != 'A' and type != 'B' and type != 'C' and type != 'D' and type != 'E' and type != 'F' and type != 'G')
         throw "main::Group not valid";
-      }
 
-        if(rank <= 0) {
+      if(rank <= 0)
         throw "main::Rank must be a positive number";
-        }
       
-        if(rank == 2 and type == 'D') {
+      if(rank == 2 and type == 'D')
         throw "main::D2 is not a simple group";
-        return 0;
-        }
 
-      if(rank >= 10) {
+      if(rank >= 10)
+      {
         cout << "Rank is too high, are you sure you want to continue?(Y/N)" << endl;
         char yesno;
         cin >> yesno;
-        if(toupper(yesno) == 'N') {
+        if(toupper(yesno) == 'N')
           return 0;
-        }
       }
     }
     
-    if(maxdim <=0) {
+    return 1;
+    
+    if(maxdim <=0)
       throw "main::Dim must be a positive number";
-    }
-
-
   }
   catch (...)
   {
@@ -188,12 +192,14 @@ int main(int argc, char *argv[]) {
         cout << Reps.GetObject(Reps.nterms()-1-j) << "(" << G << ") -> " << reps << "(" << MaximalSubgroups.GetObject(i) << ")" << endl;
       }
     }
- 
-    // Breaking Chains
-    LieGroup SMGroup("A2xA1xU1");
-    std::cout << "Breaking chains of " << G << " to " << SMGroup << ":" << std::endl;
-    std::cout << G.BreakingChains(SMGroup) << std::endl;
 
+    // Breaking Chains
+    if(G.rank() >= 4)
+    {
+      LieGroup SMGroup("A2xA1xU1");
+      std::cout << "Breaking chains of " << G << " to " << SMGroup << ":" << std::endl;
+      std::cout << G.BreakingChains(SMGroup) << std::endl;
+    }
 
     // Product of reps
     for(int i=0; i<Reps.nterms(); i++)
