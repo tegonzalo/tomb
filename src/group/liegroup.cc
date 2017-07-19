@@ -1071,20 +1071,17 @@ namespace Tomb
 
       // Now, iterate to find the subgroups of the subroups
       int nsubgroups = _Subgroups.nterms();
-//      #pragma omp parallel for
       for(int i=0; i<_MaxSubgroups.nterms(); i++)
       {
         LieGroup *G = DB<LieGroup>().get(_MaxSubgroups.GetObject(i).lg_id());
-        if(G->_Subgroups.nterms())
+        if(!G->_Subgroups.nterms())
           G->CalculateSubgroups();
-//        #pragma omp parallel for
         for(int j=0; j<G->_Subgroups.nterms(); j++)
         {
           SubGroup Subgroup(G->_Subgroups[j], _MaxSubgroups[i]);
           Subgroup.setProjection(G->_Subgroups[j].Projection()*_MaxSubgroups[i].Projection());
           Subgroup.Order();
           Subgroup.FinishSubgroup();
-//          #pragma omp critical
           if(_Subgroups.Index(Subgroup) == -1)
             _Subgroups.AddTermOrdered(Subgroup, "DESC");
         }

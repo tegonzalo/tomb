@@ -243,9 +243,8 @@ namespace Tomb
         SubGroup(n.as_string());
       else
         ParseJSON(n);
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Copy constructor 0 */
@@ -693,10 +692,14 @@ namespace Tomb
         oldlabels.AddTerm(label);
         setLabels(oldlabels);
       }
+
       // If the subgroup is already in the database, do nothing
       SubGroup *G = DB<SubGroup>().find(Id);
       if(G != NULL)
+      {
+        *this = *G;
         return ;
+      }
         
       DB<SubGroup>().set(Id, this);
       
@@ -867,7 +870,6 @@ namespace Tomb
       }
       else
         throw "SubGroup::AddTerm::Element doesn't exist";
-      
       if(!_Projection.rows() and !_Projection.cols())
         _Projection = Group.Projection();
       else
@@ -950,9 +952,11 @@ namespace Tomb
     try
     {
       // If the subgroup is already in the database, do nothing
-      SubGroup *G = DB<SubGroup>().find(id());
-      if(G == NULL)
-        DB<SubGroup>().set(id(), this);
+      //SubGroup *G = DB<SubGroup>().find(id());
+      //if(G == NULL)
+      //  DB<SubGroup>().set(id(), this);
+      // Actually always set it to the database, in case it has better info
+      DB<SubGroup>().set(id(), this, true);
 
       // Add the liegroup corresponding to the subgroup to the database
       LieGroup *LG = DB<LieGroup>().find(lg_id());
@@ -1156,7 +1160,6 @@ namespace Tomb
       
       if(this->Projection() == Group.Projection())
         return true;
-   
       if(_SuperGroup->ngroups() == _ngroups)
       {
         // FIXME: Not working, but would be better to tell subgroups apart

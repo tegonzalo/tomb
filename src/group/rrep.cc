@@ -527,19 +527,20 @@ namespace Tomb
       Rrep *R = DB<Rrep>().find(id());
       if(R == NULL)
         throw "Rrep::Decompose::Rrep not in the database";
+for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
 
-      if(R != NULL and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
+      if(R != NULL and !R->_Subreps.empty() and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
         return R->_Subreps.at(Subgroup.id());
 
-      if(!Subgroup.isSubgroupOf(*_Group))
-        throw "Rrep::Decompose::Not a subgroup";
-
+      // FIXME: Assume it is a subgroup, othewise it fails
+      //if(!Subgroup.isSubgroupOf(*_Group))
+      //  throw "Rrep::Decompose::Not a subgroup";
       Sum<Rrep> Reps;
       
       List<Weight> ProjectedWeights = Project(Subgroup);
 
      do
-      {
+     {
         Weight HWeight = ProjectedWeights.GetObject(0);
 
         int highest_dim = 0;
@@ -756,10 +757,10 @@ namespace Tomb
       return JSONNode("", id());
     }
     
-    if(nirreps() == 1) return DB<Irrep>().at(GetObject(0).id())->json();
+//    if(nirreps() == 1) return DB<Irrep>().at(GetObject(0).id())->json();
     
     JSONNode json;
-      
+    
     json.push_back(JSONNode("id", id()));
     json.push_back(JSONNode("Group", _Group->id()));
     json.push_back(_HWeight->json("HWeight"));
@@ -782,17 +783,23 @@ namespace Tomb
    
     json.push_back(_Weights.json("Weights"));
 
-    JSONNode Subreps;
-    Subreps.set_name("Subreps");
-    for(auto it = _Subreps.begin(); it != _Subreps.end(); it++)
-      Subreps.push_back(it->second.json(it->first));
-    json.push_back(Subreps);
+    if(!_Subreps.empty())
+    {
+      JSONNode Subreps;
+      Subreps.set_name("Subreps");
+      for(auto it = _Subreps.begin(); it != _Subreps.end(); it++)
+         Subreps.push_back(it->second.json(it->first));
+      json.push_back(Subreps);
+    }
 
-    JSONNode Products;
-    Products.set_name("Products");
-    for(auto it = _Products.begin(); it != _Products.end(); it++)
-      Products.push_back(it->second.json(it->first));
-    json.push_back(Products);
+    if(!_Products.empty())
+    {
+      JSONNode Products;
+      Products.set_name("Products");
+      for(auto it = _Products.begin(); it != _Products.end(); it++)
+        Products.push_back(it->second.json(it->first));
+      json.push_back(Products);
+    }
 
     return json;
   }
@@ -858,6 +865,18 @@ namespace Tomb
       {
         Rrep *R = DB<Rrep>().set(id(), this);
         R->_Weights.ParseJSON(*i);
+      }
+      else if(node_name == "Subreps")
+      {
+        Rrep *R = DB<Rrep>().set(id(), this);
+        for(auto j = i->begin(); j != i->end(); j++)
+          R->_Subreps[j->name()].ParseJSON(*j);
+      }
+      else if(node_name == "Products")
+      {
+        Rrep *R = DB<Rrep>().set(id(), this);
+        for(auto j = i->begin(); j != i->end(); j++)
+          R->_Products[j->name()].ParseJSON(*j);
       }
     
       //increment the iterator

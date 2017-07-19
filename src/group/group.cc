@@ -161,12 +161,13 @@ int main(int argc, char *argv[]) {
    
     // Pull all the available info from the database first of all
     database_fill<SimpleGroup, LieGroup, SubGroup, Irrep, Rrep>();
-    
+
     if(id.empty()) 
     {
       SimpleGroup G1(rank, type);
       id = G1.id();  
     }
+cout << "ready to create liegroup" << endl;
 
     LieGroup G(id);
 

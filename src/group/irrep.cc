@@ -767,7 +767,7 @@ namespace Tomb
       if(R == NULL)
         throw "Irrep::Decompose::Irrep not in database";
 
-      if(R != NULL and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
+      if(R != NULL and !R->_Subreps.empty() and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
         return R->_Subreps.at(Subgroup.id());
 
     
@@ -928,17 +928,23 @@ namespace Tomb
     json.push_back(_Weights.json("Weights"));
     json.push_back(_DualWeights.json("DualWeights"));
 
-    JSONNode Subreps;
-    Subreps.set_name("Subreps");
-    for(auto it = _Subreps.begin(); it != _Subreps.end(); it++)
-      Subreps.push_back(it->second.json(it->first));
-    json.push_back(Subreps);
+    if(!_Subreps.empty())
+    {
+      JSONNode Subreps;
+      Subreps.set_name("Subreps");
+      for(auto it = _Subreps.begin(); it != _Subreps.end(); it++)
+        Subreps.push_back(it->second.json(it->first));
+      json.push_back(Subreps);
+    }
 
-    JSONNode Products;
-    Products.set_name("Products");
-    for(auto it = _Products.begin(); it != _Products.end(); it++)
-      Products.push_back(it->second.json(it->first));
-    json.push_back(Products);
+    if(!_Products.empty())
+    {
+      JSONNode Products;
+      Products.set_name("Products");
+      for(auto it = _Products.begin(); it != _Products.end(); it++)
+        Products.push_back(it->second.json(it->first));
+      json.push_back(Products);
+    }
       
     return json;
   }
@@ -980,6 +986,18 @@ namespace Tomb
       {
         Irrep *R = DB<Irrep>().set(id(), this);
         R->_Weights.ParseJSON(*i);
+      }
+      else if(node_name == "Subreps")
+      {
+        Irrep *R = DB<Irrep>().set(id(), this);
+        for(auto j = i->begin(); j != i->end(); j++)
+          R->_Subreps[j->name()].ParseJSON(*j);
+      }
+      else if(node_name == "Products")
+      {
+        Irrep *R = DB<Irrep>().set(id(), this);
+        for(auto j = i->begin(); j != i->end(); j++)
+          R->_Products[j->name()].ParseJSON(*j);
       }
   
       //increment the iterator

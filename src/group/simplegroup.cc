@@ -16,7 +16,6 @@
 #include "subgroup.h"
 
 /*********************************/
-/* Class SimpleGroup definitions */
 /*********************************/
 
 namespace Tomb
@@ -544,10 +543,11 @@ namespace Tomb
         //Irrep Adjoint = Irrep(*this, Weight(*this, PRoots().GetObject(0)));
         //_Casimir = Adjoint.DynkinIndex();
       }
+
+
       // If the group is in the database, do nothing
       if(DB<SimpleGroup>().find(id()) != NULL)
         return ;
-
       // Add the group to the database
       DB<SimpleGroup>().set(id(), this);
       DB<SimpleGroup>().at(id())->CalculateIrreps(_repsMaxDim);
@@ -1249,7 +1249,6 @@ namespace Tomb
         
         }
       }
-      
     
       // Second, the non-semisimple groups obtained by removing a dot from the Dynkin diagram
       if(this->type() != 'U' and this->rank() >= 1)
@@ -1320,7 +1319,6 @@ namespace Tomb
               from = j+1;
             }
           }	
-
           Subgroup.AddTerm(SimpleGroup(1,'U'));
 
           // And the projection matrix
