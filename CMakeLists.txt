@@ -10,15 +10,54 @@
 # Minimum CMAKE version required
 cmake_minimum_required(VERSION 2.6)
 
+# Set certain policies to NEW
+foreach(p
+  CMP0003 # CMake 2.6.0
+  CMP0012 # CMake 2.8.0
+  CMP0022 # CMake 2.8.12
+  CMP0025 # CMake 3.0
+  CMP0042 # CMake 3.0
+  CMP0051 # CMake 3.1
+  CMP0054 # CMake 3.1
+  )
+  if(POLICY ${p})
+    cmake_policy(SET ${p} NEW)
+  endif()
+endforeach()
+
+# Set up colours
+if(NOT WIN32)
+  string(ASCII 27 Esc)
+  set(ColourReset "${Esc}[m")
+  set(ColourBold  "${Esc}[1m")
+  set(Red         "${Esc}[31m")
+  set(Green       "${Esc}[32m")
+  set(Yellow      "${Esc}[33m")
+  set(Blue        "${Esc}[34m")
+  set(Magenta     "${Esc}[35m")
+  set(Cyan        "${Esc}[36m")
+  set(White       "${Esc}[37m")
+  set(BoldRed     "${Esc}[1;31m")
+  set(BoldGreen   "${Esc}[1;32m")
+  set(BoldYellow  "${Esc}[1;33m")
+  set(BoldBlue    "${Esc}[1;34m")
+  set(BoldMagenta "${Esc}[1;35m")
+  set(BoldCyan    "${Esc}[1;36m")
+  set(BoldWhite   "${Esc}[1;37m")
+endif()
+
 # Project Tomb
 project(Tomb CXX)
-set(tomb_VERSION_MAJOR 1)
-set(tomb_VERSION_MINOR 0)
+set(TOMB_VERSION_MAJOR 1)
+set(TOMB_VERSION_MINOR 0)
 
 # Compiler flags
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
+
+# Include the main directory in search path for projects
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
 
 # Check for C++11 and C++14 support
 include(CheckCXXCompilerFlag)
@@ -35,7 +74,35 @@ endif()
 # OpenMP
 find_package(OpenMP REQUIRED)
 if (OPENMP_FOUND)
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  message("${BoldYellow}-- OpenMP enabled${ColourReset}")
+else()
+  message("${BoldRed}-- OpenMP disabled${ColourReset}")
+endif()
+
+# Mathematica
+find_package(Mathematica 10.0)
+if(Mathematica_FOUND)
+  find_library(LIBUUID NAMES uuid)
+  if(LIBUUID)
+    message("${BoldYellow}-- Found library libuuid${ColourReset}")
+    message("${BoldYellow}-- Found Mathematica${ColourReset}")
+    if(Mathematica_MathLink_FOUND)
+      message("${BoldYellow}-- Found MathLink. Mathematica frontend enabled${ColourReset}")
+      set(HAVE_MATHEMATICA 1)
+      set(MATHEMATICA_MATHLINK_H "${Mathematica_MathLink_INCLUDE_DIR}/mathlink.h")
+#      set(MATHEMATICA_KERNEL "${Mathematica_KERNEL_EXECUTABLE}")
+    else()
+      message("${BoldRed}-- MathLink not found. Please make sure it is installed before attempting to use the Mathematica frontend${ColourReset}")
+      set(HAVE_MATHEMATICA 0)
+    endif()
+  else()
+    message("${BoldRed}-- Missing library libuuid required for MathLink. Mathematica will be disabled${ColourReset}")
+    set(HAVE_MATHEMATICA 0)
+  endif()
+else()
+  message("${BoldRed}-- Mathematica not found. Mathematica frontend disabled${ColourReset}")
+  set(HAVE_MATHEMATICA 0)
 endif()
 
 # Debug flags
@@ -79,11 +146,24 @@ include_directories(${UTILS_INCLUDE_DIR})
 # Group
 file(GLOB group_sources "${GROUP_SOURCE_DIR}/[a-zA-Z]*.cc")
 file(GLOB group_headers "${GROUP_INCLUDE_DIR}/[a-zA-Z]*.h")
+file(GLOB group_main "${PROJECT_SOURCE_DIR}/src/group.cc")
 set(group_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson>)
-#set(group_objects $<TARGET_OBJECTS:utils>)
-add_executable(group ${group_sources} ${group_objects} ${group_headers})
-#add_dependencies(group utils)
+add_executable(group ${group_main} ${group_sources} ${group_objects} ${group_headers})
 add_dependencies(group utils libjson)
-#target_link_libraries(group libjson)
 include_directories(${GROUP_INCLUDE_DIR})
+
+# Mathgroup
+if (${HAVE_MATHEMATICA})
+  file(GLOB group_sources "${GROUP_SOURCE_DIR}/[a-zA-Z]*.cc")
+  file(GLOB group_headers "${GROUP_INCLUDE_DIR}/[a-zA-Z]*.h")
+  file(GLOB group_mathmain "${PROJECT_SOURCE_DIR}/src/mathgroup.cc")
+  set(group_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson>)
+  add_executable(mathgroup ${group_mathmain} ${group_sources} ${group_objects} ${group_headers})
+  add_dependencies(mathgroup utils libjson)
+  include_directories(${GROUP_INCLUDE_DIR})
+  include_directories(${Mathematica_MathLink_INCLUDE_DIR})
+  if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    Mathematica_ABSOLUTIZE_LIBRARY_DEPENDENCIES(mathgroup)
+  endif()
+endif()
 

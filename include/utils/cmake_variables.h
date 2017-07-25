@@ -22,8 +22,12 @@
 #define TOMB_EXECUTABLE "Tomb"
 
 /// Version info
-#define TOMB_VERSION_MAJOR    
-#define TOMB_VERSION_MINOR    
+#define TOMB_VERSION_MAJOR  1
+#define TOMB_VERSION_MINOR  0
+
+// Mathematica variables
+#define HAVE_MATHEMATICA 1
+#define MATHEMATICA_MATHLINK_H "/usr/local/Wolfram/Mathematica/11.0/SystemFiles/Links/MathLink/DeveloperKit/Linux-x86-64/CompilerAdditions/mathlink.h"
 
 #endif //// #defined__cmake_variables_hpp__
 

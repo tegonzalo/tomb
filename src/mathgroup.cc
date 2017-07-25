@@ -13,7 +13,6 @@
  */
 
 #include <ctime>
-#include "mathlink.h"
 #include "files.h"
 #include "database.h"
 #include "simplegroup.h"
@@ -21,19 +20,26 @@
 #include "subgroup.h"
 #include "irrep.h"
 
+#ifdef HAVE_MATHEMATICA
+#include MATHEMATICA_MATHLINK_H
+
 /*************************************************/
 /* Main function and getter methods for MathLink */
 /*************************************************/
 
 using namespace Tomb;
 
-void getGroup(int rank, const char *type) {
-  try {
+void getGroup(int rank, const char *type)
+{
+  try
+  {
     SimpleGroup G(rank, type[0]);
     G.Irreps();
     G.Subgroups();
     MLPutString(stdlink, G.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -41,14 +47,18 @@ void getGroup(int rank, const char *type) {
   return ;
 }
 
-void getGroup(const char *id) {
-  try {
+void getGroup(const char *id)
+{
+  try
+  {
     LieGroup G(id);
     G.Order();
     G.Reps();
     G.Subgroups();
     MLPutString(stdlink, G.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -56,12 +66,16 @@ void getGroup(const char *id) {
   return ;
 }
 
-void getReps(const char *id, int maxdim) {
-  try {
+void getReps(const char *id, int maxdim)
+{
+  try
+  {
     SimpleGroup G(id);
     List<Irrep> Reps = G.Irreps(maxdim);
     MLPutString(stdlink, Reps.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -69,12 +83,16 @@ void getReps(const char *id, int maxdim) {
   return ;
 }
 
-void getSubgroups(const char *id) {
-  try {
+void getSubgroups(const char *id)
+{
+  try
+  {
     SimpleGroup G(id);
     List<SubGroup> Subgroups = G.Subgroups();
     MLPutString(stdlink, Subgroups.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -82,16 +100,23 @@ void getSubgroups(const char *id) {
   return ;
 }
 
-void getRep(const char *id) {
-  try {
+void getRep(const char *id)
+{
+  try
+  {
     Rrep R(id);
-    if(R.nirreps() == 1) {
+    if(R.nirreps() == 1)
+    {
       Irrep R1(R.GetObject(0));
       MLPutString(stdlink, R1.json().write_formatted().c_str());
-    } else {
+    }
+    else
+    {
       MLPutString(stdlink, R.json().write_formatted().c_str());
     }
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -99,33 +124,41 @@ void getRep(const char *id) {
   return ;
 }
 
-void getRep(const char *dimId, const char *group) {
-  try {
+void getRep(const char *dimId, const char *group)
+{
+  try
+  {
     LieGroup G(group);
     List<double> dims;
     // Parse the json string for the dimensions
     JSONNode json = libjson::parse(dimId);
     JSONNode::const_iterator it = json.begin();
     dims.Empty();
-    while(it != json.end()) {
+    while(it != json.end())
+    {
       dims.AddTerm(it->as_float());
       ++it;
     }
     
     List<Irrep> Irreps;
     
-    for(int i=0; i<dims.nterms(); i++) {
+/*    for(int i=0; i<dims.nterms(); i++)
+    {
       double dim = dims.GetObject(i);
       SimpleGroup G1 = G.GetObject(i);
-      if(G1.abelian()) {
+      if(G1.abelian())
         Irreps.AddTerm(Irrep(G1, Weight(G1, dim)));
-      } else {
-        if(dim > 0) {
+      else
+      {
+        if(dim > 0)
+        {
           List<Irrep> Irreps2 = G1.Irreps(int(dim));
           List<Irrep>::iterator it_Irreps2;
           for(it_Irreps2 = Irreps2.begin(); it_Irreps2 != Irreps2.end() and it_Irreps2->dim() != int(dim); it_Irreps2++);
           Irreps.AddTerm(*it_Irreps2);
-        } else {
+        }
+        else
+        {
           List<Irrep> Irreps2 = G1.Irreps(int(-dim));
           List<Irrep>::iterator it_Irreps2;
           for(it_Irreps2 = Irreps2.begin(); it_Irreps2 != Irreps2.end() and (it_Irreps2->dim() != int(-dim) or (it_Irreps2->dim() == int(-dim) and !it_Irreps2->conjugate())); it_Irreps2++);
@@ -135,12 +168,14 @@ void getRep(const char *dimId, const char *group) {
     }
     
     Rrep Rep(Irreps.GetObject(0));
-    for(int i=1; i<Irreps.nterms(); i++) {
+    for(int i=1; i<Irreps.nterms(); i++)
       Rep.AddIrrep(Irreps.GetObject(i));
-    }
     
     MLPutString(stdlink, Rep.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+*/
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -148,11 +183,15 @@ void getRep(const char *dimId, const char *group) {
   return ;
 }
 
-void getSubgroup(const char *id) {
-  try { 
+void getSubgroup(const char *id)
+{
+  try 
+  { 
     SubGroup G(id);
     MLPutString(stdlink, G.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -160,15 +199,20 @@ void getSubgroup(const char *id) {
   return ;
 }	
 
-void getSubgroup(const char *id, const char *MixingId) {
-  try { 
+void getSubgroup(const char *id, const char *MixingId)
+{
+  try
+  { 
     Matrix<double> Mixing(MixingId);		
-    if(Mixing.rows() > Mixing.cols()) {
+    if(Mixing.rows() > Mixing.cols())
+    {
       Mixing = Mixing.Transpose();
     }
     SubGroup G(id, Mixing);
     MLPutString(stdlink, G.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -176,13 +220,17 @@ void getSubgroup(const char *id, const char *MixingId) {
   return ;
 }
 
-void getBreakingChains(const char *SuperId, const char *SubId) {
-  try {
+void getBreakingChains(const char *SuperId, const char *SubId)
+{
+  try
+  {
     LieGroup G(SuperId);
     LieGroup SubG(SubId);
     List<List<Tree<SimpleGroup> > > Chains = G.BreakingChains(SubG);
     MLPutString(stdlink, Chains.json("nolabel").write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -190,15 +238,16 @@ void getBreakingChains(const char *SuperId, const char *SubId) {
   return ;
 }
 
-void getDecomposeRep(const char *RepId, const char *SubgroupId, const char *MixingId) {
-  try {
+void getDecomposeRep(const char *RepId, const char *SubgroupId, const char *MixingId)
+{
+  try
+  {
     Rrep R(RepId);
     //LieGroup G = R.Group();
     
     Matrix<double> Mixing(MixingId);
-    if(Mixing.rows() > Mixing.cols()) {
+    if(Mixing.rows() > Mixing.cols()) 
       Mixing = Mixing.Transpose();
-    }
     //List<SubGroup> Subgroups = G.Subgroups();
     //int i=0;
     //while(i< Subgroups.nterms() and Subgroups.GetObject(i).id() != SubgroupId) {
@@ -213,7 +262,9 @@ void getDecomposeRep(const char *RepId, const char *SubgroupId, const char *Mixi
       Dec = R.Decompose(SubG);
     //}
     MLPutString(stdlink, Dec.json().write_formatted().c_str());
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
@@ -221,8 +272,10 @@ void getDecomposeRep(const char *RepId, const char *SubgroupId, const char *Mixi
   return ;
 }
 
-void getWeights(const char *RepId) {
-  try {
+void getWeights(const char *RepId)
+{
+  try
+  {
 
     Rrep R(RepId);
   
@@ -230,15 +283,19 @@ void getWeights(const char *RepId) {
   
     MLPutString(stdlink, Weights.json().write_formatted().c_str());
 
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
   }
 }
 
-void getDirectPoduct(const char *RepId1, const char *RepId2) {
-  try {
+void getDirectPoduct(const char *RepId1, const char *RepId2)
+{
+  try
+  {
     Rrep R1(RepId1);
     Rrep R2(RepId2);
     
@@ -246,22 +303,26 @@ void getDirectPoduct(const char *RepId1, const char *RepId2) {
     
     MLPutString(stdlink, Prod.json().write_formatted().c_str());
     
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
   }
 }
 
-void getInvariants(const char *RepsId, int dim) {
-  
-  try {
+void getInvariants(const char *RepsId, int dim)
+{  
+  try
+  {
     List<Rrep> Reps;
 
     JSONNode json = libjson::parse(RepsId);
     JSONNode::const_iterator it = json.begin();
     Reps.Empty();
-    while(it != json.end()) {
+    while(it != json.end())
+    {
       Rrep Rep(it->as_string());
       Reps.AddTerm(Rep);
       ++it;
@@ -269,45 +330,24 @@ void getInvariants(const char *RepsId, int dim) {
   
     LieGroup G = Reps.GetObject(0).Group();
   
-    List<Product<Rrep> > Invariants = G.Invariants(Reps,dim);
+//    List<Product<Rrep> > Invariants = G.Invariants(Reps,dim);
   
-    MLPutString(stdlink,  Invariants.json().write_formatted().c_str());
+//    MLPutString(stdlink,  Invariants.json().write_formatted().c_str());
   
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::stringstream excep;
     excep << "Exception caught: " << e.what() << std::endl;
     MLPutString(stdlink, excep.str().c_str());
   }
 }
 
-#if WINDOWS_MATHLINK
-
-/* a Microsoft Windows example WinMain routine */
-
-int PASCAL WinMain( HINSTANCE hinstCurrent, HINSTANCE hinstPrevious, LPSTR lpszCmdLine, int nCmdShow)
+int main(int argc, char *argv[])
 {
-        char  buff[512];
-        char FAR * buff_start = buff;
-        char FAR * argv[32];
-        char FAR * FAR * argv_end = argv + 32;
-
-        hinstPrevious = hinstPrevious; /* suppress warning */
-
-        if( !MLInitializeIcon( hinstCurrent, nCmdShow)) return 1;
-        MLScanString( argv, &argv_end, &lpszCmdLine, &buff_start);
-        return MLMain( (int)(argv_end - argv), argv);
-}
-
-#else
-
-
-int main(int argc, char *argv[]) {
   
-  Tomb::group_database_fill();
-
   return MLMain(argc,argv);
 
 }
 
-
-#endif
+#endif /* HAVE_MATHEMATICA */

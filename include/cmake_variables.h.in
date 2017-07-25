@@ -22,8 +22,12 @@
 #define TOMB_EXECUTABLE "@PROJECT_NAME@"
 
 /// Version info
-#define TOMB_VERSION_MAJOR    @TOMB_VERSION_MAJOR@
-#define TOMB_VERSION_MINOR    @TOMB_VERSION_MINOR@
+#define TOMB_VERSION_MAJOR  @TOMB_VERSION_MAJOR@
+#define TOMB_VERSION_MINOR  @TOMB_VERSION_MINOR@
+
+// Mathematica variables
+#define HAVE_MATHEMATICA @HAVE_MATHEMATICA@
+#define MATHEMATICA_MATHLINK_H "@MATHEMATICA_MATHLINK_H@"
 
 #endif //// #defined__cmake_variables_hpp__
 
