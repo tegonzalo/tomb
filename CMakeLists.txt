@@ -13,6 +13,7 @@ cmake_minimum_required(VERSION 2.6)
 # Set certain policies to NEW
 foreach(p
   CMP0003 # CMake 2.6.0
+  CMP0011 # Cmake 2.6.2
   CMP0012 # CMake 2.8.0
   CMP0022 # CMake 2.8.12
   CMP0025 # CMake 3.0
@@ -122,7 +123,7 @@ set(UTILS_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include/utils)
 # Set variables for compiler
 configure_file("${PROJECT_SOURCE_DIR}/include/cmake_variables.h.in" "${UTILS_INCLUDE_DIR}/cmake_variables.h" )
 
-# Externals
+# Externals, libjson
 set(TOMB_EXTERNAL_DIR ${PROJECT_SOURCE_DIR}/external)
 set(LIBJSON_SOURCE_DIR ${TOMB_EXTERNAL_DIR}/libjson/_internal/Source)
 set(LIBJSON_INCLUDE_DIR ${TOMB_EXTERNAL_DIR}/libjson)
@@ -131,10 +132,7 @@ file(GLOB libjson_external_headers "${LIBJSON_INCLUDE_DIR}/[a-zA-Z]*.h")
 file(GLOB_RECURSE libjson_internal_headers "${LIBJSON_SOURCE_DIR}/[a-zA-Z]*.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 add_library(libjson OBJECT ${libjson_sources} ${libjson_external_headers} ${libjson_internal_headers})
-#add_library(libjson STATIC ${libjson_sources} ${libjson_external_headers} ${libsjon_internal_headers})
 include_directories(${LIBJSON_INCLUDE_DIR} ${LIBJSON_SOURCE_DIR})
-#set_target_properties(libjson PROPERTIES LINKER_LANGUAGE CXX)
-#set_target_properties(libjson PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${LIBJSON_INCLUDE_DIR})
 
 # Utils
 file(GLOB utils_sources "${UTILS_SOURCE_DIR}/[a-zA-Z]*.cc")
@@ -146,7 +144,7 @@ include_directories(${UTILS_INCLUDE_DIR})
 # Group
 file(GLOB group_sources "${GROUP_SOURCE_DIR}/[a-zA-Z]*.cc")
 file(GLOB group_headers "${GROUP_INCLUDE_DIR}/[a-zA-Z]*.h")
-file(GLOB group_main "${PROJECT_SOURCE_DIR}/src/group.cc")
+set(group_main "${PROJECT_SOURCE_DIR}/src/group.cc")
 set(group_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson>)
 add_executable(group ${group_main} ${group_sources} ${group_objects} ${group_headers})
 add_dependencies(group utils libjson)
@@ -154,14 +152,18 @@ include_directories(${GROUP_INCLUDE_DIR})
 
 # Mathgroup
 if (${HAVE_MATHEMATICA})
-  file(GLOB group_sources "${GROUP_SOURCE_DIR}/[a-zA-Z]*.cc")
-  file(GLOB group_headers "${GROUP_INCLUDE_DIR}/[a-zA-Z]*.h")
-  file(GLOB group_mathmain "${PROJECT_SOURCE_DIR}/src/mathgroup.cc")
-  set(group_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson>)
-  add_executable(mathgroup ${group_mathmain} ${group_sources} ${group_objects} ${group_headers})
-  add_dependencies(mathgroup utils libjson)
-  include_directories(${GROUP_INCLUDE_DIR})
+  set(group_mathmain "${PROJECT_SOURCE_DIR}/src/mathgroup.cc")
+  set(mathlink_template "${PROJECT_SOURCE_DIR}/src/mathgroup.tm")
+  set(mathlink_source "${PROJECT_SOURCE_DIR}/src/mathgrouptm.cc")
+  add_custom_command(OUTPUT ${mathlink_source}
+                     COMMAND ${Mathematica_MathLink_INCLUDE_DIR}/mprep  ${mathlink_template} -o ${mathlink_source})
+  add_library(mathlink OBJECT ${mathlink_source})
   include_directories(${Mathematica_MathLink_INCLUDE_DIR})
+  set(mathgroup_objects $<TARGET_OBJECTS:utils> $<TARGET_OBJECTS:libjson> $<TARGET_OBJECTS:mathlink>)
+  add_executable(mathgroup ${group_mathmain} ${group_sources} ${mathgroup_objects} ${group_headers})
+  add_dependencies(mathgroup utils libjson mathlink)
+  include_directories(${GROUP_INCLUDE_DIR})
+  target_link_libraries(mathgroup ${Mathematica_MathLink_LIBRARY} uuid rt)
   if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     Mathematica_ABSOLUTIZE_LIBRARY_DEPENDENCIES(mathgroup)
   endif()

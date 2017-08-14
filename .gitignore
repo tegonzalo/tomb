@@ -12,6 +12,9 @@
 ./mathgroup
 ./tomb
 
+# Ignore mathlink template files
+./src/mathgrouptm.cc
+
 # Ignore any temporary files
 *~
 *.swp
