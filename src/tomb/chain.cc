@@ -269,8 +269,9 @@ namespace Tomb
   /* Extracts the subgroups form the chain */
   List<SubGroup> Chain::extractSubgroups() const
   {
-    try {
-      int nsubgroups = depth();
+    try
+    {
+/*      int nsubgroups = depth();
       List<SubGroup> Subgroups;
       std::stringstream supgroup;
 
@@ -305,7 +306,7 @@ namespace Tomb
         
       }
       return Subgroups; 
-      
+*/      
     } catch (...)
     {
       throw;
@@ -315,7 +316,7 @@ namespace Tomb
   /* Parses a json object into the attributes of the class */
   void Chain::ParseJSON(const JSONNode & json)
   {
-    List<Tree<SimpleGroup> >::ParseJSON(json);
+//    List<Tree<SimpleGroup> >::ParseJSON(json);
     
     _depth = calculateDepth();
   }

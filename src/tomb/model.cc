@@ -23,51 +23,51 @@ namespace Tomb
   // Member functions
 
   /* Constructor 0 */
-  Model::Model() : List<Theory>() {
-
-    try {
+  Model::Model() : List<Theory>()
+  {
+    try
+    {
       _nsteps = 0;
       _scales = List<double>();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Constructor 1 */
-  Model::Model(Theory theory) : List<Theory>(theory) {
-
-    try {
+  Model::Model(Theory theory) : List<Theory>(theory)
+  {
+    try
+    {
       _nsteps = 1;
       _scales = List<double>();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Copy constructor 1 */
-  Model::Model(const Model &M) : List<Theory>(M) {
-    
-    try {
+  Model::Model(const Model &M) : List<Theory>(M)
+  {   
+    try
+    {
       _nsteps = M.nsteps();
       _scales = M.scales();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Copy constructor 2 */
-  Model::Model(const List<Theory> &M) : List<Theory>(M) {
-    
-    try {
+  Model::Model(const List<Theory> &M) : List<Theory>(M)
+  {   
+    try
+    {
       _nsteps = M.nterms();
       _scales = List<double>();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Copy constructor 3, with a string */
@@ -77,10 +77,7 @@ namespace Tomb
     {
       ParseJSON(libjson::parse(s));
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Copy constructor 4, with a JSON node */
@@ -90,35 +87,35 @@ namespace Tomb
     {
       ParseJSON(json);
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
+
   /* Move constructor */
   Model::Model(Model && M) :
     List<Theory>(std::move(M)),
     _nsteps(std::move(M._nsteps)),
     _scales(std::move(M._scales))
-  {
-    
-    try {
+  {    
+    try
+    {
       M._nsteps = 0;
       M._scales.Clear();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
-  Model::~Model() {
+  Model::~Model()
+  {
+
   }
 
   /* Assignment operator 1 */
-  Model &Model::operator=(const Model &M) {
-    
-    try {
+  Model &Model::operator=(const Model &M)
+  {   
+    try
+    {
       if(this == &M) return *this;
         
       List<Theory>::operator=(M);
@@ -127,15 +124,15 @@ namespace Tomb
       _scales = M.scales();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Assignment operator 2 */
-  Model &Model::operator=(const List<Theory> &M) {
-    
-    try {
+  Model &Model::operator=(const List<Theory> &M)
+  {   
+    try
+    {
       if(this == &M) return *this;
         
       List<Theory>::operator=(M);
@@ -144,15 +141,15 @@ namespace Tomb
       _scales.Clear();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Move assignment operator */
-  Model &Model::operator=(Model &&M) {
-    
-    try {
+  Model &Model::operator=(Model &&M)
+  {   
+    try
+    {
       if(this == &M) return *this;
       
       List<Theory>::operator=(std::move(M));
@@ -164,19 +161,20 @@ namespace Tomb
       M._scales.Clear();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   
   /* NSteps getter */
-  int Model::nsteps() const {
+  int Model::nsteps() const
+  {
     return _nsteps;
   }
   
   /* Scales getter */
-  List<double> Model::scales() const {
+  List<double> Model::scales() const
+  {
     return _scales;
   }
   
@@ -187,10 +185,8 @@ namespace Tomb
     {
       List<Theory>::DeleteTerm(i);
       _nsteps--;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Add term to the model */
@@ -200,16 +196,15 @@ namespace Tomb
     {
       List<Theory>::AddTerm(theory);
       _nsteps++;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Generate the models */
-  void Model::generateModels(int nReps, int startAt) {
-    
-    try {
+  void Model::generateModels(int nReps, int startAt)
+  {   
+    try
+    {
       Theory theory = GetObject(0);
       
       Chain chain = theory.BreakingChain();
@@ -230,7 +225,6 @@ namespace Tomb
       
       for(int l = 0; l < depth; l++)
       {
-  
         int step = l;
         //std::cout << "step = " << step << std::endl;
   
@@ -278,8 +272,8 @@ namespace Tomb
               models.AddTerm(Model(*it));
           }
           
-          for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++) {
-      
+          for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++)
+          {
             // Iterate for the number of models
             Model model(*i);
             //std::cout << "model = " << *i << std::endl;
@@ -297,7 +291,8 @@ namespace Tomb
             }
           
             // Check if it is last step, and if so, check for SM content and exit
-            if(chain.depth() == 1 and group == StandardModel::Group) { 
+            if(chain.depth() == 1 and group == StandardModel::Group)
+            {
             //std::cout << "last step" << std::endl;
             
               if(theory.containsSM())
@@ -358,7 +353,8 @@ namespace Tomb
             List<Sum<Field> > subreps = theory.calculateBreaking(mixings);
                       
             // Loop over number of subreps, i.e. breaking options 
-            for(int k=0; k<subreps.nterms(); k++) {
+            for(int k=0; k<subreps.nterms(); k++)
+            {
               List<Field> subrep = subreps.GetObject(k);
               Theory subtheory = Theory(subgroup, subchain, subrep);
               Theory newtheory(theory);
@@ -383,7 +379,8 @@ namespace Tomb
                   newtheory.normaliseReps(norm);
 
                   
-                } else
+                }
+                else
                   continue;
               }
               // Calculate the anomaly contribution of the newly renormalised reps
@@ -497,14 +494,13 @@ namespace Tomb
       
       return ;
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Generate models, recursive version */
-  long int Model::generateModelsRec(int nReps, int startAt) {
-    
+  long int Model::generateModelsRec(int nReps, int startAt)
+  {   
     try
     {
 
@@ -652,7 +648,8 @@ namespace Tomb
                 model.DeleteTerm(-1);
                 model.AddTerm(newtheory);
               }
-            } else
+            }
+            else
               return 0;
           }
           
@@ -817,10 +814,8 @@ namespace Tomb
       
       return Progress::success;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Calculates the observables for every theory of the model */
@@ -871,10 +866,8 @@ namespace Tomb
         DeleteTerm(i);
         InsertTerm(i, theory);
       }
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Parse a JSON node into a model class */
@@ -896,10 +889,7 @@ namespace Tomb
       _nsteps = nterms();
       
     }
-    catch (...) 
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Overloaded << operator with models on the right */

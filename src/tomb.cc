@@ -95,15 +95,16 @@ int main(int argc, char *argv[])
       
         JSONNode::iterator i = json.begin();
         while(i != json.end() and i->name() != "Data") i++;
+cout << i->write_formatted() << endl;
       
         // Pull all the available info from the database first of all
-        Tomb::group_database_fill();
-        Tomb::model_database_fill();
+//        Tomb::group_database_fill();
+//        Tomb::model_database_fill();
         // Empty the temp directory in case there was leftovers from a previous run
-        if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
-        std::cout << "Databases loaded" << std::endl;
+//        if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
+//        std::cout << "Databases loaded" << std::endl;
       
-        Theory theory(*i);
+/*        Theory theory(*i);
         Model model(theory);
       
         // Get the number of reps
@@ -116,10 +117,10 @@ int main(int argc, char *argv[])
         std::cout << "Number of successful models: " << success << std::endl;
         std::cout << "Time used to generate models = " << omp_get_wtime() - time1 << std::endl;
         
-        std::cout << "Flushing Databases" << std::endl;
+//        std::cout << "Flushing Databases" << std::endl;
         // Flush all the databases to files
-        Tomb::model_database_flush();
-        Tomb::group_database_flush();
+//        Tomb::model_database_flush();
+//        Tomb::group_database_flush();
         
         // Filter with the observables
         i = json.begin();
@@ -142,11 +143,11 @@ int main(int argc, char *argv[])
         
         List<std::string> observables(*i);
         //Tomb::model_database_filter(observables);
-        
+  */      
       }
-    } else {
-      die();
     }
+    else
+      die();
 
   } catch (std::exception &e) {
     std::cerr << "Exception caught: " << e.what() << std::endl;

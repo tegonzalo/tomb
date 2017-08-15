@@ -29,8 +29,8 @@ namespace Tomb
   }
   
   /* Constructor */
-  Theory::Theory(LieGroup &Group, Chain &BreakingChain, List<Field> &Fields) {
-
+  Theory::Theory(LieGroup &Group, Chain &BreakingChain, List<Field> &Fields)
+  {
     try {
       //_Group = Group.id();
       _Group = &Group;
@@ -42,15 +42,15 @@ namespace Tomb
       _anomalyFree = true;
       _observables.clear();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Copy constructor */
-  Theory::Theory(const Theory &T) {
-    
-    try {
+  Theory::Theory(const Theory &T)
+  {   
+    try
+    {
       //_Group = T.GroupId();
       _Group = T.GroupPtr();
       _BreakingChain = T.BreakingChain();
@@ -59,19 +59,19 @@ namespace Tomb
       _Mixing = T.Mixing();
       _anomalyFree = T.anomalyFree();
       _observables = T.observables();
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   
   /* Copy constructor with JSON node */
-  Theory::Theory(const JSONNode &json) {
-    try {
+  Theory::Theory(const JSONNode &json)
+  {
+    try
+    {
       ParseJSON(json);
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
@@ -84,8 +84,8 @@ namespace Tomb
     _anomalyFree(std::move(T._anomalyFree)),
     _observables(std::move(T._observables))
   {
-    
-    try {
+    try
+    {
       //T._Group = "";
       T._Group = NULL;
       T._BreakingChain.Clear();
@@ -95,19 +95,20 @@ namespace Tomb
       T._anomalyFree = false;
       T._observables.clear();
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
-  Theory::~Theory() {
+  Theory::~Theory()
+  {
   }
 
   /* Assignment operator */
-  Theory &Theory::operator=(const Theory &T) {
-    
-    try {
+  Theory &Theory::operator=(const Theory &T)
+  {   
+    try
+    {
       if(this == &T) return *this;
       
       //_Group = T.GroupId();
@@ -120,16 +121,15 @@ namespace Tomb
       _observables = T.observables();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move assignment operator */
   Theory &Theory::operator=(Theory &&T)
   {
-    
-    try {
+    try
+    {
       if(this == &T) return *this;
       
       _Group = std::move(T._Group);
@@ -150,9 +150,8 @@ namespace Tomb
       T._observables.clear();
       
       return *this;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   
@@ -256,7 +255,8 @@ namespace Tomb
   }
 
   /* Anomaly getter */
-  bool Theory::anomalyFree() const {
+  bool Theory::anomalyFree() const
+  {
     return _anomalyFree;
   }
   
@@ -343,14 +343,13 @@ namespace Tomb
           _anomalyFree = false;
       }
       // Maybe add gravitational and Witten anomalies
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Proton decay getter */
-  std::map<std::string, bool> Theory::observables() const {
+  std::map<std::string, bool> Theory::observables() const
+  {
     return _observables;
   }
   
@@ -366,36 +365,36 @@ namespace Tomb
       _observables.emplace("NNOscillations", Observables::NNOscillations(fields));
       
         
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Obtain the scalars */
-  List<Field> Theory::getScalars() const {
-    try {
+  List<Field> Theory::getScalars() const
+  {
+    try
+    {
       List<Field> scalars;
       for(List<Field>::const_iterator it_Fields = _Fields.begin(); it_Fields != _Fields.end(); it_Fields++)
         if(it_Fields->isScalar())
           scalars.AddTerm(*it_Fields);
       return scalars;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Obtain the fermions */
-  List<Field> Theory::getFermions() const {
-    try {
+  List<Field> Theory::getFermions() const
+  {
+    try
+    {
       List<Field> fermions;
       for(List<Field>::const_iterator it_Fields = _Fields.begin(); it_Fields != _Fields.end(); it_Fields++)
         if(it_Fields->isFermion())
           fermions.AddTerm(*it_Fields);
       return fermions;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Overloaded == operator */
@@ -420,7 +419,8 @@ namespace Tomb
   }
 
   /* Find the breaking reps from this theory to subgroup with optional reps */
-  List<Field> Theory::findBreakingReps(SubGroup &subgroup, const List<Field> &reps) {
+  List<Field> Theory::findBreakingReps(SubGroup &subgroup, const List<Field> &reps)
+  {
     try {
       List<Field> breakingreps;
       List<Field> scalars;
@@ -436,8 +436,8 @@ namespace Tomb
       {
         Field scalar = *it_scalars;
         // Check if the rep can break to the next step
-        if(scalar.canBreak(_BreakingChain)) {
-        
+        if(scalar.canBreak(_BreakingChain))
+        {
           // Decompose every scalar into fields in the subgroup
           List<Field> subreps = scalar.Decompose(subgroup);
           
@@ -452,22 +452,23 @@ namespace Tomb
           if(singlet and !(_Group->rank() > subgroup.rank() and scalar.dim() == _Group->dim()))
             breakingreps.AddTerm(scalar);
         
-        } else
+        }
+        else
         {
           //std::cout << "cant break" << std::endl;
         }
       }
 
       return breakingreps;
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Calculates the breaking */
-  List<Sum<Field> > Theory::calculateBreaking(List<RVector<double> > &mixings) {
-    try {
-      
+  List<Sum<Field> > Theory::calculateBreaking(List<RVector<double> > &mixings)
+  {
+    try
+    {   
       SubGroup subgroup = BreakingChain().extractSubgroups().GetObject(1);
 
       List<Field> fermions = getFermions();
@@ -476,7 +477,8 @@ namespace Tomb
       List<Field> breakingreps;
 
       // If there is a + character in the subgroup, there is U(1) mixing
-      if(subgroup.id().find("+") != std::string::npos) {
+      if(subgroup.id().find("+") != std::string::npos)
+      {
               
         SubGroup auxsubgroup = subgroup;
         auxsubgroup.DeleteTerm(-1);
@@ -540,7 +542,8 @@ namespace Tomb
       breakingreps = findBreakingReps(subgroup,scalars);
       
       List<Sum<Field> > subreps;
-      for(int i=0; i<breakingreps.nterms(); i++) {
+      for(int i=0; i<breakingreps.nterms(); i++)
+      {
         List<Field> fields = _Fields;
         fields.DeleteObject(breakingreps.GetObject(i),1);
         
@@ -556,9 +559,8 @@ namespace Tomb
       
       return subreps;
       
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Check if the field content reproduces the SM at least */
@@ -567,7 +569,7 @@ namespace Tomb
     try
     {
       // Recast the hypercharge normalisation of the SMreps
-
+/*
       List<Field>::const_iterator pos = _Fields.begin();
       while(pos != _Fields.end() and (pos->dim() != 1 or pos->HWeight()[-1] == 0 or !pos->isFermion())) pos++;
       double norm = pos->HWeight()[-1]/StandardModel::e.HWeight()[-1];
@@ -580,13 +582,11 @@ namespace Tomb
         if(_Fields.Index(SMRep) == -1)
           return false;
       }
-      
+*/      
       return true;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Normalise the field content to SM normalisation */
@@ -620,10 +620,7 @@ namespace Tomb
       
       return norm;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Normalises the mixing */
@@ -662,10 +659,8 @@ namespace Tomb
       
       return 0;
 
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Normalise the reps with given normalisation */
@@ -689,10 +684,8 @@ namespace Tomb
       
       return norm;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Static version of normaliseReps */
@@ -706,16 +699,11 @@ namespace Tomb
         Weight w = it->HWeight();
         w[-1] *= norm; 
         fields.AddTerm(Field(Rrep(it->Group(), w), it->LorentzRep()));
-        
-
       }
       
       return fields;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   /* Generate all possible combinations of reps up to certain number of reps */
@@ -741,15 +729,12 @@ namespace Tomb
       return possibleReps;
       
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Returns the json string */
-  JSONNode Theory::json(std::string id) const {
-    
+  JSONNode Theory::json(std::string id) const
+  {   
     JSONNode json;
     
     json.push_back(JSONNode("Group", _Group->id()));
@@ -775,8 +760,8 @@ namespace Tomb
   /* Parses a json object into the attributes of the class */
   void Theory::ParseJSON(const JSONNode & json) 
   {
-    for(JSONNode::const_iterator i = json.begin(); i != json.end(); i++) {
-      
+    for(JSONNode::const_iterator i = json.begin(); i != json.end(); i++)
+    {   
       // get the node name and value as a string
       std::string node_name = i->name();
 
@@ -806,7 +791,8 @@ namespace Tomb
   }
   
   /* Overloaded << operator with theories on the right */
-  std::ostream &operator<<(std::ostream &stream, const Theory &t) {
+  std::ostream &operator<<(std::ostream &stream, const Theory &t)
+  {
     stream << t.json().write_formatted();
     return stream;
   }
