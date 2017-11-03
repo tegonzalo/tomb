@@ -83,7 +83,7 @@ namespace Tomb
       int repsMaxDim() const;
       List<Irrep> Irreps() const;
       List<Irrep> &Irreps(int);
-      Root SRoot(int);
+      Root SRoot(int) const;
       List<Root> PRoots(string = "Dynkin");
       List<Root> Roots();
       List<Irrep> SimpleReps();

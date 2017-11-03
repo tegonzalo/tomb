@@ -160,7 +160,7 @@ namespace Tomb
         default:
           throw "SimpleGroup::SimpleGroup::Group does not exist";
       }
-      
+
       init();
     
     }
@@ -526,6 +526,9 @@ namespace Tomb
         }
       }
 
+      if(DB<SimpleGroup>().find(id()) != NULL)
+        return ;
+      DB<SimpleGroup>().set(id(), this);
       _PRoots = this->PRoots();
       _PRootsDual = this->PRoots("Dual");
         
@@ -544,19 +547,17 @@ namespace Tomb
         //_Casimir = Adjoint.DynkinIndex();
       }
 
-
       // If the group is in the database, do nothing
-      if(DB<SimpleGroup>().find(id()) != NULL)
-        return ;
+      //if(DB<SimpleGroup>().find(id()) != NULL)
+      //  return ;
       // Add the group to the database
-      DB<SimpleGroup>().set(id(), this);
+      DB<SimpleGroup>().set(id(), this, true);
       DB<SimpleGroup>().at(id())->CalculateIrreps(_repsMaxDim);
       DB<SimpleGroup>().at(id())->CalculateMaximalSubgroups();
       DB<SimpleGroup>().at(id())->CalculateSubgroups();
 
-    } catch (...) {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Identifier of the group */
@@ -659,7 +660,7 @@ namespace Tomb
   }
   
   /* Returns Simple Root i */
-  Root SimpleGroup::SRoot(int i)
+  Root SimpleGroup::SRoot(int i) const
   {  
     try {
       if(i>=_rank) {
@@ -1685,6 +1686,8 @@ namespace Tomb
     json.push_back(_G.json("G"));
     json.push_back(JSONNode("Casimir", _Casimir));
     json.push_back(JSONNode("repsMaxDim", _repsMaxDim));
+    json.push_back(_PRoots.json("PRoots"));
+    json.push_back(_PRootsDual.json("PRootsDual"));
     json.push_back(_Irreps.json("Irreps"));
     json.push_back(_MaxSubgroups.json("MaxSubgroups"));
     json.push_back(_Subgroups.json("Subgroups"));
@@ -1724,6 +1727,16 @@ namespace Tomb
         _Casimir = i->as_float();
       else if(node_name == "repsMaxDim")
         _repsMaxDim = i->as_int();
+      else if(node_name == "PRoots")
+      {
+        SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
+        G->_PRoots.ParseJSON(*i);
+      }
+      else if(node_name == "PRootsDual")
+      {
+        SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
+        G->_PRootsDual.ParseJSON(*i);
+      }
       else if(node_name == "Irreps")
       {
         SimpleGroup *G = DB<SimpleGroup>().set(id(), this);
@@ -1742,6 +1755,7 @@ namespace Tomb
       //increment the iterator
       ++i;
     }
+
   }
 
   /* Checks whether the group exists or not */

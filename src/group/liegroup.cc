@@ -55,14 +55,14 @@ namespace Tomb
 
       string liegroupid(Strings::split_string(id, '[')[0]);
       List<string> simplegroupids = Strings::split_string(liegroupid,'x');
-      
+
       for(int i=0; i<simplegroupids.nterms(); i++)
       {
         AddTerm(*DB<SimpleGroup>().get(simplegroupids[i]));
       }
       
       this->Order();
-      
+ 
       init();
       
     }

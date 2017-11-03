@@ -259,7 +259,7 @@ namespace Tomb
   /* Calculates whether the rep can break into the chain */
   bool Field::canBreak(Chain &chain) const
   {
-    try {
+/*    try {
       //if(GaugeRep().isSinglet()) return false;
       if(isSinglet()) return false;
       bool canbreak = false;
@@ -290,7 +290,7 @@ namespace Tomb
     } catch (...)
     {
       throw;
-    }
+    }*/
   }
   
   /* Decompose the field into subfields of the subgroup */

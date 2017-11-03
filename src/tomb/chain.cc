@@ -24,42 +24,36 @@ namespace Tomb
   // Member functions
 
   /* Constructor 0 */
-  Chain::Chain() : List<Tree<SimpleGroup> >() 
+  Chain::Chain() : List<Tree<std::string> >() 
   {
     try
     {
       _depth = 0;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Constructor 1 */
-  Chain::Chain(const Tree<SimpleGroup> &tree) : List<Tree<SimpleGroup> >(tree)
+  Chain::Chain(const Tree<std::string> &tree) : List<Tree<std::string> >(tree)
   {
     try
     {
       _depth = 1;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Constructor 2 */
-  Chain::Chain(const SimpleGroup &group) : List<Tree<SimpleGroup> >(Tree<SimpleGroup>(group))
+  Chain::Chain(const SimpleGroup &group) : List<Tree<std::string> >(Tree<std::string>(group.id()))
   {
     try
     {
       _depth = 1;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   
@@ -70,51 +64,43 @@ namespace Tomb
     {
       ParseJSON(json);
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Copy constructor 1 */
-  Chain::Chain(const Chain &chain) : List<Tree<SimpleGroup> >(chain)
+  Chain::Chain(const Chain &chain) : List<Tree<std::string> >(chain)
   {
     try
     {
       _depth= chain.depth();
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Copy constructor 2 */
-  Chain::Chain(const List<Tree<SimpleGroup> > &chain) : List<Tree<SimpleGroup> >(chain)
+  Chain::Chain(const List<Tree<std::string> > &chain) : List<Tree<std::string> >(chain)
   {
     try
     {
       _depth = chain.nterms();
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
   Chain::Chain(Chain && chain) :
-    List<Tree<SimpleGroup> >(std::move(chain)),
+    List<Tree<std::string> >(std::move(chain)),
     _depth(std::move(chain._depth))
   {
     try
     {
       chain._depth = 0;
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
@@ -129,33 +115,29 @@ namespace Tomb
     {
       if(this == &chain) return *this;
         
-      List<Tree<SimpleGroup> >::operator=(chain);
+      List<Tree<std::string> >::operator=(chain);
       
       _depth = chain.depth();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Assignment operator 2 */
-  Chain &Chain::operator=(const List<Tree<SimpleGroup> > &chain)
+  Chain &Chain::operator=(const List<Tree<std::string> > &chain)
   {
     try
     {
       if(this == &chain) return *this;
         
-      List<Tree<SimpleGroup> >::operator=(chain);
+      List<Tree<std::string> >::operator=(chain);
       
       _depth = chain.nterms();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Move assignment operator */
@@ -165,17 +147,15 @@ namespace Tomb
     {
       if(this == &chain) return *this;
       
-      List<Tree<SimpleGroup> >::operator=(std::move(chain));
+      List<Tree<std::string> >::operator=(std::move(chain));
       
       _depth = std::move(chain._depth);
       
       chain._depth = 0;
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Depth getter */
@@ -196,20 +176,19 @@ namespace Tomb
     
       _depth = maxdepth;
       return maxdepth;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Returns the objects in level i */
-  List<SimpleGroup> Chain::getLevel(int i) const
+  List<std::string> Chain::getLevel(int i) const
   {
     try
     {
-      List<SimpleGroup> level;
+      List<std::string> level;
       List<std::string> labels;
-      for(int j=0; j < nterms(); j++) {
+      for(int j=0; j < nterms(); j++)
+      {
         if(!i) 
         {
           if(labels.Index(GetObject(j).label()) == -1) 
@@ -221,7 +200,7 @@ namespace Tomb
         {
           Chain chain(GetObject(j).Branches());
           List<std::string> sublabels = chain.getLabels(i-1);
-          List<SimpleGroup> sublevel = chain.getLevel(i-1);
+          List<std::string> sublevel = chain.getLevel(i-1);
           for(int k=0; k<sublabels.nterms(); k++)
           {
             if(labels.Index(sublabels.GetObject(k)) == -1)
@@ -234,10 +213,8 @@ namespace Tomb
       }
             
       return level;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Returns the labels in level i */
@@ -260,14 +237,12 @@ namespace Tomb
       labels.EliminateRepeated();
       
       return labels;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Extracts the subgroups form the chain */
-  List<SubGroup> Chain::extractSubgroups() const
+  List<std::string> Chain::extractSubgroups() const
   {
     try
     {
@@ -307,16 +282,14 @@ namespace Tomb
       }
       return Subgroups; 
 */      
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Parses a json object into the attributes of the class */
   void Chain::ParseJSON(const JSONNode & json)
   {
-//    List<Tree<SimpleGroup> >::ParseJSON(json);
+    List<Tree<std::string> >::ParseJSON(json);
     
     _depth = calculateDepth();
   }

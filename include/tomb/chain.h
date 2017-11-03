@@ -27,7 +27,7 @@
 
 namespace Tomb
 {
-  class Chain : public List<Tree<SimpleGroup> >
+  class Chain : public List<Tree<std::string> >
   {
     
     protected:
@@ -37,24 +37,24 @@ namespace Tomb
     public:
       
       Chain();
-      Chain(const Tree<SimpleGroup> &);
+      Chain(const Tree<std::string> &);
       Chain(const SimpleGroup &);
       Chain(const JSONNode &);
       Chain(const Chain &);
-      Chain(const List<Tree<SimpleGroup> > &);
+      Chain(const List<Tree<std::string> > &);
       Chain(Chain &&);
       ~Chain();
       Chain &operator=(const Chain &);
-      Chain &operator=(const List<Tree<SimpleGroup> > &);
+      Chain &operator=(const List<Tree<std::string> > &);
       Chain &operator=(Chain &&);
       
       int depth() const;
       int calculateDepth();
       
-      List<SimpleGroup> getLevel(int) const;
+      List<std::string> getLevel(int) const;
       List<std::string> getLabels(int) const;
 
-      List<SubGroup> extractSubgroups() const;
+      List<std::string> extractSubgroups() const;
       
       void ParseJSON(const JSONNode &);
   };

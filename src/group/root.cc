@@ -23,46 +23,47 @@ namespace Tomb
 {
 
   /* Constructor 1 */
-  Root::Root(SimpleGroup &G, int dim) : RVector<double>(dim)
+  Root::Root(const SimpleGroup &G, int dim) : RVector<double>(dim)
   {
     try
     {
-      _Group = &G;
-      _length = calculateLength();
-    }
+      _Group = G.id();
+      _length = calculateLength(G);
+   }
     catch (...) { throw; }
   }
 
   /* Constructor 2 */
-  Root::Root(SimpleGroup &G, const RVector<double> &alpha) : RVector<double>(alpha)
+  Root::Root(const SimpleGroup &G, const RVector<double> &alpha) : RVector<double>(alpha)
   {
     try
     {
-      _Group = &G;
-      _length = calculateLength();
+      _Group = G.id();
+      _length = calculateLength(G);
     }
     catch (...) { throw; }
   }
 
   /* Constructor 3 */
-  Root::Root(const std::string id) : RVector<double>()
+  Root::Root(const string id) : RVector<double>()
   {
     try
     {
-      std::stringstream ss(id);
+      stringstream ss(id);
 
-      std::string R;
+      string R;
       getline(ss, R, '(');
       getline(ss, R, ')');
-      std::string G;
+      string G;
       getline(ss, G, '\0');
       
-      _Group = DB<SimpleGroup>().get(G);
+      //_Group = DB<SimpleGroup>().get(G);
+      _Group = G;
 
       *this = Root(Group(),Group().rank());
       
-      std::stringstream Rs(R);
-      std::string s;
+      stringstream Rs(R);
+      string s;
       for(int i=0; i<this->cols()-1; i++)
       {
         getline(Rs,s,',');
@@ -71,18 +72,31 @@ namespace Tomb
       getline(Rs,s,')');
       (*this)[this->cols()-1] = atoi(s.c_str());
     
-      _length = calculateLength();
+      _length = calculateLength(Group());
       
     }
     catch (...) { throw; }
   }
+
+  /* Constructor 4, with json nodes */
+  Root::Root(const JSONNode &n)
+  {
+    if(n.as_string() != "")
+      Root(n.as_string());
+    else
+    {
+      throw "Root::Root::No ParseJSON for roots";
+    }
+  }
+
+
 
   /* Copy constructor */
   Root::Root(const Root &alpha) : RVector<double>(alpha)
   {   
     try
     {
-      _Group = &alpha.Group();
+      _Group = alpha._Group;
       _length = alpha.length();
     }
     catch (...) { throw; }
@@ -90,13 +104,13 @@ namespace Tomb
 
   /* Move constructor */
   Root::Root(Root &&alpha) : 
-    RVector<double>(std::move(alpha)),
-    _Group(std::move(alpha._Group)),
-    _length(std::move(alpha._length))
+    RVector<double>(move(alpha)),
+    _Group(move(alpha._Group)),
+    _length(move(alpha._length))
   {
     try
     {
-      alpha._Group = nullptr;
+      alpha._Group = "";
       alpha._length = 0;
     }
     catch (...) { throw; }
@@ -116,7 +130,7 @@ namespace Tomb
       if(this == &alpha) return *this;
       //if(_Group != nullptr) delete _Group;
       RVector<double>::operator=(alpha);
-      _Group = DB<SimpleGroup>().at(alpha.Group().id());
+      _Group = alpha._Group;
       _length = alpha.length();
       return *this;
     }
@@ -130,10 +144,10 @@ namespace Tomb
     {
       if(this == &alpha) return *this;
       //if(_Group != nullptr) delete _Group;
-      RVector<double>::operator=(std::move(alpha));
-      _Group = std::move(alpha._Group);
-      _length = std::move(alpha._length);
-      alpha._Group = nullptr;
+      RVector<double>::operator=(move(alpha));
+      _Group = move(alpha._Group);
+      _length = move(alpha._length);
+      alpha._Group = "";
       alpha._length = 0;
       return *this;
     }
@@ -141,9 +155,9 @@ namespace Tomb
   }
 
   /* Indentifier of the root */
-  std::string Root::id() const
+  string Root::id() const
   {
-    std::stringstream s;
+    stringstream s;
     s << '(';
     for(int i=0; i<cols()-1; i++)
     {
@@ -151,14 +165,20 @@ namespace Tomb
       s << ",";
     }
     s << (*this)[cols()-1] << ')';
-    s << Group().id() << std::endl;
+    s << _Group;
     return s.str();
   }
 
   /* Returns the Group */
   SimpleGroup &Root::Group() const
   {
-    return *_Group;
+    return *DB<SimpleGroup>().get(_Group);
+  }
+
+  /* Returns the id of the group */
+  string Root::GroupId() const
+  {
+    return _Group;
   }
 
   /* Returns the value of length */
@@ -168,33 +188,33 @@ namespace Tomb
   }
 
   /* Calculate length */
-  double Root::calculateLength()
+  double Root::calculateLength(const SimpleGroup &G)
   {
     double length = 0;
     
-    if(_Group->type() == 'U' or _Group->type() == 'A' or _Group->type() == 'D')
+    if(G.type() == 'U' or G.type() == 'A' or G.type() == 'D')
       return 2;
     
     int issimpleroot=-1;
-    for(int i=0; i<_Group->rank(); i++)
-      if(*this == _Group->Cartan().Row(i))
+    for(int i=0; i<G.rank(); i++)
+      if(*this == G.Cartan().Row(i))
         issimpleroot = i;
     
     if(issimpleroot>-1)
     {
       int longroot=0, shortroot=0;
-      for(int i=0; i<this->Group().rank(); i++)
+      for(int i=0; i<G.rank(); i++)
       {
         for(int j=0; j<i; j++)
         {
-          if(this->Group().Cartan()[j][i]!=0 and j!=i)
+          if(G.Cartan()[j][i]!=0 and j!=i)
           {
-            if(this->Group().Cartan()[i][j]/this->Group().Cartan()[j][i] > 1) 
+            if(G.Cartan()[i][j]/G.Cartan()[j][i] > 1) 
             {
               longroot = i;
               shortroot = j;
             }
-            else if(this->Group().Cartan()[i][j]/this->Group().Cartan()[j][i] < 1)
+            else if(G.Cartan()[i][j]/G.Cartan()[j][i] < 1)
             {
               longroot = j;
               shortroot = i;
@@ -206,34 +226,34 @@ namespace Tomb
       if(issimpleroot == longroot)
           length = 2;
       else if(issimpleroot == shortroot)
-        length = this->Group().Cartan()[shortroot][longroot]/this->Group().Cartan()[longroot][shortroot]*this->Group().SRoot(longroot).length();
+        length = G.Cartan()[shortroot][longroot]/G.Cartan()[longroot][shortroot]*G.SRoot(longroot).length();
       else
       {
         if(issimpleroot > longroot)
         {
           for(int i=longroot; i<issimpleroot; i++)
           {
-            if(this->Group().Cartan()[i][issimpleroot] and issimpleroot != i)
+            if(G.Cartan()[i][issimpleroot] and issimpleroot != i)
             {
-              Root alpha = this->Group().SRoot(i);
-              length = this->Group().Cartan()[issimpleroot][i]/this->Group().Cartan()[i][issimpleroot]*alpha.length();
+              Root alpha = G.SRoot(i);
+              length = G.Cartan()[issimpleroot][i]/G.Cartan()[i][issimpleroot]*alpha.length();
             }
           }
         }
         else
         {
           for(int i=longroot; i>issimpleroot; i--)
-            if(this->Group().Cartan()[i][issimpleroot] != 0 and issimpleroot != i and length == 0)
-              length = this->Group().Cartan()[issimpleroot][i]/this->Group().Cartan()[i][issimpleroot]*this->Group().SRoot(i).length();
+            if(G.Cartan()[i][issimpleroot] != 0 and issimpleroot != i and length == 0)
+              length = G.Cartan()[issimpleroot][i]/G.Cartan()[i][issimpleroot]*G.SRoot(i).length();
         }
       }
     }
     else
     {
       length = 0;
-      for(int i=0; i<this->Group().rank(); i++)
-        for(int j=0; j<this->Group().rank(); j++)
-          length += (*this)[i]*this->Group().G()[i][j]*(*this)[j];
+      for(int i=0; i<G.rank(); i++)
+        for(int j=0; j<G.rank(); j++)
+          length += (*this)[i]*G.G()[i][j]*(*this)[j];
     }
     
     return length;
@@ -246,6 +266,19 @@ namespace Tomb
     {
       Root alpha = (*this)*this->Group().G().Transpose();
       return alpha;
+    }
+    catch (...) { throw; }
+  }
+
+  /* Print to json format */
+  JSONNode Root::json(string name) const
+  {
+    try
+    {
+      if(name == "id")
+        return JSONNode("", id());
+      else
+        return RVector<double>::json(name);
     }
     catch (...) { throw; }
   }

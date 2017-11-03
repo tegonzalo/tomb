@@ -203,7 +203,7 @@ namespace Tomb
   /* Generate the models */
   void Model::generateModels(int nReps, int startAt)
   {   
-    try
+/*    try
     {
       Theory theory = GetObject(0);
       
@@ -332,7 +332,7 @@ namespace Tomb
                 }*/
                 //}
                 
-              }
+/*              }
               
               continue;
             }
@@ -397,7 +397,7 @@ namespace Tomb
               //std::cout << "Calculating possible reps..." << std::endl;
               // Pasted from the theory and linkedlists code to hopefully speed up things
               /**************************************************************/
-              List<Field> scalars = subtheory.getScalars();
+/*              List<Field> scalars = subtheory.getScalars();
               
               // If there are less than 10 reps, don't worry about numbers
               int nreps = scalars.nterms();
@@ -483,7 +483,7 @@ namespace Tomb
                 newmodels.AddTerm(newmodel2.json().write_formatted());
               }*/
               //std::cout << newmodels << std::endl;
-            }
+/*            }
   
           }
         }
@@ -495,13 +495,13 @@ namespace Tomb
       return ;
 
     }
-    catch (...) { throw; }
+    catch (...) { throw; }*/
   }
   
   /* Generate models, recursive version */
   long int Model::generateModelsRec(int nReps, int startAt)
   {   
-    try
+/*    try
     {
 
       double time0 = omp_get_wtime();
@@ -594,7 +594,7 @@ namespace Tomb
             */
             //if(RGE::DataBase.nterms() > 1000)
               //model_database_flush();
-          }
+/*          }
         }
         else
           return 0;
@@ -660,7 +660,7 @@ namespace Tomb
           //std::cout << "Calculating possible reps..." << std::endl;
           // Pasted from the theory and linkedlists code to hopefully speed up things
           /**************************************************************/
-          List<Field> scalars = subtheory.getScalars();
+/*          List<Field> scalars = subtheory.getScalars();
           
           // If there are less than 10 reps, don't worry about numbers
           int nreps = scalars.nterms();
@@ -808,20 +808,20 @@ namespace Tomb
           }
           while(next_bit_mask);
           /***********************************************************************/
-          
+          /*
         }
       }
       
       return Progress::success;
       
     }
-    catch (...) { throw; }
+    catch (...) { throw; }*/
   }
   
   /* Calculates the observables for every theory of the model */
   void Model::calculateObservables()
   {
-    try
+/*    try
     {
       for(int i=0; i < nterms(); i++)
       {
@@ -867,7 +867,7 @@ namespace Tomb
         InsertTerm(i, theory);
       }
     }
-    catch (...) { throw; }
+    catch (...) { throw; }*/
   }
   
   /* Parse a JSON node into a model class */

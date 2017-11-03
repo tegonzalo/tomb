@@ -2,15 +2,15 @@
 /* TOMB: Tool of Model Building */
 /********************************/
 /*
-* \file
-* irrep.cc
-*
-* \author
-* T. Gonzalo (t.e.gonzalo@fys.uio.no)
-*
-* \date
-* 13/08/2013
-*/
+ * \file
+ * irrep.cc
+ *
+ * \author
+ * T. Gonzalo (t.e.gonzalo@fys.uio.no)
+ *
+ * \date
+ * 13/08/2013
+ */
 
 #include "irrep.h"
 #include "simplegroup.h"

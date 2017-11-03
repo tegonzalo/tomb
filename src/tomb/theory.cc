@@ -626,7 +626,7 @@ namespace Tomb
   /* Normalises the mixing */
   double Theory::normaliseMixing(double norm)
   {
-    try
+/*    try
     {
       if(_Mixing == 0)
         return 0;
@@ -660,7 +660,7 @@ namespace Tomb
       return 0;
 
     }
-    catch (...) { throw; }
+    catch (...) { throw; }*/
   }
   
   /* Normalise the reps with given normalisation */
@@ -764,12 +764,10 @@ namespace Tomb
     {   
       // get the node name and value as a string
       std::string node_name = i->name();
-
       // find out where to store the values
       if(node_name == "Group")
       {
-        //_Group = i->as_string();
-        _Group = new LieGroup(i->as_string());
+        _Group = DB<LieGroup>().get(i->as_string()) ;
       }
       else if(node_name =="BreakingChain")
       {

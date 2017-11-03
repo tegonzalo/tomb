@@ -147,9 +147,10 @@ int parse_arguments(int argc, char *argv[], string &id, int &rank, char &type, i
   }
 }
  
-int main(int argc, char *argv[]) {
-
-  try {
+int main(int argc, char *argv[])
+{
+  try
+  {
         
     int rank, maxdim = 50;
     char type;
@@ -167,7 +168,6 @@ int main(int argc, char *argv[]) {
       SimpleGroup G1(rank, type);
       id = G1.id();  
     }
-cout << "ready to create liegroup" << endl;
 
     LieGroup G(id);
 

@@ -46,6 +46,8 @@ namespace Tomb
     public:
       DataBase();
       ~DataBase();
+ 
+      int size();
 
       int check(std::string);
       typename std::map<std::string,TYPE*>::iterator begin();
@@ -93,6 +95,13 @@ namespace Tomb
   {
     // Destroy the lock
     omp_destroy_lock(&_lock);
+  }
+
+
+  /* Return the size of the database */
+  template <class TYPE> int DataBase<TYPE>::size()
+  {
+    return _content.size();
   }
 
   /* Check whether the key is in the database */
@@ -146,7 +155,7 @@ namespace Tomb
       // If it is in the database as an object return it
       if(flag == DB_FOUND)
         return _content.at(key);
-
+ 
       // If it is only in the file database, import it
       omp_set_lock(&_lock);
       std::string imp = import(key);
@@ -187,7 +196,6 @@ namespace Tomb
   /* Imports the file corresponding to the key */
   template <class TYPE> std::string DataBase<TYPE>::import(std::string key)
   {
-
     if(check(key) and _files.find(key) != _files.end())
       return Files::ReadFileString(_files.at(key));
     else

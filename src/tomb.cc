@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
     
     std::string filename, mode;
     
-    if(parsearguments(argc, argv, filename, mode)) {
-      
+    if(parsearguments(argc, argv, filename, mode))
+    {
       if(mode == "remove")
       {
         char cont;
@@ -92,20 +92,19 @@ int main(int argc, char *argv[])
       else if(mode == "file")
       {
         JSONNode json = libjson::parse(Files::ReadFileString(filename));
-      
+     
         JSONNode::iterator i = json.begin();
         while(i != json.end() and i->name() != "Data") i++;
-cout << i->write_formatted() << endl;
       
-        // Pull all the available info from the database first of all
-//        Tomb::group_database_fill();
-//        Tomb::model_database_fill();
+       // Pull all the available info from the database first of all
+        database_fill<Model, SimpleGroup, LieGroup, SubGroup, Irrep, Rrep>();
+
         // Empty the temp directory in case there was leftovers from a previous run
-//        if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
-//        std::cout << "Databases loaded" << std::endl;
-      
-/*        Theory theory(*i);
-        Model model(theory);
+        if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
+
+        Theory theory(*i);
+cout << theory << endl;
+/*        Model model(theory);
       
         // Get the number of reps
         i = json.begin();
