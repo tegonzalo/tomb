@@ -36,7 +36,7 @@ bool parsearguments(int argc, char *argv[], std::string &filename, std::string &
     switch(argc)
     {
       case 2:
-        if(!strcmp(argv[1],"-r"))
+        if(!strcmp(argv[1],"--clean"))
         {
           mode = "remove";
           return true;
@@ -87,7 +87,10 @@ int main(int argc, char *argv[])
         while (cont != 'y' and cont != 'Y' and cont != 'n' and cont != 'N');
 
         if(cont == 'y' or cont == 'Y')
-          Files::EmptyDirectory("./models");
+        {
+          Files::EmptyDirectory("./database/Model");
+          Files::EmptyDirectory("./database/RGE");
+        }
       }
       else if(mode == "file")
       {
@@ -97,14 +100,13 @@ int main(int argc, char *argv[])
         while(i != json.end() and i->name() != "Data") i++;
       
        // Pull all the available info from the database first of all
-        database_fill<Model, SimpleGroup, LieGroup, SubGroup, Irrep, Rrep>();
+        database_fill<Model, RGE, SimpleGroup, LieGroup, SubGroup, Irrep, Rrep>();
 
         // Empty the temp directory in case there was leftovers from a previous run
         if(Files::IsDirectory("./temp")) Files::EmptyDirectory("./temp");
 
         Theory theory(*i);
-cout << theory << endl;
-/*        Model model(theory);
+        Model model(theory);
       
         // Get the number of reps
         i = json.begin();
@@ -112,24 +114,22 @@ cout << theory << endl;
         int nreps = i->as_int();
         
         double time1 = omp_get_wtime();
-        long int success = model.generateModelsRec(nreps);
+        long int success = model.generateModels(nreps);
         std::cout << "Number of successful models: " << success << std::endl;
         std::cout << "Time used to generate models = " << omp_get_wtime() - time1 << std::endl;
-        
-//        std::cout << "Flushing Databases" << std::endl;
+
         // Flush all the databases to files
-//        Tomb::model_database_flush();
-//        Tomb::group_database_flush();
+        database_flush<Model, RGE, SimpleGroup, LieGroup, SubGroup, Irrep, Rrep>();
         
-        // Filter with the observables
+/*        // Filter with the observables
         i = json.begin();
         while(i != json.end() and i->name() != "Observables") i++;
         
         if(i != json.end())
-                                {
-                                  List<std::string> observables(*i);
+        {
+          List<std::string> observables(*i);
           //Tomb::model_database_filter(observables);
-                                }
+        }
         
         std::cout << "END" << std::endl;
       }
@@ -148,13 +148,21 @@ cout << theory << endl;
     else
       die();
 
-  } catch (std::exception &e) {
+  }
+  catch (std::exception &e)
+  {
     std::cerr << "Exception caught: " << e.what() << std::endl;
-  } catch (const std::string e) {
+  }
+  catch (const std::string e)
+  {
     std::cerr << "Exception caught: " << e << std::endl;
-  } catch (const char *e) {
+  }
+  catch (const char *e)
+  {
     std::cerr << "Exception caught: " << e << std::endl;
-  } catch (...) {
+  }
+  catch (...)
+  {
     std::cerr << "Exception caught: Unspecified exception" << std::endl;
   }
 }

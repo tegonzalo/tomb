@@ -54,6 +54,7 @@ namespace Tomb
       typename std::map<std::string,TYPE*>::iterator end();
       TYPE* at(std::string);
       TYPE* find(std::string);
+      std::string key(const TYPE &);
       TYPE* get(std::string);
       TYPE* set(std::string, TYPE*, bool = false);
       std::string import(std::string);
@@ -155,7 +156,6 @@ namespace Tomb
       // If it is in the database as an object return it
       if(flag == DB_FOUND)
         return _content.at(key);
- 
       // If it is only in the file database, import it
       omp_set_lock(&_lock);
       std::string imp = import(key);
@@ -179,6 +179,19 @@ namespace Tomb
         return NULL;
     }
     catch (...) { throw; }
+  }
+
+  /* Find the key corresponding to the object given or returns an empty string */
+  template <class TYPE> std::string DataBase<TYPE>::key(const TYPE &Object)
+  {
+    try
+    {
+      for(auto it = _content.begin(); it != _content.end(); it++)
+        if(*it->second == Object)
+          return it->first;
+      return "";
+    }
+    catch (...) {throw; }
   }
 
   /* Gets the object corresponding to the key or creates it otherwise */
@@ -321,62 +334,4 @@ namespace Tomb
 
 }
 
-/*****************************************/
-/* Database helper functions definitions */
-/*****************************************/
-/*
-namespace Tomb
-{
-
-  // Singleton DataBase
-  template <typename TYPE> DataBase<TYPE>& DB()
-  {
-    static DataBase<TYPE> database;
-    static std::vector<void *> DataBases;
-    DataBases.push_back(&database);
-    return database;
-  }
-
-  // Fills the database of type TYPE with info from files
-  template <typename TYPE> void database_fill()
-  {
-    try
-    {
-      DB<TYPE>().fill();
-    }
-    catch (...) { throw; }
-  }
-
-  // Fills the databases of variadic types with info from the files
-  template <typename TYPE, typename ...Args> void database_fill()
-  {
-    try
-    {
-      database_fill<TYPE>();
-      database_fill<Args...>();
-    }
-    catch (...) { throw; }
-  }
-
-  // Flushes the database of type TYPE with info to files
-  void database_flush(dummy_type_list<>)
-  {
-
-  }
-
-  // Flushes the databases of variadic types with info to files
-  template <typename TYPE, typename ...Args> void database_flush(dummy_type_list<TYPE, Args..>)
-  {
-    DB<TYPE>().flush();
-    database_flush(dummy_type_list<Args...>());
-  }
-
-  // Flushes the databases of variadic types with info to files
-  template <typename ...Args> void database_flush()
-  {
-    database_flush(dummy_type_list<Args...>());
-  }
-
-}
-*/
 #endif /* __DATABASE_H */

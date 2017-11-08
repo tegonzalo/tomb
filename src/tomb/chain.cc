@@ -246,42 +246,37 @@ namespace Tomb
   {
     try
     {
-/*      int nsubgroups = depth();
-      List<SubGroup> Subgroups;
+      int nsubgroups = depth();
+      List<std::string> Subgroups;
       std::stringstream supgroup;
 
       for(int i=0; i<nsubgroups; i++)
       {
-        List<SimpleGroup> level = getLevel(i);
+        List<std::string> level = getLevel(i);
         List<std::string> labels = getLabels(i);
         
         std::stringstream subgroup;
         for(int j=0; j<level.nterms()-1; j++)
-          subgroup << level.GetObject(j).id() << "(" << labels.GetObject(j) << ")" << "x";
-        subgroup << level.GetObject(-1).id() << "(" << labels.GetObject(-1) << ")";
+          subgroup << level[j] << "(" << labels[j] << ")" << "x";
+        subgroup << level[-1] << "(" << labels[-1] << ")";
         
         if(i)
         {
           subgroup << "[" << supgroup.str() << "]";
-          SubGroup group(subgroup.str());
-          group.Order();
-          Subgroups.AddTerm(group);
-        } else
-        {
-          SubGroup group (LieGroup(subgroup.str()),LieGroup(subgroup.str()));
-          group.setLabels(labels);
-          group.Order();
-          Subgroups.AddTerm(group);
-        }
+          Subgroups.AddTerm(subgroup.str());
+        } 
+        else
+          Subgroups.AddTerm(subgroup.str());
         
         supgroup.str(std::string());
         for(int j=0; j<level.nterms()-1; j++)
-          supgroup << level.GetObject(j).id() << "x";
-        supgroup << level.GetObject(-1).id();
+          supgroup << level[j] << "x";
+        supgroup << level[-1];
         
       }
+
       return Subgroups; 
-*/      
+
     }
     catch (...) { throw; }
   }

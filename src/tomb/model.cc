@@ -200,308 +200,10 @@ namespace Tomb
     catch (...) { throw; }
   }
   
-  /* Generate the models */
-  void Model::generateModels(int nReps, int startAt)
+  /* Generate models */
+  long int Model::generateModels(int nReps, int startAt)
   {   
-/*    try
-    {
-      Theory theory = GetObject(0);
-      
-      Chain chain = theory.BreakingChain();
-      Chain subchain = chain;
-      int depth = chain.depth();
-      
-      LieGroup group = theory.Group();
-      LieGroup subgroup = group;
-      List<SubGroup> subgroups = chain.extractSubgroups();
-      
-      //List<Model> models;
-      //models.AddTerm(Model(theory)));
-      List<Model> models;
-      models.AddTerm(Model(theory));
-    
-      // Count the number of successes
-      int success = 0;
-      
-      for(int l = 0; l < depth; l++)
-      {
-        int step = l;
-        //std::cout << "step = " << step << std::endl;
-  
-        chain = subchain;
-        group = LieGroup(subgroup);
-  
-        List<Model> newmodels;
-        List<Model> tempmodels(models);
-        
-        //Checks if there are models in the temp dir and if so pulls them
-        int ntemps = 0;
-        std::stringstream temppath;
-        List<std::string> tempfiles;
-        if(step)
-        {
-          temppath << "./temp/" << step-1 << "/";
-          if(Files::IsDirectory(temppath.str()))
-            tempfiles = Files::GetDirectoryContents(temppath.str());
-        
-          ntemps = tempfiles.nterms();
-          if(!ntemps and !tempmodels.nterms())
-              std::cout << "No models for step " << step << ", exiting..." << std::endl;
-        }
-        
-        // total of models is total of files*1000 + newmodels
-        int totalmodels = models.nterms();
-        if(step)
-          totalmodels = ntemps*1000 + tempmodels.nterms();
-        
-        for(int ntemp = 0; ntemp <= ntemps; ntemp++)
-        {
-          if(step and ntemp == ntemps)
-            models = tempmodels;
-          else if(step and ntemps)
-          {
-            std::stringstream tempfilepath;
-            tempfilepath << temppath.str() << tempfiles[ntemp];
-            std::string temp = Files::ReadFileString(tempfilepath.str());
-            JSONNode jsontemp = libjson::parse(temp);
-            Files::DeleteFile(tempfilepath.str());
-            if(!Files::GetDirectoryContents(temppath.str()).size())
-              Files::DeleteDirectory(temppath.str());
-            models.Clear();
-            for(JSONNode::const_iterator it = jsontemp.begin(); it != jsontemp.end(); it++)
-              models.AddTerm(Model(*it));
-          }
-          
-          for(List<Model>::const_iterator i = models.begin() + startAt; i != models.end(); i++)
-          {
-            // Iterate for the number of models
-            Model model(*i);
-            //std::cout << "model = " << *i << std::endl;
-            theory = model.GetObject(-1);
-            List<Field> fields = theory.Fields();
-          
-            // Update progress
-            Progress::UpdateModelProgress(step, totalmodels);
-      
-            // Check constraints
-            if(!theory.chirality())
-            {
-              std::cerr << "Theory is not chiral" << std::endl;
-              continue;
-            }
-          
-            // Check if it is last step, and if so, check for SM content and exit
-            if(chain.depth() == 1 and group == StandardModel::Group)
-            {
-            //std::cout << "last step" << std::endl;
-            
-              if(theory.containsSM())
-              {
-                //std::cout << "contains sm" << std::endl;
-                // Check for anomaly cancellation and proton decay
-                theory.calculateAnomaly();
-                //std::cout << "anomlay free = " << theory.anomalyFree() << std::endl;
-                //model = ProtonDecay[model];
-
-                // Update the model and add to the models list
-                model.DeleteTerm(-1);
-                model.AddTerm(theory);
-                //std::cout << model << std::endl;
-                //if(newmodels.Index(model) == -1)
-                //{
-                  //newmodels.AddTerm(model);
-                
-                // For every successful model calculate the rges and store in the databases
-                RGE rges(model);
-                //std::cout << rges << std::endl;
-                int index = 0;
-                /*if((index = RGE::DataBase.Index(rges)) == -1)
-                {
-                  index = RGE::DataBase.nterms();
-                  RGE::DataBase.AddTerm(rges);
-                }*/
-                //std::cout << RGE::DataBase << std::endl;
-                /*if(Model::DataBase.nterms() <= index)
-                  Model:DataBase.AddTerm(List<Model>());
-                if(Model::DataBase[index].Index(model) == -1)
-                {
-                  Model::DataBase[index].AddTerm(model);
-                
-                  // Update the success counter
-                  success++;
-                }*/
-                //}
-                
-/*              }
-              
-              continue;
-            }
-      
-      
-            // If it is not the last step, calculate the subgroup and subchain
-            subgroup = subgroups.GetObject(l+1);
-            //std::cout << "subgroup = " << subgroup << std::endl;
-            
-            // Build the subchain
-            subchain.Clear();
-            for(int j=0; j<chain.nterms(); j++)
-              subchain.AppendList(chain.GetObject(j).Branches());
-            subchain.calculateDepth();
-            
-            //Calculate the breaking, obtaining the subreps and mixings at the end
-            List<RVector<double> > mixings;
-            List<Sum<Field> > subreps = theory.calculateBreaking(mixings);
-                      
-            // Loop over number of subreps, i.e. breaking options 
-            for(int k=0; k<subreps.nterms(); k++)
-            {
-              List<Field> subrep = subreps.GetObject(k);
-              Theory subtheory = Theory(subgroup, subchain, subrep);
-              Theory newtheory(theory);
-              Model newmodel(model);
-              //std::cout << newmodel << std::endl;
-
-              // Check if the next step is last step, and if so, check for SM content and normalise
-              if(subchain.depth() == 1 and subrep.GetObject(0).Group() == StandardModel::Group)
-              {
-                if(subtheory.containsSM())
-                {
-                  double norm = subtheory.normaliseToSM();
-                  subrep = subtheory.Fields();
-                  
-                  // Add normalisation, mixing and anomaly to the previous step (ONLY WORKS FOR THE STEP BEFORE SM)
-                  if(mixings.nterms() > k and norm != 1)
-                  {
-                    newtheory.setMixing(mixings.GetObject(k));
-                    norm = newtheory.normaliseMixing(norm);
-                  }
-                  //std::cout << newtheory << std::endl;
-                  newtheory.normaliseReps(norm);
-
-                  
-                }
-                else
-                  continue;
-              }
-              // Calculate the anomaly contribution of the newly renormalised reps
-              newtheory.calculateAnomaly();
-  
-              // Replace the last theory of the model with the current theory
-              if(newmodel.GetObject(-1) != newtheory)
-              {
-                newmodel.DeleteTerm(-1);
-                newmodel.AddTerm(newtheory);
-              }
-              
-              //Generate all possible combiations of reps
-              //std::cout << "Calculating possible reps..." << std::endl;
-              // Pasted from the theory and linkedlists code to hopefully speed up things
-              /**************************************************************/
-/*              List<Field> scalars = subtheory.getScalars();
-              
-              // If there are less than 10 reps, don't worry about numbers
-              int nreps = scalars.nterms();
-              if(scalars.nterms() > 10)
-                nreps = nReps;
-              
-              int total = Combinatorics::sum_of_binomials(scalars.nterms(),nreps);
-              
-              std::vector<bool> bit_mask(scalars.nterms());
-              bool next_bit_mask = false;
-              do
-              {
-                
-                Progress::UpdateRepProgress(total);
-                
-                if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
-                {
-                  List<Field> subset;
-                  for(int i=0; i!=bit_mask.size(); i++)
-                    if(bit_mask[i])
-                      subset.AddTerm(scalars[i]);
-                  Model newmodel2(newmodel);
-                  List<Field> fields(subtheory.getFermions());
-                  fields.AppendList(subset);
-                  newmodel2.AddTerm(Theory(subgroup, subchain, fields));
-                  newmodels.AddTerm(newmodel2);
-                  
-                  // Dump models into files if there are too many of them
-                  if(newmodels.nterms() >= 1000)
-                  {
-                    std::stringstream temppath;
-                    temppath << "./temp/";
-                    if(!Files::IsDirectory(temppath.str()))
-                      Files::CreateDirectory(temppath.str());
-                    temppath << step << "/";
-                    int ntemps = 0;
-                    if(Files::IsDirectory(temppath.str()))
-                      ntemps = Files::GetDirectoryContents(temppath.str()).size();
-                    else
-                      Files::CreateDirectory(temppath.str());
-                    temppath << (++ntemps);
-                    std::stringstream filestring;
-                    filestring << "[" << std::endl;
-                    List<Model>::iterator it_models;
-                    for(it_models = newmodels.begin(); std::next(it_models) != newmodels.end(); it_models++)
-                      filestring << it_models->json().write_formatted() << "," << std::endl;
-                    filestring << it_models->json().write_formatted() << "]";
-                    Files::WriteFileString(temppath.str(), filestring.str());
-                    newmodels.Clear();
-                    
-                  }
-                }
-                
-                // next_bitmask
-                std::size_t i = 0 ;
-                for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
-                {
-                  bit_mask[i] = false;
-                }
-
-                if( i < bit_mask.size())
-                {
-                  if(std::count(bit_mask.begin(), bit_mask.end(), true) < nreps)
-                      bit_mask[i] = true;
-                  next_bit_mask = true;
-                  
-                }
-                else 
-                  next_bit_mask = false ;
-              }
-              while(next_bit_mask);
-              /***********************************************************************/
-              
-              //List<List<Field> > possibleReps = subtheory.generatePossibleReps(nReps);
-  
-              //std::cout << "number of possible reps = " << possibleReps.nterms() << std::endl;
-
-              /*for(List<List<Field> >::iterator it_possreps = possibleReps.begin(); it_possreps != possibleReps.end(); it_possreps ++) 
-              {
-                Progress::UpdateRepProgress(possibleReps.nterms());
-                Model newmodel2(newmodel);
-                newmodel2.AddTerm(Theory(subgroup, subchain, *it_possreps));
-                newmodels.AddTerm(newmodel2.json().write_formatted());
-              }*/
-              //std::cout << newmodels << std::endl;
-/*            }
-  
-          }
-        }
-        models = newmodels;
-      }
-      
-      std::cout << "Number of successful models: " << success << std::endl;
-      
-      return ;
-
-    }
-    catch (...) { throw; }*/
-  }
-  
-  /* Generate models, recursive version */
-  long int Model::generateModelsRec(int nReps, int startAt)
-  {   
-/*    try
+    try
     {
 
       double time0 = omp_get_wtime();
@@ -516,25 +218,25 @@ namespace Tomb
       if(depth > maxdepth) maxdepth = depth;
 
       //std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
-      double time1 = omp_get_wtime();
+      //double time1 = omp_get_wtime();
       
-      List<SubGroup> subgroups;
+      List<string> subgroups;
       //std::cout << "Mark 1.0: " << omp_get_wtime() - time1 << std::endl;
-      double time2 = omp_get_wtime();
+      //double time2 = omp_get_wtime();
       #pragma omp critical
       {
         LieGroup group = theory.Group();
         //std::cout << "Mark 1.1: " << omp_get_wtime() - time2 << std::endl;
-        time2 = omp_get_wtime();
+        //time2 = omp_get_wtime();
         LieGroup subgroup = group;
         //std::cout << "Mark 1.2: " << omp_get_wtime() - time2 << std::endl;
-        time2 = omp_get_wtime();
+        //time2 = omp_get_wtime();
         subgroups = chain.extractSubgroups();
         //std::cout << "Mark 1.3: " << omp_get_wtime() - time2 << std::endl;
       }
 
       //std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
-      time1 = omp_get_wtime();
+      //time1 = omp_get_wtime();
       
       // Check constraints
       if(!theory.chirality())
@@ -544,13 +246,13 @@ namespace Tomb
       }
 
       //std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();      
+      //time1 = omp_get_wtime();      
 
       // Calculate the anomaly contribution of the newly renormalised reps
       theory.calculateAnomaly();
   
       //std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();
+      //time1 = omp_get_wtime();
 
       // Replace the last theory of the model with the current theory
       if(GetObject(-1) != theory)
@@ -560,13 +262,12 @@ namespace Tomb
       }
  
       //std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();
+      //time1 = omp_get_wtime();
 
       if(depth == 1)
       {
         if(theory.containsSM())
         {
-          //std::cout << "contains sm" << std::endl;
           //std::cout << "Calculating observables" << std::endl;
           //calculateObservables();
                     
@@ -574,28 +275,37 @@ namespace Tomb
           #pragma omp critical
           {
             RGE rges(*this);
-            //std::cout << rges << std::endl;
+
+            // Set the RGEs and models to the database
             int index = 0;
-            /*if((index = RGE::DataBase.Index(rges)) == -1)
+            string key = "";
+            if((key = DB<RGE>().key(rges)) == "")
             {
-              index = RGE::DataBase.nterms();
-              RGE::DataBase.AddTerm(rges);
-            }*/
-            //std::cout << RGE::DataBase << std::endl;
-            /*if(Model::DataBase.nterms() <= index)
-              Model:DataBase.AddTerm(List<Model>());
-            if(Model::DataBase[index].Index(*this) == -1)
+              index = DB<RGE>().size();
+              key = RGE::key(index);
+              DB<RGE>().set(key, &rges);
+            }
+            else
+              index = stoi(key.substr(4,4));
+            if((key = DB<Model>().key(*this)) == "")
             {
-              Model::DataBase[index].AddTerm(*this);
+              int index2 = Model::nmodels(index);
+              key = Model::key(index,index2); 
+              DB<Model>().set(key, this);
             
               // Update the success counter
               Progress::success++;
             }
-            */
-            //if(RGE::DataBase.nterms() > 1000)
-              //model_database_flush();
-/*          }
-        }
+            
+            // If there are too many models already in the DB, flush
+            // TODO: Finish this
+            if(DB<RGE>().size() > 1000)
+            {
+             // DB<RGE>().flush();
+             // DB<Model>().flush();
+            }
+          }
+       }
         else
           return 0;
         
@@ -604,7 +314,7 @@ namespace Tomb
       {
         // If it is not the last step, calculate the subgroup and subchain
         SubGroup subgroup = subgroups.GetObject(1);
-            
+ 
         // Build the subchain
         subchain.Clear();
         for(int j=0; j<chain.nterms(); j++)
@@ -617,30 +327,32 @@ namespace Tomb
         #pragma omp critical
         subreps = theory.calculateBreaking(mixings);
         
-        
         // Loop over number of subreps, i.e. breaking options 
-        for(int k=0; k<subreps.nterms(); k++) {
-          List<Field> subrep = subreps.GetObject(k);
-          Theory subtheory = Theory(subgroup, subchain, subrep);
+        for(int k=0; k<subreps.nterms(); k++)
+        {
+          LieGroup group(subgroup);
+          List<Field> subrep = subreps[k];
+
+          Theory subtheory = Theory(group, subchain, subrep);
           Theory newtheory(theory);
+
           Model model = *this;
-          //std::cout << newmodel << std::endl;
 
           // Check if the next step is last step, and if so, check for SM content and normalise
-          if(subchain.depth() == 1 and subrep.GetObject(0).Group() == StandardModel::Group)
+          if(subchain.depth() == 1 and subrep[0].Group() == StandardModel::Group)
           {
             if(subtheory.containsSM())
             {
               double norm = subtheory.normaliseToSM();
               subrep = subtheory.Fields();
                   
-              // Add normalisation, mixing and anomaly to the previous step (ONLY WORKS FOR THE STEP BEFORE SM)
+              // Add normalisation, mixing and anomaly to the previous step 
+              // TODO : ONLY WORKS FOR THE STEP BEFORE SM
               if(mixings.nterms() > k and norm != 1)
               {
                 newtheory.setMixing(mixings.GetObject(k));
                 norm = newtheory.normaliseMixing(norm);
               }
-              //std::cout << newtheory << std::endl;
               newtheory.normaliseReps(norm);
 
               if(model.GetObject(-1) != newtheory)
@@ -652,15 +364,14 @@ namespace Tomb
             else
               return 0;
           }
-          
+
           //std::cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
-          time1 = omp_get_wtime();           
+          //time1 = omp_get_wtime();           
               
           //Generate all possible combiations of reps
           //std::cout << "Calculating possible reps..." << std::endl;
           // Pasted from the theory and linkedlists code to hopefully speed up things
-          /**************************************************************/
-/*          List<Field> scalars = subtheory.getScalars();
+          List<Field> scalars = subtheory.getScalars();
           
           // If there are less than 10 reps, don't worry about numbers
           int nreps = scalars.nterms();
@@ -708,7 +419,7 @@ namespace Tomb
             {
               bit_mask = bit_masks[i];
               
-              //#pragma omp critical
+              #pragma omp critical
               Progress::UpdateModelProgress(maxdepth - depth, total*subreps.nterms());
 
               if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
@@ -717,14 +428,14 @@ namespace Tomb
                 for(int i=0; i!=bit_mask.size(); i++)
                   if(bit_mask[i])
                     subset.AddTerm(scalars[i]);
-              
-                Model newmodel(model);
+
                 List<Field> fields = subtheory.getFermions();
                 fields.AppendList(subset);
+                Model newmodel(model);
                 newmodel.AddTerm(Theory(subgroup, subchain, fields));
-              
+
                 // Recursive call
-                newmodel.generateModelsRec(nReps);
+                newmodel.generateModels(nReps);
               }
             }
           }
@@ -808,14 +519,14 @@ namespace Tomb
           }
           while(next_bit_mask);
           /***********************************************************************/
-          /*
+          
         }
+        
       }
-      
       return Progress::success;
       
     }
-    catch (...) { throw; }*/
+    catch (...) { throw; }
   }
   
   /* Calculates the observables for every theory of the model */
@@ -891,14 +602,29 @@ namespace Tomb
     }
     catch (...) { throw; }
   }
-  
-  /* Overloaded << operator with models on the right */
-  std::ostream &operator<<(std::ostream &stream, const Model &m)
+
+  /* Returns the number of models with the RGE index */
+  int Model::nmodels(int index)
   {
-    stream << "{" << std::endl;
-    for(Model::const_iterator it = m.begin(); it != m.end(); it++)
-      stream << it->json().write_formatted() << "," << std::endl;
-    stream << "}";
-    return stream;
+    stringstream skey;
+    skey << "Model_" << setfill('0') << setw(4) << index << "_";
+    for(int i=0; i<DB<Model>().size(); i++)
+    {
+       stringstream skey2;
+       skey2 << skey.str();
+       skey2 << setfill('0') << setw(4) << i;
+       if(!DB<Model>().check(skey2.str()))
+         return i;
+    }
+    return DB<Model>().size();
+  }
+
+  /* Create the key for the Model from RGE and model indices */
+  string Model::key(int index1, int index2)
+  {
+    stringstream skey;
+    skey << "Model_" << setfill('0') << setw(4) << index1 << "_";
+    skey << setfill('0') << setw(4) << index2;
+    return skey.str();
   }
 }

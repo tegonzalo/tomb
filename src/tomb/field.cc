@@ -28,13 +28,9 @@ namespace Tomb
   {
     try 
     {
-      //_GaugeRep = GaugeRep;
       _LorentzRep = LorentzRep;
       
-    } catch (...)
-    {
-      throw;
-    }
+    } catch (...) { throw; }
   }
   
   /* Constructor wiht gauge rep and string */
@@ -52,10 +48,8 @@ namespace Tomb
         _LorentzRep = Rrep("(1,1)A1xA1");
       else
         _LorentzRep = Rrep(LorentzRep);
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Constructor with strings */
@@ -69,15 +63,12 @@ namespace Tomb
       idstream >> gaugeid;
       idstream >> lorentzid;
       
-      //_GaugeRep = Rrep(gaugeid);
       _LorentzRep = Rrep(lorentzid);
       
       *this = Field(Rrep(gaugeid),_LorentzRep);
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Copy constructor */
@@ -85,12 +76,9 @@ namespace Tomb
   {
     try
     {
-      //_GaugeRep = f.GaugeRep();
       _LorentzRep = f.LorentzRep();
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   
@@ -100,27 +88,21 @@ namespace Tomb
     try
     {
       ParseJSON(json);
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
   Field::Field(Field &&f) :
-    //_GaugeRep(std::move(f._GaugeRep)),
     Rrep(std::move(f)),
     _LorentzRep(std::move(f._LorentzRep))
   {
     try
     {
-      //f._GaugeRep = Rrep();
       f._LorentzRep = Rrep();
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
@@ -130,22 +112,18 @@ namespace Tomb
 
   /* Assignment operator */
   Field &Field::operator=(const Field &f)
-  {
-    
+  { 
     try
     {
       if(this == &f) return *this;
       
-      //_GaugeRep = f.GaugeRep();
       
       Rrep::operator=(f);
       _LorentzRep = f.LorentzRep();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move assignment operator */
@@ -155,18 +133,14 @@ namespace Tomb
     {
       if(this == &f) return *this;
       
-      //_GaugeRep = std::move(f._GaugeRep);
       Rrep::operator=(std::move(f));
       _LorentzRep = std::move(f._LorentzRep);
       
-      //f._GaugeRep = Rrep();
       f._LorentzRep = Rrep();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Returns the id of the field */
@@ -175,32 +149,17 @@ namespace Tomb
     try
     {
       std::stringstream stream;
-      //stream << _GaugeRep.id() << " " << _LorentzRep.id();
       stream << Rrep::id() << " " << _LorentzRep.id();
       return stream.str();
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
-  
-  /* Gauge rep getter */
-  /*Rrep Field::GaugeRep() const
-  {
-    return _GaugeRep;
-  }*/
   
   /* Breaking chain getter */
   Rrep Field::LorentzRep() const
   {
     return _LorentzRep;
   }
-  
-  /* Obtains the Gauge group from the Gauge rep */
-  /*LieGroup Field::GaugeGroup() const
-  {
-    return _GaugeRep.Group();
-  }*/
   
   /* Obtains the Lorentz group from the Lorentz rep */
   LieGroup Field::LorentzGroup() const
@@ -259,38 +218,32 @@ namespace Tomb
   /* Calculates whether the rep can break into the chain */
   bool Field::canBreak(Chain &chain) const
   {
-/*    try {
-      //if(GaugeRep().isSinglet()) return false;
+    try
+    {
       if(isSinglet()) return false;
       bool canbreak = false;
       for(int i=0; i<chain.nterms(); i++)
       {
-        
-        SimpleGroup group = chain.GetObject(i).Object();
+        std::string group = chain.GetObject(i).Object();
         std::string label = chain.GetObject(i).label();
-        List<SimpleGroup> subgroup = Chain(chain.GetObject(i).Branches()).getLevel(0);
+        List<std::string> subgroup = Chain(chain.GetObject(i).Branches()).getLevel(0);
         List<std::string> labels = Chain(chain.GetObject(i).Branches()).getLabels(0);
-
 
         // Conditions for breaking on the chain
         if(subgroup.nterms()==0 or subgroup.nterms() > 1 or group != subgroup.GetObject(0) or label != labels.GetObject(0))
         {
-          //if(GaugeRep().GetObject(i).isSinglet())
           if(GetObject(i).isSinglet())
             return false;
         } else
         {
-          //if(!GaugeRep().GetObject(i).isSinglet())
           if(!GetObject(i).isSinglet())
             return false;
         }
       }
       
       return true;
-    } catch (...)
-    {
-      throw;
-    }*/
+    }
+    catch (...) { throw; }
   }
   
   /* Decompose the field into subfields of the subgroup */
@@ -310,16 +263,13 @@ namespace Tomb
       
       return subreps;
 
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Overloaded == operator */
   bool Field::operator==(const Field &f) const
   {
-    // return (GaugeRep() == f.GaugeRep() and LorentzRep() == f.LorentzRep());
     return (Rrep::operator==(f) and LorentzRep() == f.LorentzRep());
   }
   
@@ -334,7 +284,6 @@ namespace Tomb
   {
     if(isScalar() and f.isFermion()) return true;
     if((isScalar() and f.isScalar()) or (isFermion() and f.isFermion()))
-      //if(GaugeRep() < f.GaugeRep())
       if(Rrep::operator<(f))
         return true;
     return false;
@@ -365,7 +314,6 @@ namespace Tomb
       idstream >> gaugeid;
       idstream >> lorentzid;
     
-      //_GaugeRep = Rrep(gaugeid);
       _LorentzRep = Rrep(lorentzid);
       
       *this = Field(Rrep(gaugeid),_LorentzRep);

@@ -57,15 +57,16 @@ namespace Tomb
       void DeleteTerm(int);
       void AddTerm(const Theory &);
       
-      void generateModels(int = 0, int = 0);
-      long int generateModelsRec(int = 0, int = 0);
+      long int generateModels(int = 0, int = 0);
       
       void calculateObservables();
             
       void ParseJSON(const JSONNode &);
+
+      static int nmodels(int);
+      static string key(int, int);
   };
   
-  std::ostream &operator<<(std::ostream &, const Model &);
 }
 
 #endif /* __MODEL_H */

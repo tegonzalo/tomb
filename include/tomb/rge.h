@@ -45,8 +45,7 @@ namespace Tomb
       Matrix<double> _Mixing;
       
     public:
-      static List<RGE> DataBase;
-      
+
       RGE(const Model &);
       RGE(const Theory &);
       RGE(const RGE &);
@@ -72,6 +71,8 @@ namespace Tomb
       
       JSONNode json(std::string = "id") const;
       void ParseJSON(const JSONNode &);
+
+      static string key(int);
   };
   
   

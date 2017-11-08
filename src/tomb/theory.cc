@@ -31,9 +31,9 @@ namespace Tomb
   /* Constructor */
   Theory::Theory(LieGroup &Group, Chain &BreakingChain, List<Field> &Fields)
   {
-    try {
-      //_Group = Group.id();
-      _Group = &Group;
+    try
+    {
+      _Group = DB<LieGroup>().at(Group.id());
       _BreakingChain = BreakingChain;
       _Fields = Fields;
       _Fields.Order();
@@ -51,7 +51,6 @@ namespace Tomb
   {   
     try
     {
-      //_Group = T.GroupId();
       _Group = T.GroupPtr();
       _BreakingChain = T.BreakingChain();
       _Fields = T.Fields();
@@ -86,7 +85,6 @@ namespace Tomb
   {
     try
     {
-      //T._Group = "";
       T._Group = NULL;
       T._BreakingChain.Clear();
       T._Fields.Clear();
@@ -111,7 +109,6 @@ namespace Tomb
     {
       if(this == &T) return *this;
       
-      //_Group = T.GroupId();
       _Group = T.GroupPtr();
       _BreakingChain = T.BreakingChain();
       _Fields = T.Fields();
@@ -140,7 +137,6 @@ namespace Tomb
       _anomalyFree = std::move(T._anomalyFree);
       _observables = std::move(T._observables);
       
-      //T._Group = "";
       T._Group = NULL;
       T._BreakingChain.Clear();
       T._Fields.Clear();
@@ -158,14 +154,12 @@ namespace Tomb
   /* Group getter */
   LieGroup &Theory::Group() const
   {
-    //return LieGroup(_Group);
     return *_Group;
   }
   
   /* Group id getter */
   std::string Theory::GroupId() const
   {
-    //return _Group;
     return _Group->id();
   }
   
@@ -210,12 +204,8 @@ namespace Tomb
   {
     try
     {
-      //LieGroup Group(_Group);
-
-      //if(Group.nterms() == 1)
       if(_Group->nterms() == 1)
       {
-        //if(!(Group.GetObject(0).type() == 'A' and Group.rank() > 1) and !(Group.GetObject(0).type() == 'D' and Group.rank()%2 != 0))
         if(!(_Group->GetObject(0).type() == 'A' and _Group->rank() > 1) and !(_Group->GetObject(0).type() == 'D' and _Group->rank()%2 != 0))
           return false;
         else
@@ -236,7 +226,6 @@ namespace Tomb
         {
           bool real = true;
           for(int i = 0; i != it->nterms() and real; i++) {
-            //if((Group.GetObject(i).abelian() and it->GetObject(i).HWeight()!=0) or (!Group.GetObject(i).abelian() and !it->GetObject(i).real()))
             if((_Group->GetObject(i).abelian() and it->GetObject(i).HWeight()!=0) or (!_Group->GetObject(i).abelian() and !it->GetObject(i).real()))
               real = false;
           }
@@ -265,52 +254,46 @@ namespace Tomb
   {
     try
     {
-      //List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(LieGroup(_Group), 3, true, true);
       List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(*_Group, 3, true, true);
       
-      //std::cout << tdgroups << std::endl;
-  
       // Create an abelian group to compare with
       SimpleGroup abelian("U1");
       
       // Default anomaly
       _anomalyFree = true;
-      
-      //std::cout << _Fields.json().write_formatted() << std::endl;
     
       for(List<List<SimpleGroup> >::iterator it = tdgroups.begin(); it != tdgroups.end(); it++)
       {
-        //std::cout << *it << std::endl;
         double anomaly = 0;
         switch(std::count(it->begin(), it->end(), abelian))
         {
           case 0:
-            if(it->GetObject(0) == it->GetObject(1) and it->GetObject(0) == it->GetObject(2))
-              if((it->GetObject(0).type() == 'A' and it->GetObject(0).rank() > 1) or (it->GetObject(0).type() == 'D' and it->GetObject(0).rank() == 3))
+            if((*it)[0] == (*it)[1] and (*it)[0] == (*it)[2])
+              if(((*it)[0].type() == 'A' and (*it)[0].rank() > 1) or ((*it)[0].type() == 'D' and (*it)[0].rank() == 3))
               {
                 //Calculate the anomaly for a general gauge group, MISSING 
-                for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
+                for(auto it2 = _Fields.begin(); it2 != _Fields.end(); it2++)
                 {
-                  Irrep rep = it_fields->GetObject(it_fields->Group().Index(it->GetObject(0)));
+                  Irrep rep = it2->GetObject(it2->Group().Index((*it)[0]));
                   if(rep.real())
                     switch(it->GetObject(0).rank())
                     {
                       case 2:
                         // SU(3)
                         if(rep.dim() == 3)
-                          anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+                          anomaly += (rep.conjugate() ? -1 : 1)*it2->dim()/rep.dim();
                         break;
                       case 3:
                         // SU(4)
                         if(rep.dim() == 4)
-                          anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+                          anomaly += (rep.conjugate() ? -1 : 1)*it2->dim()/rep.dim();
                         break;
                       case 5:
                         // SU(5)
                         if(rep.dim() == 5)
-                          anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+                          anomaly += (rep.conjugate() ? -1 : 1)*it2->dim()/rep.dim();
                         else if(rep.dim() == 10)
-                          anomaly += (rep.conjugate() ? -1 : 1)*it_fields->dim()/rep.dim();
+                          anomaly += (rep.conjugate() ? -1 : 1)*it2->dim()/rep.dim();
                         break;
                     }
                 }
@@ -319,26 +302,20 @@ namespace Tomb
           case 1: 
             // Only works if there is one abelian component and it's at the end
             if(it->GetObject(0) == it->GetObject(1))
-              for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
-                if(!it_fields->isSinglet(it_fields->Group().Index(it->GetObject(0))))
-                  anomaly += it_fields->dim()*it_fields->HWeight()[-1];
+              for(auto it2 = _Fields.begin(); it2 != _Fields.end(); it2++)
+                if(!it2->isSinglet(it2->Group().Index(it->GetObject(0))))
+                  anomaly += it2->dim()*it2->HWeight()[-1];
             break;
           case 2:
             anomaly = 0;
             break;
           case 3:
             // Only works if there is one abelian component and it's at the end
-            for(List<Field>::iterator it_fields = _Fields.begin(); it_fields != _Fields.end(); it_fields++)
-            {
-              //std::cout << *it_fields <<  std::endl;
-              //std::cout <<  (it_fields->dim()*pow(it_fields->HWeight()[-1],3)) << std::endl;
-              anomaly += it_fields->dim()*pow(it_fields->HWeight()[-1],3);
-              //std::cout << anomaly << std::endl;
-            }
+            for(auto it2 = _Fields.begin(); it2 != _Fields.end(); it2++)
+              anomaly += it2->dim()*pow(it2->HWeight()[-1],3);
             break;
         }
         
-        //std::cout << "anomaly = " << anomaly << std::endl;
         if(fabs(anomaly) > 0.001)
           _anomalyFree = false;
       }
@@ -421,18 +398,19 @@ namespace Tomb
   /* Find the breaking reps from this theory to subgroup with optional reps */
   List<Field> Theory::findBreakingReps(SubGroup &subgroup, const List<Field> &reps)
   {
-    try {
+    try
+    {
       List<Field> breakingreps;
       List<Field> scalars;
       
       if(reps.Empty())
         scalars = getScalars();
       else
-        for(List<Field>::const_iterator it_reps = reps.begin(); it_reps != reps.end(); it_reps++)
+        for(auto it_reps = reps.begin(); it_reps != reps.end(); it_reps++)
           if(it_reps->isScalar())
             scalars.AddTerm(*it_reps);
                     
-      for(List<Field>::iterator it_scalars = scalars.begin(); it_scalars != scalars.end(); it_scalars++) 
+      for(auto it_scalars = scalars.begin(); it_scalars != scalars.end(); it_scalars++) 
       {
         Field scalar = *it_scalars;
         // Check if the rep can break to the next step
@@ -452,10 +430,6 @@ namespace Tomb
           if(singlet and !(_Group->rank() > subgroup.rank() and scalar.dim() == _Group->dim()))
             breakingreps.AddTerm(scalar);
         
-        }
-        else
-        {
-          //std::cout << "cant break" << std::endl;
         }
       }
 
@@ -484,11 +458,7 @@ namespace Tomb
         auxsubgroup.DeleteTerm(-1);
         SubGroup semisimplesubgroup(auxsubgroup.id());
         
-        //std::cout << scalars << std::endl;
         breakingreps = findBreakingReps(semisimplesubgroup, scalars);
-        
-        //std::cout << semisimplesubgroup << std::endl;
-        //std::cout << breakingreps << std::endl;
   
         // Calculate the Mixing of the U(1)s
         List<std::string> labels = Strings::split_string(subgroup.labels().GetObject(-1), '+');
@@ -546,16 +516,14 @@ namespace Tomb
       {
         List<Field> fields = _Fields;
         fields.DeleteObject(breakingreps.GetObject(i),1);
-        
         Sum<Field> subrep;
-        for(List<Field>::iterator it_fields = fields.begin(); it_fields != fields.end(); it_fields++)
+        for(auto it_fields = fields.begin(); it_fields != fields.end(); it_fields++)
         {
           Sum<Field> auxsubrep = it_fields->Decompose(subgroup);
           subrep.AppendList(auxsubrep);
         }
         subreps.AddTerm(subrep);
       }
-
       
       return subreps;
       
@@ -569,20 +537,20 @@ namespace Tomb
     try
     {
       // Recast the hypercharge normalisation of the SMreps
-/*
+
       List<Field>::const_iterator pos = _Fields.begin();
       while(pos != _Fields.end() and (pos->dim() != 1 or pos->HWeight()[-1] == 0 or !pos->isFermion())) pos++;
       double norm = pos->HWeight()[-1]/StandardModel::e.HWeight()[-1];
 
-      for(List<Field>::const_iterator it = StandardModel::Reps.begin(); it != StandardModel::Reps.end(); it++)
+      for(auto it = StandardModel::Reps.begin(); it != StandardModel::Reps.end(); it++)
       {
         Weight HW = it->HWeight();
         HW[-1]*= norm;
-        Field SMRep(Rrep(StandardModel::Group, HW), it->LorentzRep()); 
+        Field SMRep(Rrep(*DB<LieGroup>().at(StandardModel::Group.id()), HW), it->LorentzRep()); 
         if(_Fields.Index(SMRep) == -1)
           return false;
       }
-*/      
+      
       return true;
       
     }
@@ -626,7 +594,7 @@ namespace Tomb
   /* Normalises the mixing */
   double Theory::normaliseMixing(double norm)
   {
-/*    try
+    try
     {
       if(_Mixing == 0)
         return 0;
@@ -642,7 +610,7 @@ namespace Tomb
         for(auto it_BC = _BreakingChain.begin(); it_BC != _BreakingChain.end() and norm2 == 1; it_BC++)
         {
           int index = labels.Index(it_BC->label());
-          if(index != -1 and it_BC->Object().abelian())
+          if(index != -1 and DB<SimpleGroup>().at(it_BC->Object())->abelian())
           {
             if(_Mixing[index] != 0)
             {
@@ -660,7 +628,7 @@ namespace Tomb
       return 0;
 
     }
-    catch (...) { throw; }*/
+    catch (...) { throw; }
   }
   
   /* Normalise the reps with given normalisation */

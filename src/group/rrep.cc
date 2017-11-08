@@ -501,7 +501,6 @@ namespace Tomb
       Rrep *R = DB<Rrep>().find(id());
       if(R == NULL)
         throw "Rrep::Project::Rrep not in the database";
-
       for(auto it = R->_Weights.begin(); it != R->_Weights.end(); it++)
       {
         Weight weight = Weight(Subgroup, Subgroup.Projection()*(*it));
@@ -527,7 +526,6 @@ namespace Tomb
       Rrep *R = DB<Rrep>().find(id());
       if(R == NULL)
         throw "Rrep::Decompose::Rrep not in the database";
-for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
 
       if(R != NULL and !R->_Subreps.empty() and R->_Subreps.find(Subgroup.id()) != R->_Subreps.end())
         return R->_Subreps.at(Subgroup.id());
@@ -539,8 +537,8 @@ for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
       
       List<Weight> ProjectedWeights = Project(Subgroup);
 
-     do
-     {
+      do
+      {
         Weight HWeight = ProjectedWeights.GetObject(0);
 
         int highest_dim = 0;
@@ -566,7 +564,7 @@ for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
               HWeight = *it;
             }
           }
-        }
+       }
         Rrep *Rep = DB<Rrep>().find(HWeight.id());
         if(Rep == NULL)
         {
@@ -739,7 +737,7 @@ for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
 
   /* Overloaded < operator */
   bool Rrep::operator<(const Rrep &R) const
-  {   
+  { 
     try
     {
       if((*this)>R)
@@ -815,7 +813,9 @@ for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
 
       // find out where to store the values
       if (node_name == "id")
+      {
         std::string id = i->as_string();
+      }
       else if(node_name == "Group")
         _Group = DB<LieGroup>().at(i->as_string());
       else if(node_name =="HWeight")
@@ -878,36 +878,38 @@ for(auto it = R->_Subreps.begin(); it != R->_Subreps.end(); it++)
         for(auto j = i->begin(); j != i->end(); j++)
           R->_Products[j->name()].ParseJSON(*j);
       }
-    
+
       //increment the iterator
       ++i;
     }
-
-    if(!nterms())
+   
+    if(!nterms() and _Group != NULL and _HWeight != NULL)
     {
+      Rrep *R = DB<Rrep>().find(id());
+      if(R != NULL)
+        R->Clear();
+      else
+        R = DB<Rrep>().set(id(), this); 
+
       int accumulated_rank = 0;
-      _nirreps = 0;
+      int irreps = 0;
+      int dimension = 1;
       for(int i=0; i<_Group->ngroups(); i++)
       {
-        RVector<double> R = _HWeight->ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
-        Weight HW(_Group->GetObject(i), R);
-        if(DB<Irrep>().check(HW.id()))
-        {
-          AddTerm(*DB<Irrep>().at(HW.id()));
-          _dim *= DB<Irrep>().at(HW.id())->dim();
-        }
-        else
-       {
-          Irrep aRep = Irrep(_Group->GetObject(i),HW);
-          AddTerm(aRep);
-          _dim *= aRep.dim();
-        }
-        _nirreps++;
+        RVector<double> RV = _HWeight->ExtractMatrix(0,0,accumulated_rank,accumulated_rank + _Group->GetObject(i).rank()-1).Row(0);
+        Weight HW(_Group->GetObject(i), RV);
+        Irrep aRep = *DB<Irrep>().get(HW.id());
+        AddTerm(aRep);
+        R->AddTerm(aRep);
+        dimension *= aRep.dim();
+        irreps++;
         accumulated_rank += _Group->GetObject(i).rank();
       }
 
+      if((_dim and _dim != dimension) or (_nirreps and _nirreps != irreps))
+        throw "Rrep::ParseJSON::Parsing rrep failed, dimension not consistent";
     }
-    
-  }
+
+ }
 
 }

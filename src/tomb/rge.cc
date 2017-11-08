@@ -21,9 +21,6 @@
 
 namespace Tomb
 {
-  // Definition of static variable
-  List<RGE> RGE::DataBase;
-  
   // Member functions
 
   /* Constructor with model */
@@ -39,10 +36,8 @@ namespace Tomb
       _bSM = slopesMatrix(model, &SMslopes);
       _Mixing = mixingMatrix(model);
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Constructor with theory */
@@ -55,10 +50,8 @@ namespace Tomb
       _bSM = slopesMatrix(Model(theory), &SMslopes);
       _Mixing = mixingMatrix(Model(theory));
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Copy constructor */
@@ -70,10 +63,8 @@ namespace Tomb
       _bSUSY = rge.bSUSY();
       _bSM = rge.bSM();
       _Mixing = rge.Mixing();
-    } catch (...)
-    {
-      throw;
     }
+     catch (...) { throw; }
   }
   
   
@@ -83,10 +74,8 @@ namespace Tomb
     try
     {
       ParseJSON(json);
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Copy constructor with strings */
@@ -96,10 +85,7 @@ namespace Tomb
     {
       // Missing
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   /* Move constructor */
@@ -116,10 +102,8 @@ namespace Tomb
       rge._bSM = Matrix<double>();
       rge._Mixing = Matrix<double>();
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Destructor */
@@ -130,7 +114,6 @@ namespace Tomb
   /* Assignment operator */
   RGE &RGE::operator=(const RGE &rge)
   {
-    
     try
     {
       if(this == &rge) return *this;
@@ -141,10 +124,8 @@ namespace Tomb
       _Mixing = rge.Mixing();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
 
   /* Move assignment operator */
@@ -165,10 +146,8 @@ namespace Tomb
       rge._Mixing = Matrix<double>();
       
       return *this;
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
   }
   
   /* Number of couplings getter */
@@ -211,10 +190,7 @@ namespace Tomb
       }
       return slopes;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Function for calculating non-SUSY slopes */
@@ -238,10 +214,7 @@ namespace Tomb
       }
       return slopes;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Calculates the matrix of slopes using a slopes function */
@@ -251,30 +224,42 @@ namespace Tomb
     {
       Matrix<double> RGEs;
       Chain prevchain;
+
+      List<string> subgroups = model[0].BreakingChain().extractSubgroups();
+
       for(int i = 0; i < model.nsteps(); i++)
       {
         Theory theory = model[i];
         List<Field> fields = theory.Fields();
         Chain chain = theory.BreakingChain();
         LieGroup group = theory.Group();
-        SubGroup subgroup = chain.extractSubgroups()[0];
 
+        // Calculate the slopes using the function provided        
         List<double> slopes = (*slopesFunction)(fields);
-        
         List<double> slopesOrdered;
-        for(int j=0; j<chain.nterms(); j++)
+ 
+        // If it is not the first subgroup (i.e. the upmost supergroup) order the slopes
+        if(i)
         {
-          int pos = subgroup.labels().Index(chain[j].label());
-          //if(chain.GetObject(j).label().find("+") != std::string::npos)
-          //{
+          SubGroup subgroup = *DB<SubGroup>().at(subgroups[i]);
+
+          for(int j=0; j<chain.nterms(); j++)
+          {
+            int pos = subgroup.labels().Index(chain[j].label());
+            //if(chain.GetObject(j).label().find("+") != std::string::npos)
+            //{
             //if(nmixings != std::count(chain.GetObject(j).label().begin(), chain.GetObject(j).label().end(),'+'))
             //	slopesOrdered.AddTerm("-");
             //else
             //	slopesOrdered.AddTerm(slopes[pos]);
           //} else
             slopesOrdered.AddTerm(slopes[pos]);
+          }
         }
-        
+        else
+          slopesOrdered = slopes;
+         
+        // Build the matrix 
         if(!i)
         {
           CVector<double> column(slopesOrdered.nterms());
@@ -308,10 +293,7 @@ namespace Tomb
         
       return RGEs;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
 
   /* Calculates the matrix of mixings */
@@ -384,10 +366,7 @@ namespace Tomb
       
       return Mix;
     }
-    catch (...)
-    {
-      throw;
-    }
+    catch (...) { throw; }
   }
   
   /* Overloaded == operator */
@@ -422,30 +401,35 @@ namespace Tomb
     {
       JSONNode::const_iterator i = json.begin();
       
-      while (i != json.end()){
-    
+      while (i != json.end())
+      {
         // get the node name and value as a string
         std::string node_name = i -> name();
 
         // find out where to store the values
-        if(node_name == "ncouplings") {
+        if(node_name == "ncouplings")
           _ncouplings = i->as_int();
-        } else if(node_name =="bSUSY") {
+        else if(node_name =="bSUSY")
           _bSUSY.ParseJSON(*i);
-        } else if(node_name == "bSM") {
+        else if(node_name == "bSM")
           _bSM.ParseJSON(*i);
-        } else if(node_name == "Mixing") {
+        else if(node_name == "Mixing")
           _Mixing.ParseJSON(*i);
-        }
         
         //increment the iterator
         ++i;
       }
       
-    } catch (...)
-    {
-      throw;
     }
+    catch (...) { throw; }
+  }
+
+  /* Create the key for the RGEs from index */
+  string RGE::key(int index)
+  {
+    stringstream skey;
+    skey << "RGE_" << setfill('0') << setw(4) << index;
+    return skey.str();
   }
   
   /* Overloaded << operator with theories on the right */
