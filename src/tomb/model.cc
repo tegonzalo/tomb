@@ -217,12 +217,14 @@ namespace Tomb
       static int maxdepth = 0;
       if(depth > maxdepth) maxdepth = depth;
 
-      //std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
-      //double time1 = omp_get_wtime();
+      if(omp_get_wtime() - time0 > 0.02)
+        std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
+      double time1 = omp_get_wtime();
       
       List<string> subgroups;
-      //std::cout << "Mark 1.0: " << omp_get_wtime() - time1 << std::endl;
-      //double time2 = omp_get_wtime();
+      if(omp_get_wtime() - time1 > 0.02)
+        std::cout << "Mark 1.0: " << omp_get_wtime() - time1 << std::endl;
+      double time2 = omp_get_wtime();
       #pragma omp critical
       {
         LieGroup group = theory.Group();
@@ -235,8 +237,9 @@ namespace Tomb
         //std::cout << "Mark 1.3: " << omp_get_wtime() - time2 << std::endl;
       }
 
-      //std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
-      //time1 = omp_get_wtime();
+      if(omp_get_wtime() - time1 > 0.02)
+        std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
+      time1 = omp_get_wtime();
       
       // Check constraints
       if(!theory.chirality())
@@ -245,14 +248,16 @@ namespace Tomb
         return 0;
       }
 
-      //std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
-      //time1 = omp_get_wtime();      
+      if(omp_get_wtime() - time1 > 0.02)
+        std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
+      time1 = omp_get_wtime();      
 
       // Calculate the anomaly contribution of the newly renormalised reps
       theory.calculateAnomaly();
   
-      //std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
-      //time1 = omp_get_wtime();
+      if(omp_get_wtime() - time1 > 0.02)
+        std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
+      time1 = omp_get_wtime();
 
       // Replace the last theory of the model with the current theory
       if(GetObject(-1) != theory)
@@ -261,8 +266,9 @@ namespace Tomb
         AddTerm(theory);
       }
  
-      //std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
-      //time1 = omp_get_wtime();
+      if(omp_get_wtime() - time1 > 0.02)
+        std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
+      time1 = omp_get_wtime();
 
       if(depth == 1)
       {
@@ -365,8 +371,9 @@ namespace Tomb
               return 0;
           }
 
-          //std::cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
-          //time1 = omp_get_wtime();           
+          if(omp_get_wtime() - time1 > 0.02)
+            cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
+          time1 = omp_get_wtime();           
               
           //Generate all possible combiations of reps
           //std::cout << "Calculating possible reps..." << std::endl;
@@ -391,7 +398,7 @@ namespace Tomb
             if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
             {
               bit_masks.push_back(bit_mask);
-              
+
               // next_bitmask
               std::size_t i = 0 ;
               for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
@@ -409,7 +416,8 @@ namespace Tomb
           }
           while(next_bit_mask);
 
-          //std::cout << "Mark 7: " << omp_get_wtime() - time1 << std::endl;    
+          if(omp_get_wtime()-time1 > 0.02)
+            cout << "Time for bitmask: " << omp_get_wtime() - time1 << endl;    
 
           // Parallel for loop
           #pragma omp parallel default(shared)
@@ -434,92 +442,15 @@ namespace Tomb
                 Model newmodel(model);
                 newmodel.AddTerm(Theory(subgroup, subchain, fields));
 
+                time1 = omp_get_wtime();
                 // Recursive call
                 newmodel.generateModels(nReps);
+                double time2 = omp_get_wtime();  
+                if(time2-time1 > 0.02)
+                  cout << "Time in substep = " << time2-time1 << endl;
               }
             }
           }
-          
-          // First iteration
-          
-          // Update progress
-/*					Progress::UpdateModelProgress(depth-1, total*subreps.nterms());
-
-          if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
-          {
-            List<Field> subset;
-            for(int i=0; i!=bit_mask.size(); i++)
-              if(bit_mask[i])
-                subset.AddTerm(scalars[i]);
-              
-            Model newmodel(model);
-            List<Field> fields(subtheory.getFermions());
-            fields.AppendList(subset);
-            newmodel.AddTerm(Theory(subgroup, subchain, fields));
-              
-            // Recursive call
-            newmodel.generateModelsRec(nReps);
-          }
-              
-          // next_bitmask
-          std::size_t i = 0 ;
-          for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
-            bit_mask[i] = false;
-          if( i < bit_mask.size())
-          {
-            if(std::count(bit_mask.begin(), bit_mask.end(), true) < nreps)
-                bit_mask[i] = true;
-            next_bit_mask = true;
-            
-          }
-          else 
-            next_bit_mask = false ;
-          
-          // Parallel for loop
-          //#pragma omp parallel default(none) private(next_bit_mask) shared(bit_mask)
-          do
-          {
-          //	#pragma omp for
-            //for(int i=1; i<=total; i++)
-            //{
-              //std::cout << omp_get_thread_num() << std::endl;
-              // Update progress
-              Progress::UpdateModelProgress(depth-1, total*subreps.nterms());
-
-              if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
-              {
-                List<Field> subset;
-                for(int i=0; i!=bit_mask.size(); i++)
-                  if(bit_mask[i])
-                    subset.AddTerm(scalars[i]);
-
-                Model newmodel(model);
-                List<Field> fields(subtheory.getFermions());
-                fields.AppendList(subset);
-                newmodel.AddTerm(Theory(subgroup, subchain, fields));
-              
-                // Recursive call
-                newmodel.generateModelsRec(nReps);
-              }
-              
-              // next_bitmask
-              std::size_t i = 0 ;
-              for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
-                bit_mask[i] = false;
-              if( i < bit_mask.size())
-              {
-                if(std::count(bit_mask.begin(), bit_mask.end(), true) < nreps)
-                    bit_mask[i] = true;
-                next_bit_mask = true;
-              
-              }
-              else 
-                next_bit_mask = false ;
-            //}
-          }
-          while(next_bit_mask);
-          /***********************************************************************/
-          
         }
         
       }

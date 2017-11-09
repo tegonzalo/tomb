@@ -64,26 +64,45 @@ namespace Tomb
   template<typename TYPE> List<List<TYPE> > Combinatorics::permutations(List<TYPE> list, int n, bool repetitions, bool order)
   {
     List<List<TYPE> > result;
-
-    for(typename List<TYPE>::iterator it = list.begin(); it != list.end(); it++)
+ 
+    if(std::is_same<TYPE, int>::value)
     {
-      if(n ==1) result.AddTerm(*it);
-      else
+      for(typename List<TYPE>::iterator it = list.begin(); it != list.end(); it++)
       {
-        List<List<TYPE> > perms = permutations(list, n-1);
-        for(typename List<List<TYPE> >::iterator it2 = perms.begin(); it2 != perms.end(); it2++)
+        if(n ==1) result.AddTerm(*it);
+        else
         {
-          if(!repetitions and it2->Index(*it) != -1)
-            continue;
-          List<TYPE> aux(*it);
-          aux.AppendList(*it2);
-          if(order)
-            aux.Order();
-          if(result.Index(aux) == -1)
-            result.AddTerm(aux);
+          List<List<TYPE> > perms = permutations(list, n-1);
+          for(auto it2 = perms.begin(); it2 != perms.end(); it2++)
+          {
+            if(!repetitions and it2->Index(*it) != -1)
+              continue;
+            List<TYPE> aux(*it);
+            aux.AppendList(*it2);
+            if(result.Index(aux) == -1)
+              result.AddTerm(aux);
+          }
         }
       }
-    }
+     }
+     else
+     {
+       List<int> intlist;
+       for(int i = 0; i < list.nterms(); i++)
+         intlist.AddTerm(i);
+       List<List<int> > intperms = permutations(intlist, n, repetitions, order);
+       for(auto it = intperms.begin(); it != intperms.end(); it++)
+       {
+         List<TYPE> aux;
+         for(auto it2 = it->begin(); it2 != it->end(); it2++)
+         {
+           aux.AddTerm(list[*it2]);
+         }
+         if(order)
+           aux.Order();
+         result.AddTerm(aux);
+       }
+     }
 
     return result;
   }

@@ -255,13 +255,12 @@ namespace Tomb
     try
     {
       List<List<SimpleGroup> > tdgroups = Combinatorics::permutations<SimpleGroup>(*_Group, 3, true, true);
-      
+     
       // Create an abelian group to compare with
       SimpleGroup abelian("U1");
-      
+     
       // Default anomaly
       _anomalyFree = true;
-    
       for(List<List<SimpleGroup> >::iterator it = tdgroups.begin(); it != tdgroups.end(); it++)
       {
         double anomaly = 0;
