@@ -44,6 +44,8 @@ namespace Tomb
   namespace Progress
   {
     static long int success = 0;
+
+    void PrintProgressBar(int, double, int, int);
     
     void UpdateModelProgress(int, int, bool = false);
     

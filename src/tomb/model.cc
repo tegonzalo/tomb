@@ -206,7 +206,7 @@ namespace Tomb
     try
     {
 
-      double time0 = omp_get_wtime();
+      //double time0 = omp_get_wtime();
 
       Theory theory = GetObject(-1);
       
@@ -217,14 +217,11 @@ namespace Tomb
       static int maxdepth = 0;
       if(depth > maxdepth) maxdepth = depth;
 
-      if(omp_get_wtime() - time0 > 0.02)
-        std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
-      double time1 = omp_get_wtime();
+      //if(omp_get_wtime() - time0 > 0.02)
+      //  std::cout << "Mark 1: " << omp_get_wtime() - time0 << std::endl;
+      //double time1 = omp_get_wtime();
       
       List<string> subgroups;
-      if(omp_get_wtime() - time1 > 0.02)
-        std::cout << "Mark 1.0: " << omp_get_wtime() - time1 << std::endl;
-      double time2 = omp_get_wtime();
       #pragma omp critical
       {
         LieGroup group = theory.Group();
@@ -237,9 +234,9 @@ namespace Tomb
         //std::cout << "Mark 1.3: " << omp_get_wtime() - time2 << std::endl;
       }
 
-      if(omp_get_wtime() - time1 > 0.02)
-        std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
-      time1 = omp_get_wtime();
+      //if(omp_get_wtime() - time1 > 0.02)
+      //  std::cout << "Mark 2: " << omp_get_wtime() -time1 << std::endl;
+      //time1 = omp_get_wtime();
       
       // Check constraints
       if(!theory.chirality())
@@ -248,16 +245,16 @@ namespace Tomb
         return 0;
       }
 
-      if(omp_get_wtime() - time1 > 0.02)
-        std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();      
+      //if(omp_get_wtime() - time1 > 0.02)
+      //  std::cout << "Mark 3: " << omp_get_wtime() - time1 << std::endl;
+      //time1 = omp_get_wtime();      
 
       // Calculate the anomaly contribution of the newly renormalised reps
       theory.calculateAnomaly();
   
-      if(omp_get_wtime() - time1 > 0.02)
-        std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();
+      //if(omp_get_wtime() - time1 > 0.02)
+      //  std::cout << "Mark 4: " << omp_get_wtime() - time1 << std::endl;
+      //time1 = omp_get_wtime();
 
       // Replace the last theory of the model with the current theory
       if(GetObject(-1) != theory)
@@ -266,9 +263,9 @@ namespace Tomb
         AddTerm(theory);
       }
  
-      if(omp_get_wtime() - time1 > 0.02)
-        std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
-      time1 = omp_get_wtime();
+      //if(omp_get_wtime() - time1 > 0.02)
+      //  std::cout << "Mark 5: " << omp_get_wtime() - time1 << std::endl;
+      //time1 = omp_get_wtime();
 
       if(depth == 1)
       {
@@ -330,6 +327,7 @@ namespace Tomb
         //Calculate the breaking, obtaining the subreps and mixings at the end
         List<RVector<double> > mixings;
         List<Sum<Field> > subreps;
+        List<List<string> > subsets;
         #pragma omp critical
         subreps = theory.calculateBreaking(mixings);
         
@@ -371,9 +369,9 @@ namespace Tomb
               return 0;
           }
 
-          if(omp_get_wtime() - time1 > 0.02)
-            cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
-          time1 = omp_get_wtime();           
+          //if(omp_get_wtime() - time1 > 0.02)
+          //  cout << "Mark 6: " << omp_get_wtime() - time1 << std::endl;
+          //time1 = omp_get_wtime();           
               
           //Generate all possible combiations of reps
           //std::cout << "Calculating possible reps..." << std::endl;
@@ -392,7 +390,7 @@ namespace Tomb
           bool next_bit_mask = false;
           
           // Try getting bit_masks first
-          std::vector<std::vector<bool> > bit_masks;
+          vector<vector<bool> > bit_masks;
           do
           {
             if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
@@ -416,8 +414,8 @@ namespace Tomb
           }
           while(next_bit_mask);
 
-          if(omp_get_wtime()-time1 > 0.02)
-            cout << "Time for bitmask: " << omp_get_wtime() - time1 << endl;    
+          //if(omp_get_wtime()-time1 > 0.02)
+          //  cout << "Time for bitmask: " << omp_get_wtime() - time1 << endl;    
 
           // Parallel for loop
           #pragma omp parallel default(shared)
@@ -426,33 +424,48 @@ namespace Tomb
             for(int i=0; i<bit_masks.size(); i++)
             {
               bit_mask = bit_masks[i];
-              
-              #pragma omp critical
-              Progress::UpdateModelProgress(maxdepth - depth, total*subreps.nterms());
 
-              if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
+              List<string> subset;
+              List<Field> subfield;
+              for(int i=0; i!=bit_mask.size(); i++)
+                if(bit_mask[i])
+                {
+                  subset.AddTerm(scalars[i].id());
+                  subfield.AddTerm(scalars[i]);
+                }
+              
+              bool isNewModel = false;
+ 
+              #pragma omp critical
               {
-                List<Field> subset;
-                for(int i=0; i!=bit_mask.size(); i++)
-                  if(bit_mask[i])
-                    subset.AddTerm(scalars[i]);
+                Progress::UpdateModelProgress(maxdepth - depth, total*subreps.nterms());
+ 
+                if(subsets.Index(subset) == -1)
+                  isNewModel = true;
+              }
+
+              if(isNewModel)
+              {
+                #pragma omp critical
+                subsets.AddTerm(subset);
 
                 List<Field> fields = subtheory.getFermions();
-                fields.AppendList(subset);
+                fields.AppendList(subfield);
                 Model newmodel(model);
                 newmodel.AddTerm(Theory(subgroup, subchain, fields));
 
-                time1 = omp_get_wtime();
+                //time1 = omp_get_wtime();
                 // Recursive call
                 newmodel.generateModels(nReps);
-                double time2 = omp_get_wtime();  
-                if(time2-time1 > 0.02)
-                  cout << "Time in substep = " << time2-time1 << endl;
+                //double time2 = omp_get_wtime();  
+                //if(time2-time1 > 0.02)
+                //  cout << "Time in substep = " << time2-time1 << endl;
               }
             }
           }
         }
         
+
       }
       return Progress::success;
       

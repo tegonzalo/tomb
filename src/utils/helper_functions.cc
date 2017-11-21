@@ -66,10 +66,6 @@ namespace Tomb
   /* Updates the progess bar for the models */
   void Progress::UpdateModelProgress(int step, int nModels, bool noUpdate)
   {
-    //static List<int> counters(std::vector<int>(10)); // Vector of counters
-    //static List<int> nModelsVec(std::vector<int>(10)); // Vector of number of models
-    //double progress = double(counters[step])/nModels; // Counts models per step
-    
     int thread_id = omp_get_thread_num();
     int thread_max = omp_get_max_threads();
 
@@ -88,14 +84,9 @@ namespace Tomb
     if(nModelsVec[thread_id].size() <= step)
       nModelsVec[thread_id].push_back(0);
     
-    //std::cout << counters[thread_id][step] << std::endl;
-    //std::cout << nModelsVec[thread_id][step] << std::endl;
-    // Set up progress message
-    if(counters[thread_id][step] == 0)
-    {
-      counters[thread_id][step] ++;
-      nModelsVec[thread_id][step] = nModels;
-    }
+    // Increment counters
+    if(!noUpdate) counters[thread_id][step] ++;
+    nModelsVec[thread_id][step] = nModels;
     //std::cout << counters[thread_id][step] << std::endl;
     //std::cout << nModelsVec[thread_id][step] << std::endl;
                 
@@ -109,28 +100,10 @@ namespace Tomb
         progress += double(counters[i][step])/nModels;
       }
     }
-    // std::cout << totalcounter << std::endl;
+    //std::cout << totalcounter << std::endl;
 
-    if(!thread_id and (!step or step and nModels > 100))
-    {
-      std::cout <<  "Step " << step << ": [";
-      int pos = barWidth * progress;
-      for (int i = 0; i < barWidth; ++i)
-      {
-        if (i < pos) 
-          std::cout << "=";
-        else if (i == pos) 
-          std::cout << ">";
-        else 
-          std::cout << " ";
-      } 
-      std::cout << "] " << int(progress * 100.0) << " % : " << totalcounter << "/" << nModels << "\r";
-      std::cout.flush();
-
-      std::cout << std::endl;
-    }
-
-    if(!noUpdate) counters[thread_id][step] ++;
+    //if(!step or step and nModels > 100)
+      Progress::PrintProgressBar(step, progress, totalcounter, nModels);
 
     if(totalcounter >= nModelsVec[thread_id][step])
     {
@@ -139,6 +112,30 @@ namespace Tomb
     }
 
   }
+
+  /* Print the progress bar */
+  void Progress::PrintProgressBar(int step, double progress, int counter, int total)
+  {
+      int barWidth = 70;
+
+      std::cout <<  "Step " << step << ": [";
+      int pos = barWidth * progress;
+      for (int i = 0; i < barWidth; ++i)
+      {
+        if (i < pos)
+          std::cout << "=";
+        else if (i == pos)
+          std::cout << ">";
+        else
+          std::cout << " ";
+      }
+      std::cout << "] " << int(progress * 100.0) << " % : " << counter << "/" << total << "\r";
+      std::cout.flush();
+
+      std::cout << std::endl;
+  }
+
+
   
   /* Updates the progess bar for the reps */
   void Progress::UpdateRepProgress(int nreps)

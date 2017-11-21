@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
       if(mode == "remove")
       {
         char cont;
-        std::cout << "You are about to delete all the models, do you want to conitue (Y/N)" << std::endl;
+        std::cout << "You are about to delete all the models, do you want to continue (Y/N)" << std::endl;
         do
         {
           cont = getchar();
