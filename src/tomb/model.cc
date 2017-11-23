@@ -323,6 +323,7 @@ namespace Tomb
         for(int j=0; j<chain.nterms(); j++)
           subchain.AppendList(chain.GetObject(j).Branches());
         subchain.calculateDepth();
+//cout << theory.Fields() << endl;
         
         //Calculate the breaking, obtaining the subreps and mixings at the end
         List<RVector<double> > mixings;
@@ -393,13 +394,13 @@ namespace Tomb
           vector<vector<bool> > bit_masks;
           do
           {
-            if(std::count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
+            if(count(bit_mask.begin(), bit_mask.end(), true) <= nreps)
             {
               bit_masks.push_back(bit_mask);
 
               // next_bitmask
-              std::size_t i = 0 ;
-              for( ; ( i < bit_mask.size() ) && (bit_mask[i] or std::count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
+              size_t i = 0 ;
+              for( ; ( i < bit_mask.size() ) && (bit_mask[i] or count(bit_mask.begin(),bit_mask.end(),true) >=nreps); ++i )
                 bit_mask[i] = false;
               if( i < bit_mask.size())
               {
@@ -418,49 +419,48 @@ namespace Tomb
           //  cout << "Time for bitmask: " << omp_get_wtime() - time1 << endl;    
 
           // Parallel for loop
-          #pragma omp parallel default(shared)
+          #pragma omp parallel for private(bit_mask)
+          for(int i=0; i<bit_masks.size(); i++)
           {
-            #pragma omp for nowait
-            for(int i=0; i<bit_masks.size(); i++)
+            bit_mask = bit_masks[i];
+
+            List<string> subset;
+            List<Field> subfield;
+            for(int j=0; j<bit_mask.size(); j++)
             {
-              bit_mask = bit_masks[i];
-
-              List<string> subset;
-              List<Field> subfield;
-              for(int i=0; i!=bit_mask.size(); i++)
-                if(bit_mask[i])
-                {
-                  subset.AddTerm(scalars[i].id());
-                  subfield.AddTerm(scalars[i]);
-                }
+              if(bit_mask[j])
+              {
+                subset.AddTerm(scalars[j].id());
+                subfield.AddTerm(scalars[j]);
+              }
+            }
               
-              bool isNewModel = false;
+            bool isNewModel = false;
  
-              #pragma omp critical
+            #pragma omp critical
+            {
+              Progress::UpdateModelProgress(maxdepth - depth, total*subreps.nterms());
+
+              if(subsets.Index(subset) == -1)
               {
-                Progress::UpdateModelProgress(maxdepth - depth, total*subreps.nterms());
- 
-                if(subsets.Index(subset) == -1)
-                  isNewModel = true;
+               subsets.AddTerm(subset);
+               isNewModel = true;
               }
+            }
 
-              if(isNewModel)
-              {
-                #pragma omp critical
-                subsets.AddTerm(subset);
+            if(isNewModel)
+            {
+              List<Field> fields = subtheory.getFermions();
+              fields.AppendList(subfield);
+              Model newmodel(model);
+              newmodel.AddTerm(Theory(subgroup, subchain, fields));
 
-                List<Field> fields = subtheory.getFermions();
-                fields.AppendList(subfield);
-                Model newmodel(model);
-                newmodel.AddTerm(Theory(subgroup, subchain, fields));
-
-                //time1 = omp_get_wtime();
-                // Recursive call
-                newmodel.generateModels(nReps);
-                //double time2 = omp_get_wtime();  
-                //if(time2-time1 > 0.02)
-                //  cout << "Time in substep = " << time2-time1 << endl;
-              }
+              //time1 = omp_get_wtime();
+              // Recursive call
+              newmodel.generateModels(nReps);
+              //double time2 = omp_get_wtime();  
+              //if(time2-time1 > 0.02)
+              //  cout << "Time in substep = " << time2-time1 << endl;
             }
           }
         }

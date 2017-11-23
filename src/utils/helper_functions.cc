@@ -69,12 +69,9 @@ namespace Tomb
     int thread_id = omp_get_thread_num();
     int thread_max = omp_get_max_threads();
 
-    //std::cout << "thread id = " << thread_id << " of " << thread_max << " in step " << step << std::endl;
-
     static std::vector<std::vector<int> > counters(thread_max); // Vector of counters
     static std::vector<std::vector<int> > nModelsVec(thread_max); // Vector of number of models
     double progress = 0, totalcounter = 0;
-
 
     if(!nModels) return ;
     
@@ -87,8 +84,6 @@ namespace Tomb
     // Increment counters
     if(!noUpdate) counters[thread_id][step] ++;
     nModelsVec[thread_id][step] = nModels;
-    //std::cout << counters[thread_id][step] << std::endl;
-    //std::cout << nModelsVec[thread_id][step] << std::endl;
                 
     int barWidth = 70;
     
@@ -100,7 +95,6 @@ namespace Tomb
         progress += double(counters[i][step])/nModels;
       }
     }
-    //std::cout << totalcounter << std::endl;
 
     //if(!step or step and nModels > 100)
       Progress::PrintProgressBar(step, progress, totalcounter, nModels);
