@@ -1,0 +1,44 @@
+23/11/15
+**Reps: fails for E8
+MaxSubgroups: fails for A(6,...), B(5,...), C(5,...), D(6,...), E7, E8
+--------
+30/11/15
+**Reps: fails for E8
+MaxSubgroups: fixed and tested for up to A10, B10, C10, D10, E6, E7, F4, G2
+--------
+02/12/15
+**Reps: fails for E8
+Subgroups: tested for up to A8, B7, C7, D8, E6, E7, F4, G2
+Check: E7 -> E6xU1?? Maybe in Cartan recognisation
+Decompose: tested for up to A6, B6, C6, D6, G2; fails for E6, E7, F4
+--------
+03/12/15
+Reps: fails for E8
+Subgroups : wrong previously, tested for up to A5, B5, C5, D5, F4, G2
+--------
+04/12/15
+DataBase: doesn't parse weights (and lists in general) properly
+--------
+07/12/15
+DataBase: all working properly
+Irreps & Subgroups: tested up to A5, B5, C5, D5, F4, G2
+**Parsing of weights slow, temporal hack: ignore parsing for r<6
+Decomposition: tested up to A5, B5, C5, D5, F4, G2
+Breaking Chains: tested up to A5, B5, C5, D5, F4, G2
+Direct Products: tested up to A5, B5, C5, D5, F4, G2
+**Something fails for E6
+**Two many subgroups, maybe have copies inside the subgroup
+Invariants: works but gives incomplete result for A5, B5, C5, D5, F4, G2
+**Improve invariants algorithm
+---------
+06/07/16
+Parallelized model generation
+---------
+07/06/17
+Sped up considerably all the group calculations
+Implemented databases for relevant classes
+Works for A1-5, B1-5, C1-5, D1-6, G2 and F4
+Fails for E6
+----------
+12/06/17
+Works now for all groups up to E6

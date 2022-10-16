@@ -1,0 +1,159 @@
+%%%%%%%%%%%%%%%%%%%%%%%%% L a T e X %%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[12pt]{article}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{amssymb}
+\usepackage{rotating}
+\usepackage{mathtools}
+
+\textwidth 16.25cm
+\textheight 22.5cm
+\hoffset    -1.5cm
+\voffset    -1cm
+\setlength{\parindent}{1cm}
+\setlength{\parskip}{5pt plus 2pt minus 1pt}
+\renewcommand{\baselinestretch}{1.2}
+
+% Getting rid of blank lines in the bibliography
+\let\oldthebibliography=\thebibliography
+\let\endoldthebibliography=\endthebibliography
+\renewenvironment{thebibliography}[1]{%
+\begin{oldthebibliography}{#1}%
+\setlength{\parskip}{0ex}%
+\setlength{\itemsep}{0ex}%
+}%
+{%
+\end{oldthebibliography}%
+}
+
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\GSM}{\mathcal{G}_{SM}}
+\newcommand{\Tr}{\text{Tr}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\thispagestyle{empty}
+\vspace*{-1in}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\vskip 5pt
+
+\begin{center}
+{\Large{\bf 
+Manual}}
+\vskip 25pt
+
+{
+Tom\'as Gonzalo\footnote{E-mail: tomas.gonzalo.11@ucl.ac.uk}
+}
+
+\vskip 10pt
+
+{\it \small 
+Department of Physics and Astronomy, University College London, UK
+}\\
+
+\medskip
+
+\begin{abstract}
+\end{abstract}
+
+\end{center}
+
+\medskip
+
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\setcounter{footnote}{0}
+
+\cleardoublepage
+\setcounter{page}{1}
+\pagenumbering{Roman}
+\tableofcontents
+
+\cleardoublepage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+
+\section{Libraries}
+
+\subsection{Matrices and Vectors}
+
+\subsection{Linked Lists}
+
+\section{Main classes}
+
+\subsection{SimpleGroup}
+
+\subsubsection{Classification of simple groups}
+
+
+\begin{tabular}{c | c | c | c}
+Name & Type & Rank & Dimension \\ 
+\hline
+$SU(n+1)$ & A & $n=1\dots$ & $n^2 -1$ \\
+$SO(2n-1)$ & B & $n=1\dots$ & \\
+$Sp(2n)$ & C & $n=1\dots$ & \\
+$SO(2n)$ & D & $n=1\dots$ & $2n(2n+1)$ \\
+$E_n$ & E & $n=6,7,8$ & \\
+$F_4$ & F & 4 & \\
+$G_2$ & G & 2 & 
+\end{tabular}
+
+
+\subsubsection{Roots}
+
+The roots of a simple group are the vectors of constants obtain by commuting the generators of the group with the generator in the Cartan sub algebra.
+
+\begin{equation}
+[H_i, E_\alpha] = \alpha_i E_\alpha.
+\end{equation}
+
+A simple group has a minimal set of roots, its rank, from which all roots can be obtained. These are called the simple roots, and they are usually expressed in a Cartan matrix, e.g. for $SU(5)$
+
+\begin{equation}
+K = \left( 
+\begin{array}{cccc}
+2 & -1 & 0 & 0 \\
+-1 & 2 & -1 & 0 \\
+0 & -1 & 2 & -1 \\
+0 & 0 & -1 & 2
+\end{array}
+\right)
+\end{equation}
+
+Linear combinations of these simple roots will span the set of roots of the simple group, of dimension the dimension of the group. The highest root in the group is that one with the largest coefficients. The process of obtaining the whole set of roots corresponds to subtracting from the highest root the $ith$ root $i$ times, where $i$ is a positive element of the highest root. As an example, we'll deduct the roots for $SU(3)$, which highest root is $\{1,1\}$, and Cartan matrix is 
+
+\begin{equation}
+K = \left( 
+\begin{array}{cc}
+2 & -1  \\
+-1 & 2 
+\end{array}
+\right)
+\end{equation}
+
+
+\begin{align}
+\{\bf{1}, 1\} &- \{2, -1\} = \{-1, 2\} \notag  \\
+\{1, \bf{1}\} &- \{-1, 2\} = \{2, -1\} \notag  \\
+\{\bf{2}, -1\} &- \{2, -1\} = \{0, 0\} \notag  \\
+\{-1, \bf{2}\} &- \{-1, 2\} = \{0, 0\} \notag  \\
+\{\bf{2}, -1\} &- 2 \{2, -1\} = \{-2, 1\} \notag  \\
+\{-1, \bf{2}\} &- 2 \{-1, 2\} = \{1,-2\} \notag  \\
+\{-2, \bf{1}\} &- \{-1, 2\} = \{-1,-1\} \notag  \\
+\{\bf{1}, -2\} &- \{2, -1\} = \{-1, -1\} \notag  \\
+\end{align}
+
+as can be seen above it is possible to reach some roots in different ways. In the example above the root $\{-1, -1\}$ which seems to be reached in different ways, it's actually the same root, whereas the root $\{0, 0 \}$ has multiplicity 2 and both should be kept. This makes sense because $SU(3)$ is a group of dimension 8 and, if we drop one of the $\{-1, -1\}$ roots, there are exactly 8 roots.
+
+\subsubsection{Representations}
+
+The representations of a group are maps from the elements of the group to $\mathcal{G}l_n$, i.e., the General Linear group of $n \times n$ matrices.
+
+\end{document}
+
+
