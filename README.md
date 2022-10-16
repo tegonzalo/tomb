@@ -1,2 +1,1 @@
-# tomb
-Tool of Model Building
+# TOMB: A Tool of Model Building
